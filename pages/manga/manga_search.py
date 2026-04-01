@@ -1,8 +1,8 @@
-import streamlit as st
-from streamlit_searchbox import st_searchbox
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from utilities.util_manga import search_titles, save_config
+import streamlit as st
+from bs4 import BeautifulSoup
+from streamlit_searchbox import st_searchbox
+from utilities.util_manga import save_config, search_titles
 from utilities.util_network import better_get
 from utilities.util_persistent import apply_logo
 

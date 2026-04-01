@@ -1,14 +1,12 @@
-import os
 import json
-from bs4 import BeautifulSoup
+import os
+import shutil
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin
 import streamlit as st
+from bs4 import BeautifulSoup
+from PIL import Image
 from utilities.util_network import better_get
-import base64
-from PIL import Image, ImageOps
-from io import BytesIO
-from concurrent.futures import ThreadPoolExecutor
-import shutil
 
 
 
@@ -41,7 +39,7 @@ def save_config(key:str=None, value:str=None, replace_data:dict=None):
         with open(config_path, "w") as f:
             json.dump(replace_data, f, indent=4)
     
-    st.session_state.cache_data, st.session_state.library_list = read_cache()
+    st.session_state.manga_cache, st.session_state.manga_library = read_cache()
 
 
 
@@ -130,30 +128,17 @@ def search_titles_mangadex(title:str) -> dict:
 
 
 
-@st.cache_data(persist="disk", show_spinner=True)
-def process_image(url:str) -> ImageOps:
-    try:
-        response = better_get(url)
-        img = Image.open(BytesIO(response.content))
-        cropped_img = ImageOps.fit(img, (400, 600), centering=(0.5, 0.2))
-        return cropped_img
-    except Exception:
-        return None
-
-
-
-
-def get_image_base64(img:ImageOps):
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
-
-
-
 def read_cache() -> tuple[dict, list]:
-    with open("./cache/reading_library.json", "r") as file:
-        data = json.load(file)
+    path = "./cache/reading_library.json"
+    
+    if os.path.exists(path):
+        with open(path, "r") as file:
+            data = json.load(file)
+    else:
+        with open(path, "w") as file:
+            json.dump({}, file, indent=4)
+        data = {}
+    
     library_list = list(data.items())
     return data, library_list
 
@@ -241,3 +226,11 @@ def change_chapter_read(title:str, chapter_read:int) -> None:
 
 def change_chapter_state(current_chapter:str):
     st.session_state.open_chapter = current_chapter
+
+
+
+
+@st.cache_data(persist="disk", show_spinner=True)
+def get_cached_image(url:str):
+    response = better_get(url)
+    return response.content
