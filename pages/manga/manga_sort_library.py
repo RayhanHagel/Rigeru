@@ -12,7 +12,7 @@ st.subheader(body="Sort Library", width="stretch", divider="violet")
 
 
 sortable_library = [
-    {'header': '',  'items': [key for key, _ in st.session_state.library_list]}
+    {'header': '',  'items': [key for key, _ in st.session_state.manga_library]}
 ]
 
 custom_css = """
@@ -48,5 +48,5 @@ cols = st.columns(spec=[0.55, 0.45], gap="small")
 
 with cols[0]:
     sorted_items = sort_items(items=sortable_library, direction="vertical", custom_style=custom_css, multi_containers=True)
-    reordered_data = {k: st.session_state.cache_data[k] for k in sorted_items[0]['items'] if k in st.session_state.cache_data}
+    reordered_data = {k: st.session_state.manga_cache[k] for k in sorted_items[0]['items'] if k in st.session_state.manga_cache}
     save_config(replace_data=reordered_data)
