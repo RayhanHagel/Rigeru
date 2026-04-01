@@ -1,6 +1,9 @@
 import streamlit as st
-from utilities.util_manga import download_chapter, change_chapter_read, refresh_library, change_chapter_state
 import streamlit_extras.specialized_inputs as stsi
+from streamlit_extras.eval_javascript import *
+from utilities.util_manga import (change_chapter_read, change_chapter_state,
+                                  download_chapter, get_cached_image,
+                                  refresh_library)
 from utilities.util_persistent import apply_logo
 
 
@@ -13,19 +16,20 @@ if "downloading_all" not in st.session_state:
     st.session_state.downloading_all = False
 
 
-title = st.session_state.cache_data[st.session_state.selected_title]
+title = st.session_state.manga_cache[st.session_state.selected_title]
 
 
 apply_logo()
 st.header("☄️ Manga and Manhwa")
 column_subheader = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 column_subheader[0].subheader(body=st.session_state.selected_title, width="stretch", divider="violet")
-column_subheader[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=(st.session_state.cache_data, st.session_state.selected_title), use_container_width=True)
+column_subheader[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=(st.session_state.manga_cache, st.session_state.selected_title), use_container_width=True)
 
 
 column_outside = st.columns(spec=[0.35, 0.65], gap="small", border=True)
 with column_outside[0]:
-    st.image(image=title["image"], width=350)
+    cached_image = get_cached_image(title["image"])
+    st.image(image=cached_image, width=350)
 
 with column_outside[1]:
     st.write("**Tag Informations**")
@@ -56,6 +60,7 @@ with column_outside[1]:
     
     chapter_to_download = list(set(title["chapters_url"]) - set(title["chapter_downloaded"]))
     if chapter_to_download != []:
+        st.session_state.downloading_all = False
         download_all = chapter_read[2].button(label="Download All", key="download_all", icon=":material/deployed_code_update:", use_container_width=True, disabled=st.session_state.downloading_all)
         if download_all:
             st.session_state.downloading_all = True

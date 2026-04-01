@@ -1,4 +1,8 @@
 import requests
+from PIL import Image, ImageOps
+import streamlit as st
+from io import BytesIO
+import base64
 
 
 
@@ -28,3 +32,28 @@ def better_post(url:str, payload, headers) -> requests.Response:
     except: 
         print(f"[Error] Failed to connect to the database [{response.status_code}]")
         return None
+
+
+
+
+@st.cache_data(persist="disk", show_spinner=True)
+def process_image(url:str, crop:bool) -> ImageOps:
+    try:
+        response = better_get(url)
+        img = Image.open(BytesIO(response.content))
+        if crop:
+            cropped_img = ImageOps.fit(img, (400, 600), centering=(0.5, 0.2))
+            return cropped_img
+        else:
+            return img
+    except Exception:
+        return None
+
+
+
+
+@st.cache_data(persist="disk", show_spinner=True)
+def get_image_base64(img:ImageOps):
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
