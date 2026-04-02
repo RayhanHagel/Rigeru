@@ -11,19 +11,10 @@ from utilities.util_network import better_get
 
 
 
-def save_config(key:str=None, value:str=None, replace_data:dict=None):
+def save_config(key:str=None, value:str=None, replace_data:dict=None, reread_cache:bool=True):
     config_path = "./cache/reading_library.json"    
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    
     if replace_data == None:
-        data = {}
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError:
-                    data = {}
-        
+        data = st.session_state.manga_cache
         if key in data:
             if isinstance(data[key], dict) and isinstance(value, dict):
                 data[key].update(value) 
@@ -39,7 +30,8 @@ def save_config(key:str=None, value:str=None, replace_data:dict=None):
         with open(config_path, "w") as f:
             json.dump(replace_data, f, indent=4)
     
-    st.session_state.manga_cache = read_cache()
+    if reread_cache:
+        st.session_state.manga_cache = read_cache()
 
 
 
@@ -179,9 +171,8 @@ def download_chapter(title:str, chapter_key:str, chapter_url:str, website_type:s
         shutil.rmtree(chapter_path)
     except OSError as e:
         print(f"[Erorr] Failed to remove folder {title}/{chapter_key} - {e}")
-    data, _ = read_cache()
-    data[title]["chapter_downloaded"].append(chapter_url)
-    save_config(title, data[title])
+    st.session_state.manga_cache[title]["chapter_downloaded"].append(chapter_url)[title]["chapter_downloaded"].append(chapter_url)
+    save_config(title, st.session_state.manga_cache[title]["chapter_downloaded"].append(chapter_url)[title], reread_cache=False)
 
 
 
@@ -215,9 +206,8 @@ def threaded_download(url:str, image_path:str) -> None:
 
 
 def change_chapter_read(title:str, chapter_read:int) -> None:
-    data, _ = read_cache()
-    data[title]["chapter_read"] = chapter_read
-    save_config(title, data[title])
+    st.session_state.manga_cache[title]["chapter_read"] = chapter_read
+    save_config(title, st.session_state.manga_cache[title], reread_cache=False)
     st.toast(body=":green[Done saving **Chapter Read**]", duration="short", icon=":material/save_as:")
 
 
