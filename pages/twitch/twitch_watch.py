@@ -21,7 +21,7 @@ for channel in st.session_state.get('twitch_cache', []):
         st.session_state.check_twitch = channel
         break
 
-if "check_twitch" in st.session_state:
+if st.session_state.check_twitch is not None:
     video_url = f"https://player.twitch.tv/?channel={st.session_state.check_twitch}&parent=localhost"
     components.iframe(video_url, height=400, scrolling=False)
     
