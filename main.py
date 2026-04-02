@@ -14,7 +14,7 @@ st.session_state.manga = {
     "search": "pages\manga\manga_search.py",
     "library": "pages\manga\manga_library.py",
     "read": "pages\manga\manga_read.py",
-    "sort": "pages\manga\manga_sort_library.py",
+    "sort": "pages\manga\manga_sort.py",
     "pdf": "pages\manga\manga_pdf.py"
 }
 
@@ -24,13 +24,13 @@ st.session_state.twitch = {
 
 
 st.session_state.quick_cache = quick_rc()
-st.session_state.manga_cache, st.session_state.manga_library = manga_rc()
+st.session_state.manga_cache = manga_rc()
 
 
 pages = {
     "Quick Navigation": [
         st.Page(st.session_state.quick["home"], title="Home"),
-        st.Page(st.session_state.quick["sort"], title="Sort")
+        st.Page(st.session_state.quick["sort"], title="Sort", visibility="hidden")
     ],
     "Manga and Manhwa": [
         st.Page(st.session_state.manga["search"], title="Search Titles"),

@@ -39,7 +39,7 @@ def save_config(key:str=None, value:str=None, replace_data:dict=None):
         with open(config_path, "w") as f:
             json.dump(replace_data, f, indent=4)
     
-    st.session_state.manga_cache, st.session_state.manga_library = read_cache()
+    st.session_state.manga_cache = read_cache()
 
 
 
@@ -128,7 +128,7 @@ def search_titles_mangadex(title:str) -> dict:
 
 
 
-def read_cache() -> tuple[dict, list]:
+def read_cache() -> dict:
     path = "./cache/reading_library.json"
     
     if os.path.exists(path):
@@ -138,9 +138,8 @@ def read_cache() -> tuple[dict, list]:
         with open(path, "w") as file:
             json.dump({}, file, indent=4)
         data = {}
-    
-    library_list = list(data.items())
-    return data, library_list
+
+    return data
 
 
 
@@ -234,3 +233,12 @@ def change_chapter_state(current_chapter:str):
 def get_cached_image(url:str):
     response = better_get(url)
     return response.content
+
+
+
+
+def sync_and_save(new_layout):
+    sorted_layout = sorted(new_layout, key=lambda item: (item['y'], item['x']))
+    new_order_indices = [int(item['i']) for item in sorted_layout]
+    ordered_data = {list(st.session_state.temp_manga_cache.items())[i][0]: list(st.session_state.temp_manga_cache.items())[i][1] for i in new_order_indices}
+    save_config(replace_data=ordered_data)

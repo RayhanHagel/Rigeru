@@ -96,3 +96,11 @@ def save_button():
     st.session_state.hide_add_button = False
     st.temp_data_input = None
     st.temp_data_widget = None
+
+
+
+def sync_and_save(new_layout):
+    sorted_layout = sorted(new_layout, key=lambda x: x['y'])
+    new_order_indices = [int(item['i']) for item in sorted_layout]
+    ordered_data = [st.session_state.quick_cache[i] for i in new_order_indices]
+    write_cache(replace_data=ordered_data)
