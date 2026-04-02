@@ -11,3 +11,8 @@ ENV/
 # Local cache folders
 cache/
 .cache/
+
+# Testing Items
+test.py
+
+pages/spotify/

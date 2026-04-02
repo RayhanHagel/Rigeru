@@ -36,10 +36,10 @@ with elements("dashboard"):
                     for sub_item in item_group:
                         mui.Typography(f"Type: {sub_item['widget']}", variant="caption", sx={"color": "gray"})
                         mui.Typography(
-                            sub_item['input'], 
+                            sub_item["input"], 
                             sx={"wordBreak": "break-all", "marginBottom": "10px", "display": "block", "whiteSpace": "pre-wrap"}
                         )
-                        if sub_item['widget'] == 'image':
+                        if sub_item["widget"] == "image" or sub_item["widget"] == "clickable image":
                             image_encoded = get_cached_image_base64(sub_item['input'])
                             mui.Box(
                                 component="img", 

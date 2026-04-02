@@ -8,17 +8,17 @@ import base64
 
 
 def better_get(url:str) -> requests.Response:
+    last_error = None
     for _ in range(5):
         try:
-            with requests.get(url) as response:
-                if response.status_code == 200:
-                    return response
-                else:
-                    raise Exception()
-        except:
-            print(f"[Error] Failed to connect to the database [{response.status_code}]")
-            return None
-
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response
+            last_error = f"status {response.status_code}"
+        except requests.RequestException as e:
+            last_error = str(e)
+    print(f"[Error] Failed to connect to {url} — {last_error}")
+    return None
 
 
 
@@ -53,7 +53,8 @@ def process_image(url:str, crop:bool) -> ImageOps:
 
 
 @st.cache_data(persist="disk", show_spinner=True)
-def get_image_base64(img:ImageOps):
+def get_image_base64(url:str, crop:bool):
+    img = process_image(url, crop)
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
@@ -66,9 +67,8 @@ def get_cached_image_base64(url):
     try:
         response = requests.get(url)
         if response.status_code == 200:
-            # Convert binary image data to a Base64 string
             encoded_body = base64.b64encode(response.content).decode("utf-8")
             return f"data:image/jpeg;base64,{encoded_body}"
     except Exception as e:
-        return None # Fallback if URL is broken
+        return None
     return url

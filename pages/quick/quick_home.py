@@ -4,7 +4,7 @@ from streamlit_clickable_images import clickable_images
 from utilities.util_persistent import apply_logo
 from streamlit_extras.bottom_container import *
 from streamlit_extras.pagination import *
-from utilities.util_network import (process_image, get_image_base64, get_cached_image_base64)
+from utilities.util_network import (process_image, get_cached_image_base64)
 from streamlit_extras.redirect import *
 
 
@@ -66,10 +66,11 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                             case "clickable image":
                                 url = widget["input"].split(" | ")[0]
                                 to_do = widget["input"].split(" | ")[1]
-                                image_cropped = get_cached_image_base64(url=url)
+                                
+                                image_encoded = get_cached_image_base64(url=url)
                                 
                                 clicked = clickable_images(
-                                    [image_cropped],
+                                    [image_encoded],
                                     titles=[to_do],
                                     div_style={"display": "flex", "justify-content": "center"},
                                     img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
