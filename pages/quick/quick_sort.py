@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_elements import elements, mui, dashboard
 from utilities.util_persistent import apply_logo
-from utilities.util_network import (get_cached_image_base64)
+from utilities.util_network import get_cached_image_base64
 from utilities.util_quick import sync_and_save
 
 

@@ -171,8 +171,8 @@ def download_chapter(title:str, chapter_key:str, chapter_url:str, website_type:s
         shutil.rmtree(chapter_path)
     except OSError as e:
         print(f"[Erorr] Failed to remove folder {title}/{chapter_key} - {e}")
-    st.session_state.manga_cache[title]["chapter_downloaded"].append(chapter_url)[title]["chapter_downloaded"].append(chapter_url)
-    save_config(title, st.session_state.manga_cache[title]["chapter_downloaded"].append(chapter_url)[title], reread_cache=False)
+    st.session_state.manga_cache[title]["chapter_downloaded"].append(chapter_url)
+    save_config(title, st.session_state.manga_cache[title], reread_cache=False)
 
 
 

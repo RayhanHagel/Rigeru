@@ -3,7 +3,7 @@ from streamlit_clickable_images import clickable_images
 from streamlit_extras.bottom_container import *
 from streamlit_extras.pagination import *
 from utilities.util_manga import refresh_library
-from utilities.util_network import (process_image, get_image_base64)
+from utilities.util_network import get_image_base64
 from utilities.util_persistent import apply_logo
 
 
