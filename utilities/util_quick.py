@@ -21,29 +21,16 @@ def read_cache() -> dict:
 
 def write_cache(replace_data:dict=None):
     config_path = './cache/quick_navigation.json'
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
     
     if replace_data is not None:
         with open(config_path, "w") as f:
             json.dump(replace_data, f, indent=4)
-        st.session_state.quick_cache = read_cache()
+        st.session_state.quick_cache = replace_data
         return
     
-    data = []
-    if os.path.exists(config_path):
-        with open(config_path, "r") as f:
-            try:
-                data = json.load(f)
-                if not isinstance(data, list):
-                    data = []
-            except json.JSONDecodeError:
-                data = []
-    
-    data.append(st.session_state.temp_data)
+    st.session_state.quick_cache.append(st.session_state.temp_data)
     with open(config_path, "w") as f:
-        json.dump(data, f, indent=4)
-        
-    st.session_state.quick_cache = read_cache()
+        json.dump(st.session_state.quick_cache, f, indent=4)
 
 
     
@@ -91,7 +78,7 @@ def add_button():
 
 
 def save_button():
-    write_cache(replace_data=None)
+    write_cache()
     st.session_state.temp_data = []
     st.session_state.hide_add_button = False
     st.temp_data_input = None

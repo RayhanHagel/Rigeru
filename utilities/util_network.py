@@ -24,13 +24,14 @@ def better_get(url:str) -> requests.Response:
 
 def better_post(url:str, payload, headers) -> requests.Response:
     try:
-        with requests.post(url, data=payload, headers=headers) as response:
-            if response.status_code == 200:
-                return response
-            else:
-                raise Exception()
-    except: 
-        print(f"[Error] Failed to connect to the database [{response.status_code}]")
+        response = requests.post(url, data=payload, headers=headers)
+        if response.status_code == 200:
+            return response
+        else:
+            print(f"[Error] Failed to post — status {response.status_code}")
+            return None
+    except requests.RequestException as e: 
+        print(f"[Error] Failed to post to {url} — {e}")
         return None
 
 

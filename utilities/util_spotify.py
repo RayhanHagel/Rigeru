@@ -20,30 +20,35 @@ def read_cache() -> dict:
     
     return data
 
-data = {
-    "username" : "RigeruRay",
-    "refresh_interval" : "30" # in seconds
-}
 
-def check_lastfm(username:str):
+
+
+def check_lastfm(username:str) -> tuple[str, str, str, list]:
     lastfm_response = better_get(f"https://www.last.fm/user/{username}")
     lastfm_page = BeautifulSoup(lastfm_response.text, "html.parser")
     
-    avatar_url = lastfm_page.find('img', attrs={'alt': 'Your avatar'}).get("src")
+    avatar_url = lastfm_page.find("span", class_="avatar").find("img").get("src").replace("\n", "")
     scrobble_information = lastfm_page.find_all("div", class_="header-metadata-display") 
-    scrobble_amount, scrobble_artist = scrobble_information[0].text, scrobble_information[1].text
-    
-    print(avatar_url)
-    print(scrobble_amount)
-    print(scrobble_artist)
+    scrobble_amount, scrobble_artist = scrobble_information[0].text.replace("\n", ""), scrobble_information[1].text.replace("\n", "")
     
     recent_listening_box = lastfm_page.find("section", id="recent-tracks-section").find("tbody")
-    recent_items = recent_listening_box.find_all("tr")[1:]
+    recent_items = recent_listening_box.find_all("tr")
+    
+    recent_songs = []
     for item in recent_items:
-        name_song = item.find("td", class_="chartlist-name").text
-        name_artist = item.find("td", class_="charlist-artist").text
-        last_played = item.find("td", class_=""""
-                chartlist-timestamp
-                chartlist-timestamp--lang-en
-            """).text
-        print(f"{name_song} - {name_artist} - {last_played}")
+        song_details = []
+        
+        rows = item.find_all("td")
+        for row in rows:
+            try:
+                class_name = row.get("class")[0]
+                if class_name in ["chartlist-name", "chartlist-artist"]:
+                    song_details.append(row.text.replace("\n", ""))
+                elif class_name == "chartlist-timestamp":
+                    song_details.append(" ".join(row.text.replace("\n", "").replace("\xa0", " ").split()))
+            except:
+                pass
+        if song_details != []:
+            recent_songs.append(song_details)
+    
+    return avatar_url, scrobble_amount, scrobble_artist, recent_songs
