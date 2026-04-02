@@ -1,30 +1,33 @@
 import streamlit as st
 from utilities.util_manga import read_cache as manga_rc
 from utilities.util_quick import read_cache as quick_rc
+from utilities.util_twitch import read_cache as twitch_rc
+import os
 
 
 
 
 st.session_state.quick = {
-    "home": "pages\quick\quick_home.py",
-    "sort": "pages\quick\quick_sort.py"
+    "home": os.path.join("pages", "quick", "quick_home.py"),
+    "sort": os.path.join("pages", "quick", "quick_sort.py")
 }
 
 st.session_state.manga = {
-    "search": "pages\manga\manga_search.py",
-    "library": "pages\manga\manga_library.py",
-    "read": "pages\manga\manga_read.py",
-    "sort": "pages\manga\manga_sort.py",
-    "pdf": "pages\manga\manga_pdf.py"
+    "search": os.path.join("pages", "manga", "manga_search.py"),
+    "library": os.path.join("pages", "manga", "manga_library.py"),
+    "read": os.path.join("pages", "manga", "manga_read.py"),
+    "sort": os.path.join("pages", "manga", "manga_sort.py"),
+    "pdf": os.path.join("pages", "manga", "manga_pdf.py")
 }
 
 st.session_state.twitch = {
-    "player": "pages\\twitch\\twitch_watch.py"
+    "player": os.path.join("pages", "twitch", "twitch_watch.py")
 }
 
 
 st.session_state.quick_cache = quick_rc()
 st.session_state.manga_cache = manga_rc()
+st.session_state.twitch_cache = twitch_rc()
 
 
 pages = {

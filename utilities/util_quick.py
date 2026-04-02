@@ -4,7 +4,7 @@ import streamlit as st
 
 
 
-def read_cache() -> tuple[dict, list]:
+def read_cache() -> dict:
     path = "./cache/quick_navigation.json"
     
     if os.path.exists(path):    
@@ -102,5 +102,5 @@ def save_button():
 def sync_and_save(new_layout):
     sorted_layout = sorted(new_layout, key=lambda x: x['y'])
     new_order_indices = [int(item['i']) for item in sorted_layout]
-    ordered_data = [st.session_state.quick_cache[i] for i in new_order_indices]
+    ordered_data = [st.session_state.temp_quick_cache[i] for i in new_order_indices]
     write_cache(replace_data=ordered_data)

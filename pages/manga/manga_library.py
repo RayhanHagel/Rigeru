@@ -39,8 +39,7 @@ for i in range(0, len(manga_library), column_amount):
             key, value = manga_library[i+j]
             with cols[j]:
                 with st.container(border=True, height="stretch"):
-                    image_cropped = process_image(url=value["image"], crop=True)
-                    image_encoded = get_image_base64(image_cropped)
+                    image_encoded = get_image_base64(url=value["image"], crop=True)
                     
                     clicked = clickable_images(
                         [f"data:image/png;base64,{image_encoded}"],
