@@ -4,7 +4,8 @@ from streamlit_clickable_images import clickable_images
 from utilities.util_persistent import apply_logo
 from streamlit_extras.bottom_container import *
 from streamlit_extras.pagination import *
-from utilities.util_network import process_image
+from utilities.util_network import (process_image, get_image_base64, get_cached_image_base64)
+from streamlit_extras.redirect import *
 
 
 
@@ -21,7 +22,9 @@ st.header("⚡ Quick Navigation")
 cols = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 cols[0].subheader(body="Home Page", width="stretch", divider="violet")
 if cols[1].button(label="", icon=":material/drag_pan:", use_container_width=True, help="Sort the library"):
+    st.session_state.temp_quick_cache = st.session_state.quick_cache
     st.switch_page(st.session_state.quick["sort"])
+    
 
 
 column_amount = st.sidebar.slider(
@@ -58,6 +61,25 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                                 )
                             case "text":
                                 st.write(widget["input"])
+                            case "caption":
+                                st.caption(widget["input"])
+                            case "clickable image":
+                                url = widget["input"].split(" | ")[0]
+                                to_do = widget["input"].split(" | ")[1]
+                                image_cropped = get_cached_image_base64(url=url)
+                                
+                                clicked = clickable_images(
+                                    [image_cropped],
+                                    titles=[to_do],
+                                    div_style={"display": "flex", "justify-content": "center"},
+                                    img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
+                                )
+                                if clicked == 0:
+                                    try:
+                                        redirect(to_do)
+                                    except ValueError:
+                                        js = f"window.location.href = '{to_do}';"
+                                        st.components.v1.html(f"<script>{js}</script>", height=0)
                             case _:
                                 st.markdown(":red[[Error] Widget key is not valid!]")
         
@@ -82,7 +104,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                                 label="placeholder",
                                 placeholder="Choose a widget to add first",
                                 index=None,
-                                options=["image", "link button", "text"],
+                                options=["image", "link button", "text", "caption", "clickable image"],
                                 key="temp_data_widget",
                                 label_visibility="collapsed"
                             )
