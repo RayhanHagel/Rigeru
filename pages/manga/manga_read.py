@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit_extras.specialized_inputs as stsi
 from streamlit_extras.eval_javascript import *
 from utilities.util_manga import (change_chapter_read, download_chapter, refresh_library)
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
 
@@ -18,7 +18,7 @@ if "downloading_all" not in st.session_state:
 chapter_json = st.session_state.manga_cache[st.session_state.selected_title]
 st.session_state.open_chapter = False
 
-apply_logo()
+
 st.header("☄️ Manga and Manhwa")
 column_subheader = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 column_subheader[0].subheader(body=st.session_state.selected_title, width="stretch", divider="violet")

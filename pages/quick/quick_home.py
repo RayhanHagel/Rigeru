@@ -1,7 +1,7 @@
 import streamlit as st
 from utilities.util_quick import read_cache, render_control_bar
 from streamlit_clickable_images import clickable_images
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 from streamlit_extras.redirect import *
 
@@ -15,7 +15,7 @@ if "temp_data" not in st.session_state:
     st.session_state.temp_data = []
 
 
-apply_logo()
+
 st.header("⚡ Quick Navigation")
 cols = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 cols[0].subheader(body="Home Page", width="stretch", divider="violet")
@@ -45,7 +45,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                     for widget in st.session_state.quick_cache[i+j]:
                         match widget["widget"]:
                             case "image":
-                                image_to_add = get_image_cache(url=widget["input"])
+                                image_to_add = get_image_cache(url=widget["input"], crop=True, crop_size=(640, 360))
                                 try:
                                     st.image(image=image_to_add, width="content")
                                 except Exception as e:
@@ -65,7 +65,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                                 url = widget["input"].split(" | ")[0]
                                 to_do = widget["input"].split(" | ")[1]
                                 
-                                image_encoded = get_image_cache(url=url)
+                                image_encoded = get_image_cache(url=url, crop=True, crop_size=(640, 360))
                                 
                                 clicked = clickable_images(
                                     [image_encoded],

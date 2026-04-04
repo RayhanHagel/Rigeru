@@ -1,9 +1,8 @@
 import streamlit as st
 from streamlit_elements import elements, mui, dashboard
 from utilities.util_manga import sync_and_save
-from utilities.util_persistent import apply_logo
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 
 
 
@@ -11,7 +10,7 @@ if "temp_manga_cache" not in st.session_state:
     st.session_state.temp_manga_cache = st.session_state.manga_cache
     
 
-apply_logo()
+
 st.header("☄️ Manga and Manhwa")
 st.subheader(body="Sort Library", width="stretch", divider="violet")
 
