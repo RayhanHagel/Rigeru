@@ -1,13 +1,13 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from utilities.util_twitch import check_live_status
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 from streamlit_autorefresh import st_autorefresh
 
 
 
 
-apply_logo()
+
 st.title("📺 Twitch Watch!")
 
 

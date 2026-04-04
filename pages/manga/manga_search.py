@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_searchbox import st_searchbox
 from utilities.util_manga import (save_config, search_titles, asura_get_chapter)
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
 
@@ -10,7 +10,7 @@ from utilities.util_network import get_image_cache
 if "search_lookup" not in st.session_state:
     st.session_state.search_lookup = {}
 
-apply_logo()
+
 st.header("☄️ Manga and Manhwa")
 st.subheader("Select Source")
 website_text = "Choosing multiple sources could lead to longer search result."
@@ -37,15 +37,21 @@ if selected_website_options:
     if chapter_title:
         chapter_url = st.session_state.search_lookup.get(chapter_title)
         chapter_title = chapter_title[chapter_title.find(" ")+1:]
-        website = [value for _, value in website_options.items() if value in str(chapter_url)][0]
         
+        matches = [value for _, value in website_options.items() if value in str(chapter_url)]
+        if not matches:
+            st.toast(f":red[Could not determine source website]", duration="infinite", icon=":material/apps_outage:")
+            st.stop()
+        website = matches[0]
+        
+        chapter_json = None
         if website == "asurascans.com/":
             chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)    
         elif website == "mangadex.org/":
             ...
         
         if chapter_json is None:
-            st.toast(":red[Failed to get information on {chapter_title}]", duration="infinite", icon=":material/apps_outage:")
+            st.toast(f":red[Failed to get information on {chapter_title}]", duration="infinite", icon=":material/apps_outage:")
         else:
             chapter_json["chapter_read"] = 0
             image = get_image_cache(url=chapter_json["image"], crop=True)
