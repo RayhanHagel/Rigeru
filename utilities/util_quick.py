@@ -37,7 +37,7 @@ def write_cache(replace_data:dict=None):
 def render_control_bar(is_disabled:bool):
     buttons = [
         (":material/delete_forever:", "Cancel adding the widget!", None, cancel_button, False),
-        (":material/dashboard_2_edit:", "Add the widget!", "Pick a widget and enter details!", add_button, True if is_disabled else (False if st.session_state.temp_data_widget != None and st.session_state.temp_data_input != None else True)),
+        (":material/dashboard_2_edit:", "Add the widget!", "Pick a widget and enter details!", add_button, True if is_disabled else (False if st.session_state.temp_data_widget is not None and st.session_state.temp_data_input is not None else True)),
         (":material/dashboard_customize:", "Save the card widgets!", "Add a widget with details first!", save_button, False if st.session_state.temp_data != [] else True)
     ]
     

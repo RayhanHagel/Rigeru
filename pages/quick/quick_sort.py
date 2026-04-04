@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_elements import elements, mui, dashboard
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 from utilities.util_quick import sync_and_save
 
@@ -11,7 +11,7 @@ if "temp_quick_cache" not in st.session_state:
     st.session_state.temp_quick_cache = st.session_state.quick_cache
 
 
-apply_logo()
+
 st.header("⚡ Quick Navigation")
 st.subheader(body="Sort Navigation", width="stretch", divider="violet")
 

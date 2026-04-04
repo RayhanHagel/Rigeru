@@ -2,14 +2,14 @@ import streamlit as st
 from streamlit_clickable_images import clickable_images
 from utilities.util_manga import refresh_library
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 
 
 
 
 st.session_state.open_chapter = False
 
-apply_logo()
+
 st.header("☄️ Manga and Manhwa")
 cols = st.columns(spec=[0.84, 0.08, 0.08], gap="small", vertical_alignment="bottom")
 cols[0].subheader(body="Reading Library", width="stretch", divider="violet")

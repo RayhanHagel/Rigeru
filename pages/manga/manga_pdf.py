@@ -1,13 +1,13 @@
 import base64
 import streamlit as st
 from streamlit_extras.eval_javascript import *
-from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_persistent import apply_footer
 
 
 
 
-apply_logo()
-if ("selected_title" not in st.session_state) or ("open_chapter" not in st.session_state):
+
+if ("selected_title" not in st.session_state) or not st.session_state.get("open_chapter"):
     st.switch_page(st.session_state.manga["library"])
 
 
@@ -26,7 +26,7 @@ height_status = height_state.get("status", "idle")
 height_error = height_state.get("error")
 
 
-if height_status != "running" and not height_error and height_value != None and width_status != "running" and not width_error and width_value != None:
+if height_status != "running" and not height_error and height_value is not None and width_status != "running" and not width_error and width_value is not None:
     width, height = int(width_value), int(height_value)
     width = int(round(width * 0.9 / 50) * 50)
     height = int(round(height * 0.8 / 50) * 50)

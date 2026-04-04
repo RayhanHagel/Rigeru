@@ -13,7 +13,7 @@ from utilities.util_network import better_get
 
 def save_config(key:str=None, value:str=None, replace_data:bool=False):
     config_path = "./cache/reading_library.json"    
-    if not replace_data and key != None and value != None:
+    if not replace_data and key is not None and value is not None:
         if key in st.session_state.manga_cache:
             if isinstance(st.session_state.manga_cache[key], dict) and isinstance(value, dict):
                 st.session_state.manga_cache[key].update(value) 
@@ -35,11 +35,13 @@ def save_config(key:str=None, value:str=None, replace_data:bool=False):
 def refresh_library(title:str=None) -> None:
     if title is None:
         for chapter_title, value in st.session_state.manga_cache.items():
+            chapter_json = None
             if value["website"] == "asurascans.com/":
                 chapter_json = asura_get_chapter(chapter_url=value["main_url"], website=value["website"]
                 )
             elif value["website"] == "mangadex.org/":
                 ...
+            
             if chapter_json is None:
                 st.toast(body=f":red[Failed to refresh library for {chapter_title}]", duration="infinite", icon=":material/apps_outage:")
             else:
@@ -67,18 +69,22 @@ def asura_get_chapter(chapter_url:str, website:str) -> dict:
     if response is None:
         return None
     
-    title_url_response = BeautifulSoup(response.text, "html.parser")
-    title_chapters_unclean = title_url_response.find("div", class_="divide-y divide-white/5").find_all("a", href=True)
-    title_chapters_cleaned = []
-    for chapter in title_chapters_unclean[::-1]:
-        title_chapters_cleaned.append(urljoin(f"https://{website}", chapter['href']))
-        
-    title_status = title_url_response.find("span", class_="text-base font-bold text-[#A78BFA] capitalize").text.strip().capitalize()
-    title_type = title_url_response.find("span", class_="text-base font-bold text-[#913FE2] uppercase").text.strip().capitalize()
-    title_rating = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-r from-[#FFDA6E] to-[#FFC414] bg-clip-text text-transparent").text.strip()
-    title_chapter = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-b from-[#48C855] to-[#C6FFAB] bg-clip-text text-transparent").text.strip()
-    title_image = title_url_response.find("img", id="cover-viewer-img")["data-full-src"]
-
+    title_url_response = BeautifulSoup(response.content, "lxml")
+    
+    try:
+        title_chapters_unclean = title_url_response.find("div", class_="divide-y divide-white/5").find_all("a", href=True)
+        title_chapters_cleaned = []
+        for chapter in title_chapters_unclean[::-1]:
+            title_chapters_cleaned.append(urljoin(f"https://{website}", chapter['href']))
+            
+        title_status = title_url_response.find("span", class_="text-base font-bold text-[#A78BFA] capitalize").text.strip().capitalize()
+        title_type = title_url_response.find("span", class_="text-base font-bold text-[#913FE2] uppercase").text.strip().capitalize()
+        title_rating = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-r from-[#FFDA6E] to-[#FFC414] bg-clip-text text-transparent").text.strip()
+        title_chapter = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-b from-[#48C855] to-[#C6FFAB] bg-clip-text text-transparent").text.strip()
+        title_image = title_url_response.find("img", id="cover-viewer-img")["data-full-src"]
+    except (AttributeError, IndexError, TypeError):
+        return None
+    
     chapter_json = {
         "main_url": chapter_url,
         "chapters_amount": int(title_chapter),
@@ -130,7 +136,6 @@ def search_titles_asura(title:str) -> dict:
     if response_json is None:
         return None
     
-    st.write(response_json)
     search_result_clean = {f"🌑 {item['title']}" : f"https://asurascans.com/comics/{item['slug']}" for item in response_json}
     if len(search_result_clean) == 0:
         return None
@@ -171,10 +176,14 @@ def download_chapter(title:str, chapter_key:str, chapter_url:str, website_type:s
     
     if website_type == "asurascans.com/":
         url, path = get_images_asura(chapter_url, chapter_path)
+        if url is None or path is None:
+            st.toast(body=f":red[Failed to fetch images for **Chapter {chapter_key}**]", duration="infinite", icon=":material/file_download_off:")
+            shutil.rmtree(chapter_path, ignore_errors=True)
+            return None
         images_url.extend(url)
         images_path.extend(path)
     
-    if website_type == "mangadex.org/":
+    elif website_type == "mangadex.org/":
         ...
     
     with ThreadPoolExecutor() as executor:
@@ -212,7 +221,7 @@ def get_images_asura(chapter_url:str, chapter_path:str) -> tuple[list[str], list
     response = better_get(chapter_url)
     if response is None:
         return None, None
-    chapter_html = BeautifulSoup(response.text, "html.parser")
+    chapter_html = BeautifulSoup(response.content, "lxml")
     chapter_body = chapter_html.find("div", class_="max-w-full md:max-w-[720px] mx-auto overflow-hidden flex flex-col leading-[0]")
     
     chapter_images = chapter_body.find_all("img")    
@@ -250,5 +259,6 @@ def change_chapter_read(title:str, chapter_read:int) -> None:
 def sync_and_save(new_layout):
     sorted_layout = sorted(new_layout, key=lambda item: (item['y'], item['x']))
     new_order_indices = [int(item['i']) for item in sorted_layout]
-    st.session_state.manga_cache = {list(st.session_state.temp_manga_cache.items())[i][0]: list(st.session_state.temp_manga_cache.items())[i][1] for i in new_order_indices}
+    items = list(st.session_state.temp_manga_cache.items())
+    st.session_state.manga_cache = {items[i][0]: items[i][1] for i in new_order_indices}
     save_config(replace_data=True)

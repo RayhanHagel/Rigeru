@@ -2,6 +2,7 @@ import streamlit as st
 from utilities.util_manga import read_cache as manga_rc
 from utilities.util_quick import read_cache as quick_rc
 from utilities.util_twitch import read_cache as twitch_rc
+from utilities.util_persistent import apply_logo
 import os
 
 
@@ -47,5 +48,9 @@ pages = {
     ]
 }
 
+
+apply_logo()
+
+    
 pg = st.navigation(pages, position="top")
 pg.run()
