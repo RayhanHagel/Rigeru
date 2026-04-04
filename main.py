@@ -25,6 +25,10 @@ st.session_state.twitch = {
     "player": os.path.join("pages", "twitch", "twitch_watch.py")
 }
 
+st.session_state.spotify = {
+    "scrobbler": os.path.join("pages", "spotify", "spotify_listening.py")
+}
+
 
 st.session_state.quick_cache = quick_rc()
 st.session_state.manga_cache = manga_rc()
@@ -45,6 +49,9 @@ pages = {
     ],
     "Twitch Player": [
         st.Page(st.session_state.twitch["player"], title="Watch")
+    ],
+    "Spotify Scrobbler": [
+        st.Page(st.session_state.spotify["scrobbler"], title="Listening")
     ]
 }
 
