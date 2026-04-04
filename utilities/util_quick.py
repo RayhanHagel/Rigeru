@@ -58,8 +58,8 @@ def render_control_bar(is_disabled:bool):
 def cancel_button():
     if st.session_state.temp_data == []:
         st.session_state.hide_add_button = False
-        st.temp_data_input = None
-        st.temp_data_widget = None
+        st.session_state.temp_data_input = None
+        st.session_state.temp_data_widget = None
     else:
         st.session_state.temp_data.pop()
     
@@ -81,8 +81,8 @@ def save_button():
     write_cache()
     st.session_state.temp_data = []
     st.session_state.hide_add_button = False
-    st.temp_data_input = None
-    st.temp_data_widget = None
+    st.session_state.temp_data_input = None
+    st.session_state.temp_data_widget = None
 
 
 

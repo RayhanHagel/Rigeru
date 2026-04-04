@@ -7,16 +7,14 @@ import streamlit as st
 
 @st.cache_data(ttl=5*60)
 def check_live_status(channel:str):
-    url = f'https://www.twitch.tv/{channel}'
-    contents = better_get(url).content.decode('utf-8')
-    if 'isLiveBroadcast' in contents:
-        return True
-    else:
+    response = better_get(f'https://www.twitch.tv/{channel}')
+    if response is None:
         return False
+    return 'isLiveBroadcast' in response.content.decode('utf-8')
 
 
 
-def read_cache() -> tuple[dict, list]:
+def read_cache() -> list:
     path = "./cache/twitch_priority.json"
     
     if os.path.exists(path):    
@@ -33,27 +31,14 @@ def read_cache() -> tuple[dict, list]:
 
 def save_config(channel:str, replace_data:dict=None):
     config_path = "./cache/twitch_priority.json"    
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    
-    if replace_data == None:
-        data = []
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError:
-                    data = []
-        
-        if channel in data:
-            pass
-        else:
-            data.append(channel)
 
+    if replace_data is None:
+        if channel not in st.session_state.twitch_cache:
+            st.session_state.twitch_cache.append(channel)
         with open(config_path, "w") as f:
-            json.dump(data, f, indent=4)
+            json.dump(st.session_state.twitch_cache, f, indent=4)
     
     else:
         with open(config_path, "w") as f:
             json.dump(replace_data, f, indent=4)
-    
-    st.session_state.twitch_cache = read_cache()
+        st.session_state.twitch_cache = replace_data

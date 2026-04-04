@@ -25,8 +25,10 @@ def read_cache() -> dict:
 
 def check_lastfm(username:str) -> tuple[str, str, str, list]:
     lastfm_response = better_get(f"https://www.last.fm/user/{username}")
-    lastfm_page = BeautifulSoup(lastfm_response.text, "html.parser")
+    if lastfm_response is None:
+        return None, None, None, []
     
+    lastfm_page = BeautifulSoup(lastfm_response.text, "html.parser")
     avatar_url = lastfm_page.find("span", class_="avatar").find("img").get("src").replace("\n", "")
     scrobble_information = lastfm_page.find_all("div", class_="header-metadata-display") 
     scrobble_amount, scrobble_artist = scrobble_information[0].text.replace("\n", ""), scrobble_information[1].text.replace("\n", "")

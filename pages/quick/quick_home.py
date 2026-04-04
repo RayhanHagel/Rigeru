@@ -1,16 +1,14 @@
 import streamlit as st
 from utilities.util_quick import read_cache, render_control_bar
 from streamlit_clickable_images import clickable_images
-from utilities.util_persistent import apply_logo
-from streamlit_extras.bottom_container import *
-from streamlit_extras.pagination import *
-from utilities.util_network import (process_image, get_cached_image_base64)
+from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_network import get_image_cache
 from streamlit_extras.redirect import *
 
 
 
 
-if "quick_cache" not in st.session_state or "quick_list" not in st.session_state:
+if "quick_cache" not in st.session_state:
     st.session_state.quick_cache = read_cache()
 
 if "temp_data" not in st.session_state:
@@ -47,7 +45,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                     for widget in st.session_state.quick_cache[i+j]:
                         match widget["widget"]:
                             case "image":
-                                image_to_add = process_image(url=widget["input"], crop=False)
+                                image_to_add = get_image_cache(url=widget["input"])
                                 try:
                                     st.image(image=image_to_add, width="content")
                                 except Exception as e:
@@ -67,7 +65,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                                 url = widget["input"].split(" | ")[0]
                                 to_do = widget["input"].split(" | ")[1]
                                 
-                                image_encoded = get_cached_image_base64(url=url)
+                                image_encoded = get_image_cache(url=url)
                                 
                                 clicked = clickable_images(
                                     [image_encoded],
@@ -127,3 +125,5 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
         else:
             st.container(border=False)
 
+
+apply_footer()

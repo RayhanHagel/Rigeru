@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from utilities.util_twitch import check_live_status
-from utilities.util_persistent import apply_logo
+from utilities.util_persistent import (apply_logo, apply_footer)
 from streamlit_autorefresh import st_autorefresh
 
 
@@ -29,3 +29,6 @@ if st.session_state.check_twitch is not None:
     components.iframe(chat_embed, height=400, scrolling=False)
 else:
     st.markdown(":violet[Did not find any live streams from the provided list.]")
+
+
+apply_footer()
