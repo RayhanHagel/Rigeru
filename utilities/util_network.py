@@ -17,7 +17,7 @@ def better_get(url:str) -> requests.Response:
             last_error = f"status {response.status_code}"
         except requests.RequestException as e:
             last_error = str(e)
-    print(f"[Error] Failed to connect to {url} — {last_error}")
+    st.toast(f":red[Failed to connect to {url} — {last_error}]", duration="infinite", icon=":material/apps_outage:")
     return None
 
 
@@ -38,38 +38,17 @@ def better_post(url:str, payload, headers) -> requests.Response:
 
 
 @st.cache_data(persist="disk", show_spinner=True)
-def process_image(url:str, crop:bool) -> ImageOps:
-    try:
-        response = better_get(url)
-        img = Image.open(BytesIO(response.content))
-        if crop:
-            cropped_img = ImageOps.fit(img, (400, 600), centering=(0.5, 0.2))
-            return cropped_img
-        else:
-            return img
-    except Exception:
+def get_image_cache(url:str, crop:bool=False) -> str:
+    response = better_get(url)
+    if response is None:
         return None
-
-
-
-
-@st.cache_data(persist="disk", show_spinner=True)
-def get_image_base64(url:str, crop:bool):
-    img = process_image(url, crop)
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
-
-
-
-@st.cache_data(persist="disk", show_spinner=True)
-def get_cached_image_base64(url):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            encoded_body = base64.b64encode(response.content).decode("utf-8")
-            return f"data:image/jpeg;base64,{encoded_body}"
-    except Exception as e:
-        return None
-    return url
+    
+    if not crop:
+        encoded_body = base64.b64encode(response.content).decode("utf-8")
+        return f"data:image/png;base64,{encoded_body}"
+    else:
+        image = Image.open(BytesIO(response.content))
+        image = ImageOps.fit(image, (400, 600), centering=(0.5, 0.2))
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"

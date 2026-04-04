@@ -2,8 +2,8 @@ import streamlit as st
 from streamlit_elements import elements, mui, dashboard
 from utilities.util_manga import sync_and_save
 from utilities.util_persistent import apply_logo
-from utilities.util_network import get_cached_image_base64
-
+from utilities.util_network import get_image_cache
+from utilities.util_persistent import (apply_logo, apply_footer)
 
 
 
@@ -39,7 +39,8 @@ with elements("manga_library"):
         for i, key in enumerate(st.session_state.temp_manga_cache.keys())
     ]
     
-    with dashboard.Grid(layout, draggableHandle=".drag-header", onLayoutChange=sync_and_save, cols={'lg': column_amount, 'md': column_amount, 'sm': column_amount, 'xs': column_amount, 'xxs': column_amount}):
+    grid_key = f"col_{column_amount}_height_{height_amount}"
+    with dashboard.Grid(layout, draggableHandle=".drag-header", onLayoutChange=sync_and_save, cols={'lg': column_amount, 'md': column_amount, 'sm': column_amount, 'xs': column_amount, 'xxs': column_amount}, key=grid_key):
         for item_index, item_key in enumerate(st.session_state.temp_manga_cache):
             with mui.Card(key=item_index, variant="outlined", sx={"display": "flex", "flexDirection": "column"}):
                 mui.CardHeader(
@@ -49,7 +50,7 @@ with elements("manga_library"):
                 )
 
                 with mui.CardContent(sx={"overflow": "auto", "flex": 1}):
-                    image_encoded = get_cached_image_base64(st.session_state.temp_manga_cache[item_key]["image"])
+                    image_encoded = get_image_cache(url=st.session_state.temp_manga_cache[item_key]["image"], crop=True)
                     mui.Box(
                         component="img", 
                         src=image_encoded, 
@@ -60,3 +61,6 @@ with elements("manga_library"):
                         sx={"wordBreak": "break-all", "marginBottom": "10px", "display": "block", "whiteSpace": "pre-wrap", "fontWeight": "bold"}
                     )
                     mui.Typography(f"Chapter {st.session_state.temp_manga_cache[item_key]['chapter_read']} / {st.session_state.temp_manga_cache[item_key]['chapters_amount']}", variant="caption", sx={"color": "gray"})
+
+
+apply_footer()
