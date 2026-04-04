@@ -1,10 +1,8 @@
-from urllib.parse import urljoin
 import streamlit as st
-from bs4 import BeautifulSoup
 from streamlit_searchbox import st_searchbox
-from utilities.util_manga import save_config, search_titles
-from utilities.util_network import better_get
-from utilities.util_persistent import apply_logo
+from utilities.util_manga import (save_config, search_titles, asura_get_chapter)
+from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_network import get_image_cache
 
 
 
@@ -25,7 +23,7 @@ selected_website_options = st.pills(website_text, website_options.keys(), select
 
 if selected_website_options:
     st.subheader("Search Title")
-    result_select = st_searchbox(
+    chapter_title = st_searchbox(
         search_function=lambda search_term: search_titles(
             websites=selected_website_options, 
             title=search_term
@@ -36,45 +34,32 @@ if selected_website_options:
     )
 
 
-    if result_select:
-        title_url = st.session_state.search_lookup.get(result_select)
-        website_chosen = [value for key, value in website_options.items() if value in str(title_url)][0]
-
-        if title_url:
-            title_url_response = BeautifulSoup(better_get(title_url).text, "html.parser")
-            
-            title_chapters_unclean = title_url_response.find("div", class_="divide-y divide-white/5").find_all("a", href=True)
-            title_chapters_cleaned = []
-            for chapter in title_chapters_unclean[::-1]:
-                title_chapters_cleaned.append(urljoin(f"https://{website_chosen}", chapter["href"]))
-                
-            title_status = title_url_response.find("span", class_="text-base font-bold text-[#A78BFA] capitalize").text.strip().capitalize()
-            title_type = title_url_response.find("span", class_="text-base font-bold text-[#913FE2] uppercase").text.strip().capitalize()
-            title_rating = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-r from-[#FFDA6E] to-[#FFC414] bg-clip-text text-transparent").text.strip()
-            title_chapter = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-b from-[#48C855] to-[#C6FFAB] bg-clip-text text-transparent").text.strip()
-            title_image = title_url_response.find("img", id="cover-viewer-img")["data-full-src"]
-            
-            json_to_save = {
-                "main_url": title_url,
-                "chapters_amount": int(title_chapter),
-                "status": title_status,
-                "type": title_type,
-                "rating": float(title_rating),
-                "website": website_chosen,
-                "image": title_image,
-                "chapter_read": 0,
-                "chapter_downloaded": [],
-                "chapters_url": title_chapters_cleaned,
-            }
-            
-            st.image(image=title_image, width=400)
+    if chapter_title:
+        chapter_url = st.session_state.search_lookup.get(chapter_title)
+        chapter_title = chapter_title[chapter_title.find(" ")+1:]
+        website = [value for _, value in website_options.items() if value in str(chapter_url)][0]
+        
+        if website == "asurascans.com/":
+            chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)    
+        elif website == "mangadex.org/":
+            ...
+        
+        if chapter_json is None:
+            st.toast(":red[Failed to get information on {chapter_title}]", duration="infinite", icon=":material/apps_outage:")
+        else:
+            chapter_json["chapter_read"] = 0
+            image = get_image_cache(url=chapter_json["image"], crop=True)
+            st.image(image=chapter_json["image"] if image is None else image, width=400)
             st.markdown(
-                f":violet-badge[:material/edit_document: {title_status}] :violet-badge[:material/menu_book: {title_type}] :violet-badge[:material/kid_star: Rating {title_rating}] :violet-badge[:material/bookmark: Chapter {title_chapter}]",
+                f":violet-badge[:material/edit_document: {chapter_json['status']}] :violet-badge[:material/menu_book: {chapter_json['type']}] :violet-badge[:material/kid_star: Rating {chapter_json['rating']}] :violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]",
                 width=400,
                 text_alignment="center"
             )
-                        
+
             button1, button2 = st.columns(spec=2, gap="small", width=400)
-            button1.link_button(label="Go to page", url=title_url, icon=":material/open_in_new:", use_container_width=True)
-            if button2.button(label="Add to Library", icon=":material/bookmark_add:", on_click=save_config, args=(result_select[result_select.find(" ")+1:], json_to_save), use_container_width=True):
+            button1.link_button(label="Go to page", url=chapter_url, icon=":material/open_in_new:", use_container_width=True)
+            if button2.button(label="Add to Library", icon=":material/bookmark_add:", on_click=save_config, args=(chapter_title, chapter_json), use_container_width=True):
                 st.toast(body=f":green[Successfully saved to library!]", duration="short", icon=":material/bookmark_add:")
+
+
+apply_footer()

@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_elements import elements, mui, dashboard
-from utilities.util_persistent import apply_logo
-from utilities.util_network import get_cached_image_base64
+from utilities.util_persistent import (apply_logo, apply_footer)
+from utilities.util_network import get_image_cache
 from utilities.util_quick import sync_and_save
 
 
@@ -39,10 +39,21 @@ with elements("dashboard"):
                             sub_item["input"], 
                             sx={"wordBreak": "break-all", "marginBottom": "10px", "display": "block", "whiteSpace": "pre-wrap"}
                         )
-                        if sub_item["widget"] == "image" or sub_item["widget"] == "clickable image":
-                            image_encoded = get_cached_image_base64(sub_item['input'])
+                        if sub_item["widget"] == "clickable image":
+                            url = sub_item["input"].split(" | ")[0]
+                            image_encoded = get_image_cache(url)
                             mui.Box(
                                 component="img", 
                                 src=image_encoded, 
                                 sx={"display": "block", "width": "150px", "borderRadius": "4px", "marginTop": "5px","marginBottom": "10px"}
                             )
+                        elif sub_item["widget"] == "image":
+                            image_encoded = get_image_cache(sub_item["input"])
+                            mui.Box(
+                                component="img", 
+                                src=image_encoded, 
+                                sx={"display": "block", "width": "150px", "borderRadius": "4px", "marginTop": "5px","marginBottom": "10px"}
+                            )
+
+
+apply_footer()

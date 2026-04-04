@@ -1,10 +1,8 @@
 import streamlit as st
 from streamlit_clickable_images import clickable_images
-from streamlit_extras.bottom_container import *
-from streamlit_extras.pagination import *
 from utilities.util_manga import refresh_library
-from utilities.util_network import get_image_base64
-from utilities.util_persistent import apply_logo
+from utilities.util_network import get_image_cache
+from utilities.util_persistent import (apply_logo, apply_footer)
 
 
 
@@ -15,7 +13,7 @@ apply_logo()
 st.header("☄️ Manga and Manhwa")
 cols = st.columns(spec=[0.84, 0.08, 0.08], gap="small", vertical_alignment="bottom")
 cols[0].subheader(body="Reading Library", width="stretch", divider="violet")
-cols[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=[st.session_state.manga_cache], use_container_width=True, help="Refresh the library")
+cols[1].button(label="", icon=":material/refresh:", on_click=refresh_library, use_container_width=True, help="Refresh the library")
 if cols[2].button(label="", icon=":material/drag_pan:", use_container_width=True, help="Sort the library"):
     st.session_state.temp_manga_cache = st.session_state.manga_cache
     st.switch_page(st.session_state.manga["sort"])
@@ -39,15 +37,17 @@ for i in range(0, len(manga_library), column_amount):
             key, value = manga_library[i+j]
             with cols[j]:
                 with st.container(border=True, height="stretch"):
-                    image_encoded = get_image_base64(url=value["image"], crop=True)
+                    image_encoded = get_image_cache(url=value["image"], crop=True)
                     
-                    clicked = clickable_images(
-                        [f"data:image/png;base64,{image_encoded}"],
-                        titles=[key],
-                        div_style={"display": "flex", "justify-content": "center"},
-                        img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
-                    )
-                    
+                    if image_encoded:
+                        clicked = clickable_images(
+                            [image_encoded],
+                            titles=[key],
+                            div_style={"display": "flex", "justify-content": "center"},
+                            img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
+                        )
+                    else:
+                        clicked = st.button("Image didn't load, so here is a button.")
                     st.write(f" **{key}**")
                     st.caption(f"Chapter {value['chapter_read']} / {value['chapters_amount']}")
                     
@@ -56,3 +56,6 @@ for i in range(0, len(manga_library), column_amount):
                         st.switch_page(st.session_state.manga["read"])
         else:
             st.container(border=False)
+
+
+apply_footer()
