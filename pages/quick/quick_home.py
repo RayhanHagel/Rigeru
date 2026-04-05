@@ -73,6 +73,7 @@ for i in range(0, len(st.session_state.quick_cache)+1, column_amount):
                                     div_style={"display": "flex", "justify-content": "center"},
                                     img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
                                 )
+                                
                                 if clicked == 0:
                                     try:
                                         redirect(to_do)
