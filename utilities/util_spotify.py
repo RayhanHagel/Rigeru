@@ -97,3 +97,11 @@ def get_album_cover(url:str) -> str:
     except Exception:
         return None
     return album_cover_url
+
+
+
+
+@st.fragment(run_every=30)
+def auto_refresh(username:str) -> tuple[str, str, str, list]:
+    data = check_lastfm(username)
+    return data
