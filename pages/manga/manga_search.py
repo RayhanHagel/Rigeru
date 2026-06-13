@@ -1,26 +1,32 @@
 import streamlit as st
 from streamlit_searchbox import st_searchbox
-from utilities.util_manga import (save_config, search_titles, asura_get_chapter)
+from utilities.util_manga import save_config, search_titles, asura_get_chapter
 from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
-
-
-
+# --- State Initialization ---
 if "search_lookup" not in st.session_state:
     st.session_state.search_lookup = {}
 
-
 st.header("☄️ Manga and Manhwa")
+
+# --- Source Selection ---
 st.subheader("Select Source")
-website_text = "Choosing multiple sources could lead to longer search result."
+st.caption("Choosing multiple sources could lead to longer search results.")
+
 website_options = {
     "🌑 AsuraScans": "asurascans.com/",
     "😺 MangaDex": "mangadex.org/"
 }
-selected_website_options = st.pills(website_text, website_options.keys(), selection_mode="multi")
+# Using collapsed label for a cleaner UI
+selected_website_options = st.pills(
+    label="Sources", 
+    options=website_options.keys(), 
+    selection_mode="multi", 
+    label_visibility="collapsed"
+)
 
-
+# --- Search Interface ---
 if selected_website_options:
     st.subheader("Search Title")
     chapter_title = st_searchbox(
@@ -28,44 +34,64 @@ if selected_website_options:
             websites=selected_website_options, 
             title=search_term
         ),
-        placeholder="Type here...",
+        placeholder="Type manga title here...",
         key="file_search",
         debounce=300
     )
 
-
+    # --- Results Rendering ---
     if chapter_title:
         chapter_url = st.session_state.search_lookup.get(chapter_title)
-        chapter_title = chapter_title[chapter_title.find(" ")+1:]
         
+        # Safely extract the actual title (removing any prepended source icons/labels)
+        clean_title = chapter_title.split(" ", 1)[-1] if " " in chapter_title else chapter_title
+        
+        # Determine the source website from the URL
         matches = [value for _, value in website_options.items() if value in str(chapter_url)]
         if not matches:
-            st.toast(f":red[Could not determine source website]", duration="infinite", icon=":material/apps_outage:")
+            st.toast(":red[Could not determine source website]", duration="infinite", icon=":material/apps_outage:")
             st.stop()
+            
         website = matches[0]
         
-        chapter_json = None
-        if website == "asurascans.com/":
-            chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)    
-        elif website == "mangadex.org/":
-            ...
+        # Fetch Chapter Metadata
+        with st.spinner(f"Fetching details for {clean_title}..."):
+            chapter_json = None
+            if website == "asurascans.com/":
+                chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)    
+            elif website == "mangadex.org/":
+                pass # TODO: Implement MangaDex fetcher
         
+        # Render the Result Card
         if chapter_json is None:
-            st.toast(f":red[Failed to get information on {chapter_title}]", duration="infinite", icon=":material/apps_outage:")
+            st.toast(f":red[Failed to get information on {clean_title}]", duration="infinite", icon=":material/apps_outage:")
         else:
             chapter_json["chapter_read"] = 0
-            image = get_image_cache(url=chapter_json["image"], crop=True)
-            st.image(image=chapter_json["image"] if image is None else image, width=400)
-            st.markdown(
-                f":violet-badge[:material/edit_document: {chapter_json['status']}] :violet-badge[:material/menu_book: {chapter_json['type']}] :violet-badge[:material/kid_star: Rating {chapter_json['rating']}] :violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]",
-                width=400,
-                text_alignment="center"
-            )
-
-            button1, button2 = st.columns(spec=2, gap="small", width=400)
-            button1.link_button(label="Go to page", url=chapter_url, icon=":material/open_in_new:", use_container_width=True)
-            if button2.button(label="Add to Library", icon=":material/bookmark_add:", on_click=save_config, args=(chapter_title, chapter_json), use_container_width=True):
-                st.toast(body=f":green[Successfully saved to library!]", duration="short", icon=":material/bookmark_add:")
-
+            
+            with st.container(border=True):
+                col1, col2 = st.columns([1, 2])
+                
+                with col1:
+                    image = get_image_cache(url=chapter_json.get("image", ""), crop=True)
+                    st.image(image=image if image else chapter_json.get("image"), width="stretch")
+                
+                with col2:
+                    st.markdown(f"### {clean_title}")
+                    st.markdown(
+                        f":violet-badge[:material/edit_document: {chapter_json.get('status', 'Unknown')}]  \n"
+                        f":violet-badge[:material/menu_book: {chapter_json.get('type', 'Unknown')}]  \n"
+                        f":violet-badge[:material/kid_star: Rating {chapter_json.get('rating', 'N/A')}]  \n"
+                        f":violet-badge[:material/bookmark: Chapters: {chapter_json.get('chapters_amount', 0)}]"
+                    )
+                    
+                    st.write("") # Spacer
+                    
+                    btn_col1, btn_col2 = st.columns(2)
+                    btn_col1.link_button(label="Go to page", url=chapter_url, icon=":material/open_in_new:", width="stretch")
+                    
+                    # Instead of using args in on_click (which can trigger weird state reloads), we use a direct action block
+                    if btn_col2.button(label="Add to Library", icon=":material/bookmark_add:", width="stretch"):
+                        save_config(key=clean_title, value=chapter_json)
+                        st.toast(f":green[Successfully saved {clean_title} to library!]", duration="short", icon=":material/bookmark_add:")
 
 apply_footer()

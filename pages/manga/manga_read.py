@@ -1,126 +1,115 @@
 import streamlit as st
 import streamlit_extras.specialized_inputs as stsi
-from streamlit_extras.eval_javascript import *
-from utilities.util_manga import (change_chapter_read, download_chapter, refresh_library)
+from utilities.util_manga import change_chapter_read, download_chapter, refresh_library
 from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
-
-
-
+# --- State Initialization & Routing ---
 if "selected_title" not in st.session_state:
-    st.switch_page(st.session_state.manga["library"])
+    st.switch_page(st.session_state.nav_home["manga_library"])
 
 if "downloading_all" not in st.session_state:
     st.session_state.downloading_all = False
 
-
-chapter_json = st.session_state.manga_cache[st.session_state.selected_title]
+chapter_json = st.session_state.manga_cache.get(st.session_state.selected_title)
 st.session_state.open_chapter = False
 
+if not chapter_json:
+    st.error("Error loading manga details. Please return to the library.")
+    st.stop()
 
 st.header("☄️ Manga and Manhwa")
+
+# --- Top Action Bar ---
 column_subheader = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 column_subheader[0].subheader(body=st.session_state.selected_title, width="stretch", divider="violet")
-column_subheader[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=(st.session_state.selected_title, ), use_container_width=True)
+column_subheader[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=(st.session_state.selected_title,), width="stretch")
 
-
+# --- Content Grid ---
 column_outside = st.columns(spec=[0.35, 0.65], gap="small", border=True)
+
+# Left Column: Cover Image
 with column_outside[0]:
     cached_image = get_image_cache(url=chapter_json["image"], crop=True)
-    st.image(image=cached_image, width=350)
+    st.image(image=cached_image if cached_image else chapter_json["image"], width="stretch")
 
+# Right Column: Details & Actions
 with column_outside[1]:
-    st.write("**Tag Informations**")
+    st.write("**Tag Information**")
     st.markdown(
-        f":violet-badge[:material/edit_document: {chapter_json['status']}] :violet-badge[:material/menu_book: {chapter_json['type']}] :violet-badge[:material/kid_star: Rating {chapter_json['rating']}] :violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]",
-        width=400,
+        f":violet-badge[:material/edit_document: {chapter_json['status']}] "
+        f":violet-badge[:material/menu_book: {chapter_json['type']}] "
+        f":violet-badge[:material/kid_star: Rating {chapter_json['rating']}] "
+        f":violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]"
     )
-        
-    chapter_read = st.columns(spec=[0.3, 0.3, 0.4], gap="small", vertical_alignment="bottom")
-    with chapter_read[0]:
+
+    chapter_read_cols = st.columns(spec=[0.3, 0.3, 0.4], gap="small", vertical_alignment="bottom")
+
+    # Chapter Progress Input
+    with chapter_read_cols[0]:
         input_chapter_value = stsi.specialized_text_input(
             label="Chapter read",
-            suffix=chapter_json["chapters_amount"],
-            value=chapter_json["chapter_read"],
+            suffix=str(chapter_json["chapters_amount"]),
+            value=str(chapter_json["chapter_read"]),
         )
         try:
-            input_chapter_value = int(input_chapter_value)
-            if input_chapter_value > chapter_json["chapters_amount"]:
-                st.toast(body=":red[The input can't be larger than the chapter amount]", duration="short", icon=":material/error:")
-                st.stop()
-            if input_chapter_value < 0:
-                st.toast(body=":red[The input can't be lower than zero]", duration="short", icon=":material/error:")
-                st.stop()
-            if int(input_chapter_value) != int(chapter_json["chapter_read"]):
-                change_chapter_read(title=st.session_state.selected_title, chapter_read=int(input_chapter_value))           
+            val = int(input_chapter_value)
+            max_chapters = int(chapter_json["chapters_amount"])
+            if val > max_chapters:
+                st.toast(":red[Input cannot be larger than total chapters]", icon=":material/error:")
+            elif val < 0:
+                st.toast(":red[Input cannot be less than zero]", icon=":material/error:")
+            elif val != int(chapter_json["chapter_read"]):
+                change_chapter_read(title=st.session_state.selected_title, chapter_read=val)
         except ValueError:
-            st.toast(body=":red[The input only accept integers]", duration="short", icon=":material/error:")
-    
-    chapter_to_download = [url for url in chapter_json["chapters_url"] if url not in chapter_json["chapter_downloaded"]]
-    if chapter_to_download != []:
-        st.session_state.downloading_all = False
-        download_all = chapter_read[2].button(label="Download All", key="download_all", icon=":material/deployed_code_update:", use_container_width=True, disabled=st.session_state.downloading_all)
-        if download_all:
+            st.toast(":red[Please enter a valid integer]", icon=":material/error:")
+
+    # Download All Button
+    chapter_to_download = [url for url in chapter_json.get("chapters_url", []) if url not in chapter_json.get("chapter_downloaded", [])]
+
+    if chapter_to_download:
+        if chapter_read_cols[2].button("Download All", key="download_all", icon=":material/deployed_code_update:", width="stretch", disabled=st.session_state.downloading_all):
             st.session_state.downloading_all = True
-            with st.status(f"Downloading chapters 0/{len(chapter_to_download)}!") as status:
+            with st.status(f"Downloading 0/{len(chapter_to_download)} chapters...") as status:
                 for index, chapter_url in enumerate(chapter_to_download):
-                    st.write(f"Chapter {chapter_url.split('/')[-1]}")
+                    current_chap_num = chapter_url.split("/")[-1]
+                    st.write(f"Downloading Chapter {current_chap_num}...")
                     download_chapter(
                         title=st.session_state.selected_title,
-                        chapter_key=chapter_url.split("/")[-1],
+                        chapter_key=current_chap_num,
                         chapter_url=chapter_url,
                         website_type=chapter_json["website"]
                     )
-                    status.update(label=f"Downloading chapters {index+1}/{len(chapter_to_download)}")
-                status.update(label="Download complete!", state="complete", expanded=False)
+                    status.update(label=f"Downloaded {index + 1}/{len(chapter_to_download)}...")
+                status.update(label="All downloads complete!", state="complete", expanded=False)
             st.session_state.downloading_all = False
+            st.rerun()
     else:
-        download_all = chapter_read[2].button(label="Download All", key="download_all", icon=":material/deployed_code_update:", use_container_width=True, disabled=True, help="All chapters already downloaded!")
-        
-    with st.container(height=250, border=True):
-        for chapter_url in chapter_json["chapters_url"]:
-            column_inside = st.columns(spec=[0.3, 0.3, 0.4], gap="small", vertical_alignment="center", width="stretch")
+        chapter_read_cols[2].button("Download All", key="download_all", icon=":material/deployed_code_update:", width="stretch", disabled=True, help="All chapters downloaded!")
+
+    # Chapter List Container
+    with st.container(height=350, border=True):
+        for chapter_url in chapter_json.get("chapters_url", []):
+            col_in = st.columns(spec=[0.3, 0.3, 0.4], gap="small", vertical_alignment="center")
             current_chapter = chapter_url.split("/")[-1]
-            
-            if "asurascans" in chapter_json["website"]:
-                column_inside[0].write(f"**Chapter {current_chapter}**")
-                        
-            if chapter_url in chapter_json["chapter_downloaded"]:
-                read_button = column_inside[1].button(
-                    label="Read",
-                    key=f"read_{current_chapter}",
-                    icon=":material/library_books:",
-                    use_container_width=True
-                )
-                if read_button:
+
+            col_in[0].write(f"**Chapter {current_chapter}**")
+
+            if chapter_url in chapter_json.get("chapter_downloaded", []):
+                if col_in[1].button("Read", key=f"read_{current_chapter}", icon=":material/library_books:", width="stretch"):
                     st.session_state.open_chapter = current_chapter
-                    st.switch_page(st.session_state.manga["pdf"])
-                    
-                column_inside[2].button(
-                    label="Downloaded",
-                    key=f"downloaded_{current_chapter}",
-                    icon=":material/download_done:",
-                    disabled=True,
-                    use_container_width=True
-                )
+                    st.switch_page(st.session_state.nav_hidden["manga_pdf"])
+
+                col_in[2].button("Downloaded", key=f"dl_done_{current_chapter}", icon=":material/download_done:", disabled=True, width="stretch")
             else:
-                column_inside[1].button(
-                    label="Read",
-                    key=f"read_{current_chapter}",
-                    icon=":material/library_books:",
-                    disabled=True,
-                    help="Download the chapter first!", 
-                    use_container_width=True
-                )
-                column_inside[2].button(
-                    label="Download",
+                col_in[1].button("Read", key=f"read_dis_{current_chapter}", icon=":material/library_books:", disabled=True, help="Download first!", width="stretch")
+                col_in[2].button(
+                    "Download",
                     on_click=download_chapter,
                     args=(st.session_state.selected_title, current_chapter, chapter_url, chapter_json["website"]),
-                    key=f"download_{current_chapter}",
+                    key=f"dl_{current_chapter}",
                     icon=":material/download:",
-                    use_container_width=True
+                    width="stretch"
                 )
-
 
 apply_footer()
