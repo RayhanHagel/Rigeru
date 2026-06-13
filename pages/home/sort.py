@@ -4,24 +4,20 @@ from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 from utilities.util_quick import sync_and_save
 
-
-
-
+# --- State Initialization ---
 if "temp_quick_cache" not in st.session_state:
     st.session_state.temp_quick_cache = st.session_state.quick_cache
-
-
 
 st.header("⚡ Quick Navigation")
 st.subheader(body="Sort Navigation", width="stretch", divider="violet")
 
-
+# --- Interactive Drag-and-Drop Grid ---
 with elements("dashboard"):
+    # Define layout: One column dashboard, items stacked vertically
     layout = [
         dashboard.Item(str(i), 0, i, 12, 2, isDraggable=True) 
         for i in range(len(st.session_state.temp_quick_cache))
     ]
-    
     
     with dashboard.Grid(layout, draggableHandle=".drag-header", onLayoutChange=sync_and_save):
         for index, item_group in enumerate(st.session_state.temp_quick_cache):
@@ -34,26 +30,25 @@ with elements("dashboard"):
 
                 with mui.CardContent(sx={"overflow": "auto", "flex": 1}):
                     for sub_item in item_group:
-                        mui.Typography(f"Type: {sub_item['widget']}", variant="caption", sx={"color": "gray"})
+                        widget = sub_item.get('widget')
+                        content = sub_item.get('input', '')
+                        
+                        mui.Typography(f"Type: {widget.capitalize()}", variant="caption", sx={"color": "gray"})
                         mui.Typography(
-                            sub_item["input"], 
+                            content, 
                             sx={"wordBreak": "break-all", "marginBottom": "10px", "display": "block", "whiteSpace": "pre-wrap"}
                         )
-                        if sub_item["widget"] == "clickable image":
-                            url = sub_item["input"].split(" | ")[0]
+                        
+                        # Render preview for media-based widgets
+                        if widget in ["clickable image", "image"]:
+                            # Handle potential "Label | URL" format for clickable images
+                            url = content.split(" | ")[0] if " | " in content else content
                             image_encoded = get_image_cache(url)
-                            mui.Box(
-                                component="img", 
-                                src=image_encoded, 
-                                sx={"display": "block", "width": "150px", "borderRadius": "4px", "marginTop": "5px","marginBottom": "10px"}
-                            )
-                        elif sub_item["widget"] == "image":
-                            image_encoded = get_image_cache(sub_item["input"])
-                            mui.Box(
-                                component="img", 
-                                src=image_encoded, 
-                                sx={"display": "block", "width": "150px", "borderRadius": "4px", "marginTop": "5px","marginBottom": "10px"}
-                            )
-
+                            if image_encoded:
+                                mui.Box(
+                                    component="img", 
+                                    src=image_encoded, 
+                                    sx={"display": "block", "width": "150px", "borderRadius": "4px", "marginTop": "5px", "marginBottom": "10px"}
+                                )
 
 apply_footer()

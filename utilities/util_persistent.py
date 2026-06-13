@@ -1,8 +1,6 @@
 import streamlit as st
-from streamlit_extras.avatar import *
+from streamlit_extras.avatar import avatar
 from utilities.util_network import get_image_cache
-
-
 
 
 def apply_logo():
@@ -11,28 +9,48 @@ def apply_logo():
         page_icon=":material/gamepad_circle_left:",
         layout="wide",
     )
-    
+
     image_logo = get_image_cache(url="https://img.itch.zone/aW1hZ2UvMjQ5MzUzMi8xNDgxMjQ1OC5wbmc=/347x500/N%2BG9dy.png")
-    st.logo(
-        image=image_logo,
-        icon_image=image_logo,
-        size="large"
-    )
-
-
+    if image_logo:
+        st.logo(
+            image=image_logo,
+            icon_image=image_logo,
+            size="large"
+        )
 
 
 def apply_footer():
+    """Applies the custom avatar footer to the sidebar with safe CSS positioning."""
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebarContent"] {
+                padding-bottom: 6rem !important;
+            }
+            div[data-testid="stSidebar"] div:has(> div[key="sticky_footer"]),
+            div[key="sticky_footer"] {
+                position: relative !important;
+                bottom: auto !important;
+                top: auto !important;
+                transform: none !important;
+                margin-top: 2rem !important;
+                z-index: 10 !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     image_container = get_image_cache(url="https://avatars.githubusercontent.com/u/43041149?v=4&size=2048")
+
     with st.sidebar.container(key="sticky_footer"):
+        st.divider()
         avatar(
-            image=image_container,
+            image=image_container if image_container else "https://avatars.githubusercontent.com/u/43041149",
             label="Rigeru 2026",
             caption="Personal Project",
             height=30
         )
-
-
 
 
 def apply_theme() -> None:
@@ -208,84 +226,3 @@ def apply_theme() -> None:
         """,
         unsafe_allow_html=True,
     )
-
-
-
-
-def clickable_image(
-    src: str,
-    key: str,
-    caption: str = "",
-    aspect_ratio: str = "16 / 9",
-) -> bool:
-    """
-    Renders a clickable image that fills its parent container.
-    Returns True on the frame the image is clicked.
-    """
-    st.markdown(
-        f"""
-        <style>
-        /* Stretch all intermediate Streamlit wrappers */
-        .st-key-ci_{key},
-        .st-key-ci_{key} > div,
-        .st-key-ci_{key} > div > div,
-        .st-key-ci_{key} > div > div > div {{
-            width: 100%;
-            height: 100%;
-        }}
-
-        .st-key-ci_{key} button {{
-            background-image:    url('{src}') !important;
-            background-size:     cover !important;
-            background-position: center !important;
-            background-color:    transparent !important;
-            width:               100% !important;
-            aspect-ratio:        {aspect_ratio} !important;
-            min-height:          unset !important;
-            padding:             0 !important;
-            border-radius:       8px !important;
-            border:              1px solid rgba(255,255,255,0.10) !important;
-            color:               transparent !important;
-            display:             block !important;
-            overflow:            hidden !important;
-            transition:
-                transform       0.2s ease,
-                border-color    0.2s ease,
-                box-shadow      0.2s ease,
-                filter          0.2s ease !important;
-            cursor: pointer !important;
-        }}
-
-        /* Kill the inner <p> label that causes the top bleed */
-        .st-key-ci_{key} button p {{
-            display:  none !important;
-            height:   0 !important;
-            margin:   0 !important;
-            padding:  0 !important;
-        }}
-
-        .st-key-ci_{key} button:hover {{
-            transform:        scale(1.03) !important;
-            border-color:     rgba(255,255,255,0.22) !important;
-            box-shadow:       0 4px 24px rgba(120,80,255,0.18),
-                              0 1px 6px  rgba(0,0,0,0.40) !important;
-            filter:           brightness(1.10) !important;
-            background-color: transparent !important;
-        }}
-        .st-key-ci_{key} button:active {{
-            transform:    scale(0.98) !important;
-            filter:       brightness(0.95) !important;
-            border-color: rgba(255,255,255,0.30) !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    with st.container(key=f"ci_{key}"):
-        clicked = st.button(" ", key=f"_ci_btn_{key}")
-
-    if caption:
-        st.caption(caption)
-
-    return clicked
