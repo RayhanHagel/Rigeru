@@ -14,3 +14,7 @@ cache/
 
 # Testing Items
 test.py
+test/
+
+# Vscode
+.vscode/
