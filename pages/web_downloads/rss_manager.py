@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import re
 from utilities.util_rss import load_subscriptions, save_subscriptions, fetch_all_feeds, preview_rss_feed
@@ -77,12 +76,25 @@ with tab_config:
         raw_url = st.text_input("Raw GitHub or OPML URL", value=default_raw_url)
         
         if st.button("🌐 Fetch List", width="stretch"):
-            with st.spinner("Parsing links..."):
+            from streamlit.runtime.scriptrunner import add_script_run_ctx
+            import threading
+            
+            def _fetch_remote_bg():
                 from utilities.util_rss import fetch_remote_recommendations
                 discovered = fetch_remote_recommendations(raw_url)
                 if discovered:
                     st.session_state.discovery_stack = [("Main Directory", discovered)]
-                    st.success(f"Found {len(discovered)} items!")
+                    st.session_state.discovery_complete = True
+            
+            with st.spinner("Parsing links in background..."):
+                fetch_thread = threading.Thread(target=_fetch_remote_bg)
+                add_script_run_ctx(fetch_thread)
+                fetch_thread.start()
+                fetch_thread.join()
+                
+                if st.session_state.get('discovery_complete'):
+                    st.success(f"Found {len(st.session_state.discovery_stack[0][1])} items!")
+                    st.rerun()
                 else:
                     st.error("No valid links found. Make sure it's a 'Raw' github URL.")
         
@@ -155,19 +167,30 @@ with tab_config:
     st.divider()
 
     new_feed = st.text_input("Add Custom RSS URL", placeholder="https://example.com/feed.xml")
-    if st.button("➕ Add Custom Feed", width="stretch"):
+    if st.button("Add Custom Feed", width="stretch"):
         if new_feed and new_feed not in st.session_state.rss_urls:
-            with st.spinner("Fetching feed info..."):
+            from streamlit.runtime.scriptrunner import add_script_run_ctx
+            import threading
+            
+            def _add_feed_bg():
                 from utilities.util_rss import fetch_feed_data
                 parsed = fetch_feed_data(new_feed)
                 
-                # Extract title, or fallback to the URL if it fails
                 feed_title = parsed.feed.get('title', new_feed) if parsed else new_feed
                 st.session_state.rss_urls[new_feed] = feed_title
                 
                 save_subscriptions(st.session_state.rss_urls)
                 fetch_all_feeds.clear()
-                st.rerun()
+                st.session_state.feed_added = True
+            
+            with st.spinner("Fetching feed info..."):
+                feed_thread = threading.Thread(target=_add_feed_bg)
+                add_script_run_ctx(feed_thread)
+                feed_thread.start()
+                feed_thread.join()
+                
+                if st.session_state.get('feed_added'):
+                    st.rerun()
             
     st.divider()
     st.subheader("Manage Subscriptions")

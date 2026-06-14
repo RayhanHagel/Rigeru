@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_file_mover import (
-    get_image_preview, get_target_files, perform_move,
+    get_target_files, perform_move,
     perform_delete, perform_undo, open_file_in_os, open_folder_dialog
 )
 from utilities.util_persistent import apply_footer
@@ -40,30 +40,30 @@ def next_file(msg, record_history=None):
 with st.container(border=True):
     col_src, col_src_btn = st.columns([4, 1], vertical_alignment="bottom")
     col_src.text_input("Source Directory (To Scan)", value=st.session_state.fm_state["source_path"], disabled=True)
-    if col_src_btn.button("📁 Browse Source", width="stretch"):
+    if col_src_btn.button("Browse Source", width="stretch", icon=":material/folder_open:"):
         st.session_state.fm_state["source_path"] = open_folder_dialog(st.session_state.fm_state["source_path"])
         st.rerun()
 
     col_dst, col_dst_btn = st.columns([4, 1], vertical_alignment="bottom")
     col_dst.text_input("Destination Root Directory", value=st.session_state.fm_state["dest_path"], disabled=True)
-    if col_dst_btn.button("📁 Browse Destination", width="stretch"):
+    if col_dst_btn.button("Browse Destination", width="stretch", icon=":material/folder_open:"):
         st.session_state.fm_state["dest_path"] = open_folder_dialog(st.session_state.fm_state["dest_path"])
         st.rerun()
 
     if st.button("🔍 Scan Folder", type="primary", width="stretch"):
         if not os.path.isdir(st.session_state.fm_state["source_path"]):
-            update_status("❌ Invalid source path.")
+            update_status(":material/error: Invalid source path.")
         else:
             with st.spinner("Scanning directory..."):
                 files = get_target_files(st.session_state.fm_state["source_path"])
                 st.session_state.fm_state["files_list"] = files
                 st.session_state.fm_state["current_idx"] = 0
                 st.session_state.fm_state["history"] = []
-                update_status(f"✅ Found {len(files)} files ready to organize.")
+                update_status(f":material/check: Found {len(files)} files ready to organize.")
         st.rerun()
 
 # Status Banner
-if st.session_state.fm_state["status"].startswith("❌"):
+if st.session_state.fm_state["status"].startswith(":material/error:"):
     st.error(st.session_state.fm_state["status"])
 else:
     st.info(st.session_state.fm_state["status"])
@@ -93,19 +93,19 @@ else:
     st.markdown("#### Quick Actions")
     col_open, col_skip, col_del = st.columns(3)
 
-    if col_open.button("📂 Open File", width="stretch"):
+    if col_open.button("Open File", width="stretch", icon=":material/file_open:"):
         open_file_in_os(src_file_path)
 
-    if col_skip.button("⏭️ Skip", width="stretch"):
-        next_file(f"⏭️ Skipped: {current_file}", {"action": "skip", "orig_file": current_file, "dest_file": current_file, "target": None})
+    if col_skip.button("Skip", width="stretch", icon=":material/skip_next:"):
+        next_file(f":material/skip_next: Skipped: {current_file}", {"action": "skip", "orig_file": current_file, "dest_file": current_file, "target": None})
         st.rerun()
 
-    if col_del.button("🗑️ Send to Trash", type="primary", width="stretch"):
+    if col_del.button("Send to Trash", type="primary", width="stretch", icon=":material/delete:"):
         success, err = perform_delete(src_file_path)
         if success:
-            next_file(f"🗑️ Trashed: {current_file}", {"action": "delete", "orig_file": current_file, "dest_file": None, "target": None})
+            next_file(f":material/delete: Trashed: {current_file}", {"action": "delete", "orig_file": current_file, "dest_file": None, "target": None})
         else:
-            update_status(f"❌ Delete Error: {err}")
+            update_status(f":material/error: Delete Error: {err}")
         st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -116,18 +116,18 @@ else:
     col_rename, col_move = st.columns([3, 1], vertical_alignment="bottom")
     rename_val = col_rename.text_input("Rename file to (leave blank to keep original name):", key=f"rn_{current_idx}")
 
-    if col_move.button("🚚 Move File", type="primary", width="stretch"):
+    if col_move.button("Move File", type="primary", width="stretch", icon=":material/drive_file_move:"):
         if not dest_dir or not os.path.isdir(dest_dir):
-            update_status("❌ Please select a valid Destination Directory above.")
+            update_status(":material/error: Please select a valid Destination Directory above.")
         else:
             target_rel_path = ""
             success, final_name, action_type, err = perform_move(src_file_path, dest_dir, current_file, rename_val)
 
             if success:
-                msg = f"✅ Renamed & moved: {current_file} → {final_name}" if action_type == "rename" else f"✅ Moved: {current_file}"
+                msg = f":material/check: Renamed & moved: {current_file} → {final_name}" if action_type == "rename" else f":material/check: Moved: {current_file}"
                 next_file(msg, {"action": action_type, "orig_file": current_file, "dest_file": final_name, "target": target_rel_path})
             else:
-                update_status(f"❌ Move Error: {err}")
+                update_status(f":material/error: Move Error: {err}")
         st.rerun()
 
 # --- 3. Undo History ---
@@ -139,9 +139,9 @@ if st.session_state.fm_state["history"]:
 
         if success:
             st.session_state.fm_state["current_idx"] -= 1
-            update_status(f"↩️ Undid action for: {last_action['orig_file']}")
+            update_status(f":material/undo: Undid action for: {last_action['orig_file']}")
         else:
-            update_status(f"❌ Undo failed: {err}")
+            update_status(f":material/error: Undo failed: {err}")
             st.session_state.fm_state["history"].append(last_action)
         st.rerun()
 

@@ -1,19 +1,21 @@
 import os
 import subprocess
-import tkinter as tk
-from tkinter import filedialog
 from PIL import Image, UnidentifiedImageError, ImageOps, ImageFilter
+
 
 def _init_tkinter():
     """Helper to initialize a hidden, top-most tkinter root window."""
+    import tkinter as tk
     root = tk.Tk()
     root.withdraw()
     root.attributes('-topmost', True)
-    return root
+    return root, tk
+
 
 def open_file_dialog() -> str:
     """Opens a native OS file dialog to select a single file."""
-    root = _init_tkinter()
+    from tkinter import filedialog
+    root, _ = _init_tkinter()
     file_path = filedialog.askopenfilename(
         title="Select Media File",
         filetypes=[("All Files", "*.*")]
@@ -21,14 +23,16 @@ def open_file_dialog() -> str:
     root.destroy()
     return file_path
 
+
 def open_folder_dialog(initial_dir: str = "") -> str:
     """Opens a native OS folder dialog to select a directory."""
-    root = _init_tkinter()
-    
+    from tkinter import filedialog
+    root, _ = _init_tkinter()
+
     # Fallback to home directory if the provided initial_dir is invalid
     if not initial_dir or not os.path.exists(initial_dir):
         initial_dir = os.path.expanduser('~')
-        
+
     folder_path = filedialog.askdirectory(
         title="Select Directory",
         initialdir=initial_dir
@@ -36,11 +40,12 @@ def open_folder_dialog(initial_dir: str = "") -> str:
     root.destroy()
     return folder_path
 
+
 def process_video(
-    input_path: str, 
-    output_dir: str, 
-    start_t: float, 
-    end_t: float, 
+    input_path: str,
+    output_dir: str,
+    start_t: float,
+    end_t: float,
     target_res: str,
     crf: int = 23,
     preset: str = "fast",
@@ -61,7 +66,7 @@ def process_video(
     output_path = os.path.join(output_dir, f"{name}_compressed.mp4")
 
     cmd = [
-        "ffmpeg", "-y", 
+        "ffmpeg", "-y",
         "-i", input_path,
         "-ss", str(start_t)
     ]
@@ -70,17 +75,20 @@ def process_video(
         cmd.extend(["-to", str(end_t)])
 
     scale_filter = None
-    if target_res == "1080p": scale_filter = "scale=-2:1080"
-    elif target_res == "720p": scale_filter = "scale=-2:720"
-    elif target_res == "480p": scale_filter = "scale=-2:480"
+    if target_res == "1080p":
+        scale_filter = "scale=-2:1080"
+    elif target_res == "720p":
+        scale_filter = "scale=-2:720"
+    elif target_res == "480p":
+        scale_filter = "scale=-2:480"
 
     if scale_filter:
         cmd.extend(["-vf", scale_filter])
 
     # Video Encoding settings
     cmd.extend([
-        "-c:v", "libx264", 
-        "-crf", str(crf), 
+        "-c:v", "libx264",
+        "-crf", str(crf),
         "-preset", preset
     ])
 
@@ -99,19 +107,21 @@ def process_video(
     cmd.append(output_path)
 
     try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
         return True, f"Video saved to: {output_path}"
     except subprocess.CalledProcessError:
         return False, "FFmpeg failed to process the video. Ensure FFmpeg is installed."
     except FileNotFoundError:
         return False, "FFmpeg executable not found on the system."
 
+
 def batch_compress_images(
-    input_dir: str, 
-    output_dir: str, 
-    quality: int, 
-    max_width: int, 
-    max_height: int, 
+    input_dir: str,
+    output_dir: str,
+    quality: int,
+    max_width: int,
+    max_height: int,
     fit_mode: str
 ) -> tuple[bool, str]:
     """
@@ -143,34 +153,42 @@ def batch_compress_images(
 
                 if max_width > 0 and max_height > 0:
                     if fit_mode == "Stretch to Fit":
-                        img = img.resize((max_width, max_height), Image.Resampling.LANCZOS)
+                        img = img.resize((max_width, max_height),
+                                         Image.Resampling.LANCZOS)
                     elif fit_mode == "Pad with Black Bars":
-                        img = ImageOps.pad(img, (max_width, max_height), color="black")
+                        img = ImageOps.pad(
+                            img, (max_width, max_height), color="black")
                     elif fit_mode == "Pad with White Bars":
-                        img = ImageOps.pad(img, (max_width, max_height), color="white")
+                        img = ImageOps.pad(
+                            img, (max_width, max_height), color="white")
                     elif fit_mode == "Pad with Blurred Background":
                         # Create a zoomed/blurred background filling the box
-                        bg = ImageOps.fit(img, (max_width, max_height), Image.Resampling.LANCZOS)
+                        bg = ImageOps.fit(
+                            img, (max_width, max_height), Image.Resampling.LANCZOS)
                         bg = bg.filter(ImageFilter.GaussianBlur(radius=20))
-                        
+
                         # Resize the original image maintaining aspect ratio
-                        img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-                        
+                        img.thumbnail((max_width, max_height),
+                                      Image.Resampling.LANCZOS)
+
                         # Paste centered
-                        offset = ((max_width - img.width) // 2, (max_height - img.height) // 2)
+                        offset = ((max_width - img.width) // 2,
+                                  (max_height - img.height) // 2)
                         bg.paste(img, offset)
                         img = bg
-                    else: # "Maintain Aspect Ratio (Fit Inside)"
-                        img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-                        
-                elif max_width > 0: # Fallback if only width is provided
+                    else:  # "Maintain Aspect Ratio (Fit Inside)"
+                        img.thumbnail((max_width, max_height),
+                                      Image.Resampling.LANCZOS)
+
+                elif max_width > 0:  # Fallback if only width is provided
                     ratio = max_width / float(img.width)
                     new_height = int(float(img.height) * float(ratio))
-                    img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+                    img = img.resize((max_width, new_height),
+                                     Image.Resampling.LANCZOS)
 
                 img.save(output_path, "JPEG", quality=quality, optimize=True)
                 processed_count += 1
-                
+
         except UnidentifiedImageError:
             error_count += 1
         except Exception:
@@ -178,9 +196,9 @@ def batch_compress_images(
 
     if processed_count == 0 and error_count == 0:
         return False, "No valid images found in the input directory."
-    
+
     msg = f"Successfully compressed {processed_count} images."
     if error_count > 0:
         msg += f" (Skipped {error_count} corrupted or unsupported files)."
-        
+
     return True, msg

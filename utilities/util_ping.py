@@ -1,7 +1,6 @@
 import platform
 import subprocess
 import re
-import socket
 import psutil
 
 DNS_PRESETS = {

@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 from utilities.util_network_monitor import get_active_connections, generate_cyberpunk_graph_html
 from utilities.util_persistent import apply_footer
@@ -42,7 +41,7 @@ if st.session_state.network_data:
     
     # Inject our custom HTML/JS physics engine directly into the Streamlit UI
     html_graph = generate_cyberpunk_graph_html(st.session_state.network_data)
-    components.html(html_graph, height=570)
+    st.html(html_graph, height=570)
 else:
     st.warning("No external connections detected. You are completely offline!")
 

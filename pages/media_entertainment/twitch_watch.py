@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from utilities.util_twitch import check_live_status, read_cache, save_config
 from utilities.util_persistent import apply_footer
 from streamlit_autorefresh import st_autorefresh
@@ -102,10 +101,10 @@ with tab_watch:
 
             with col_vid:
                 video_url = f"https://player.twitch.tv/?channel={selected_channel}&parent={embed_parent}"
-                components.iframe(video_url, height=650, scrolling=False)
+                st.iframe(video_url, height=650)
 
             with col_chat:
                 chat_url = f"https://www.twitch.tv/embed/{selected_channel}/chat?parent={embed_parent}"
-                components.iframe(chat_url, height=650, scrolling=False)
+                st.iframe(chat_url, height=650)
 
 apply_footer()

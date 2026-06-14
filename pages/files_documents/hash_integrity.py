@@ -9,10 +9,10 @@ if "hash_target_dir" not in st.session_state:
 if "hash_results" not in st.session_state:
     st.session_state.hash_results = None
 
-st.header("🛡️ File Integrity Checker")
+st.header(":material/shield_lock: File Integrity Checker")
 st.markdown("Take a digital fingerprint of your folders and verify them later to detect corruption or tampering.")
 
-tab1, tab2 = st.tabs(["📸 1. Create Baseline Snapshot", "🔍 2. Verify Integrity"])
+tab1, tab2 = st.tabs([":material/archive: Create Baseline Snapshot", ":material/verified_user: Verify Integrity"])
 
 # --- TAB 1: CREATE SNAPSHOT ---
 with tab1:
@@ -25,17 +25,19 @@ with tab1:
         )
         st.info("This will scan every file in the selected directory and generate a JSON file of SHA-256 hashes.")
 
-        if st.button("🚀 Generate Fingerprint", type="primary", width="stretch", key="btn_generate_snap"):
+        if st.button("Generate Fingerprint", type="primary", width="stretch", key="btn_generate_snap", icon=":material/fingerprint:"):
             if not os.path.isdir(target_dir_snap):
-                st.error("Directory not found. Please enter a valid path.")
+                st.error(":material/error: Directory not found. Please enter a valid path.")
             else:
                 st.session_state.hash_target_dir = target_dir_snap
                 with st.spinner("Calculating hashes... This might take a while for large folders."):
-                    os.makedirs("./cache", exist_ok=True)
                     safe_name = "".join(
                         c for c in os.path.basename(target_dir_snap) if c.isalpha() or c.isdigit() or c == ' '
                     ).rstrip()
-                    output_file = os.path.join("./cache", f"hash_snapshot_{safe_name}.json")
+                    cache_dir = os.path.join(".", "cache")
+                    hash_dir = os.path.join(cache_dir, "hash")
+                    os.makedirs(hash_dir, exist_ok=True)
+                    output_file = os.path.join(hash_dir, f"snapshot_{safe_name}.json")
 
                     success, msg = create_snapshot(target_dir_snap, output_file)
                     if success:
@@ -43,14 +45,15 @@ with tab1:
                         # Offer the snapshot for download
                         with open(output_file, "rb") as f:
                             st.download_button(
-                                "💾 Download Snapshot JSON",
+                                "Download Snapshot JSON",
                                 data=f.read(),
                                 file_name=os.path.basename(output_file),
                                 mime="application/json",
-                                width="stretch"
+                                width="stretch",
+                                icon=":material/download:"
                             )
                     else:
-                        st.error(msg)
+                        st.error(f":material/error: {msg}")
 
 # --- TAB 2: VERIFY INTEGRITY ---
 with tab2:
@@ -71,13 +74,13 @@ with tab2:
             label_visibility="collapsed"
         )
         if uploaded_snapshot:
-            st.caption(f"📎 `{uploaded_snapshot.name}`")
+            st.caption(f":material/fingerprint: `{uploaded_snapshot.name}`")
 
-        if st.button("🔍 Run Integrity Scan", type="primary", width="stretch", key="btn_run_scan"):
+        if st.button("Run Integrity Scan", type="primary", width="stretch", key="btn_run_scan", icon=":material/scan:"):
             if not os.path.isdir(target_dir_verify):
-                st.error("Please enter a valid target folder path.")
+                st.error(":material/error: Please enter a valid target folder path.")
             elif not uploaded_snapshot:
-                st.error("Please upload a snapshot JSON file.")
+                st.error(":material/error: Please upload a snapshot JSON file.")
             else:
                 # Write snapshot to temp file
                 import tempfile
@@ -91,9 +94,9 @@ with tab2:
 
                     if success:
                         st.session_state.hash_results = results
-                        st.toast("Scan complete!", icon="✅")
+                        st.toast("Scan complete!", icon=":material/check:")
                     else:
-                        st.error(msg)
+                        st.error(f":material/error: {msg}")
 
     # --- Results Rendering ---
     if st.session_state.hash_results:
@@ -101,13 +104,13 @@ with tab2:
         st.markdown("### Scan Results Breakdown")
 
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("✅ Unchanged", len(res.get('ok', [])))
-        m2.metric("⚠️ Modified", len(res.get('modified', [])))
-        m3.metric("❌ Missing", len(res.get('missing', [])))
-        m4.metric("➕ New/Untracked", len(res.get('new', [])))
+        m1.metric(":material/content_paste: Unchanged", len(res.get('ok', [])))
+        m2.metric(":material/difference: Modified", len(res.get('modified', [])))
+        m3.metric(":material/file_copy_off: Missing", len(res.get('missing', [])))
+        m4.metric(":material/frame_exclamation: New/Untracked", len(res.get('new', [])))
 
         if res.get('modified') or res.get('missing'):
-            st.error("🚨 Warning: Changes detected in baseline files!")
+            st.error(":material/warning: Warning: Changes detected in baseline files!")
 
             if res.get('modified'):
                 with st.expander("Show Modified / Corrupted Files", expanded=True):
@@ -119,7 +122,7 @@ with tab2:
                     st.write("These files were in the snapshot but are no longer present:")
                     st.code("\n".join(res['missing']), language="text")
         else:
-            st.success("🎉 All baseline files passed the integrity check perfectly!")
+            st.success(":material/check: All baseline files passed the integrity check perfectly!")
 
         if res.get('new'):
             with st.expander("Show New / Untracked Files", expanded=False):

@@ -9,10 +9,10 @@ except ImportError:
 from utilities.util_math_latex import process_math_image, get_model_labels
 from utilities.util_persistent import apply_footer
 
-st.header("🧮 Math Screenshot to LaTeX")
+st.header(":material/function: Math Screenshot to LaTeX")
 st.markdown("Upload a screenshot of a mathematical equation, crop it, and convert it to copyable LaTeX code.")
 
-tab_config, tab_upload = st.tabs(["⚙️ Model Configuration", "🖼️ Process Image"])
+tab_config, tab_upload = st.tabs([":material/settings: Model Configuration", ":material/image: Process Image"])
 
 # ─────────────────────────────────────────────
 # TAB 1 — Configuration
@@ -51,7 +51,7 @@ with tab_upload:
                 cropped_img = img
                 st.image(img, width="stretch")
                 
-            if st.button("🚀 Convert to LaTeX", type="primary", width="stretch"):
+            if st.button("Convert to LaTeX", type="primary", width="stretch", icon=":material/rocket_launch:"):
                 with st.spinner(f"Analyzing equation using {ocr_model}..."):
                     # Pass the cropped image along with the config settings
                     success, result = process_math_image(cropped_img, ocr_model, device_preference)
@@ -64,7 +64,7 @@ with tab_upload:
                         st.latex(result)
                     
                     st.markdown("### Export Formats")
-                    tab_latex, tab_word, tab_text = st.tabs(["LaTeX", "MS Word", "Plain Text"])
+                    tab_latex, tab_word, tab_text = st.tabs([":material/code: LaTeX", ":material/file_copy: MS Word", ":material/text_fields: Plain Text"])
                     
                     with tab_latex:
                         st.code(result, language="latex")
