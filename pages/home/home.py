@@ -1,108 +1,326 @@
 import streamlit as st
-from utilities.util_quick import read_cache, render_control_bar
-from streamlit_clickable_images import clickable_images
+from utilities.util_quick import read_cache, write_cache
 from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
-# --- State Initialization ---
+WIDGET_OPTIONS = ["link button", "image", "clickable image", "text", "caption", "internal page"]
+
+# ── Build INTERNAL_PAGES dynamically from session state nav dicts ─────────────
+# Maps nav_dict_key -> display prefix (used to label pages in the picker)
+NAV_SOURCES = [
+    ("nav_home",        "🏠"),
+    ("nav_manga",       "📺"),
+    ("nav_media_feeds", "📺"),
+    ("nav_web_feeds",   "🌐"),
+    ("nav_file_mgmt",   "🗂️"),
+    ("nav_metadata",    "📝"),
+    ("nav_media_proc",  "🎨"),
+    ("nav_system",      "⚙️"),
+    ("nav_vision",      "🔬"),
+    ("nav_data_mgmt",   "🗂️"),
+]
+
+def build_internal_pages() -> dict:
+    """
+    Returns {display_label: (key_name, nav_dict_key)} by reading
+    the nav dicts that main.py stores in session_state.
+    Skips home pages (quick_home, quick_sort) to avoid recursion.
+    """
+    SKIP_KEYS = {"quick_home", "quick_sort"}
+    pages = {}
+    for nav_key, _ in NAV_SOURCES:
+        nav_dict = st.session_state.get(nav_key, {})
+        for key_name, path in nav_dict.items():
+            if key_name in SKIP_KEYS:
+                continue
+            # Build a readable label from the key_name
+            label = key_name.replace("_", " ").title()
+            pages[label] = (key_name, nav_key)
+    return pages
+
+# ── CSS ───────────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+.add-panel-label {
+    font-size: 0.7rem;
+    font-family: monospace;
+    color: #9ca3af;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+.preview-badge {
+    display: inline-block;
+    background: #1e1030;
+    border: 1px solid #7c3aed44;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: #a78bfa;
+    margin-top: 4px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ── Session State ─────────────────────────────────────────────────────────────
 if "quick_cache" not in st.session_state:
     st.session_state.quick_cache = read_cache()
 
 if "temp_data" not in st.session_state:
     st.session_state.temp_data = []
 
-if "hide_add_button" not in st.session_state:
-    st.session_state.hide_add_button = False
+if "show_add_panel" not in st.session_state:
+    st.session_state.show_add_panel = False
 
+if "new_card_widgets" not in st.session_state:
+    st.session_state.new_card_widgets = []
+
+# ── Header ────────────────────────────────────────────────────────────────────
 st.header("⚡ Quick Navigation")
 
-# --- Top Action Bar ---
-cols = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
-cols[0].subheader(body="Home Page", width="stretch", divider="violet")
-
-# FIX: quick_sort is now a visible page under Home, use nav_home instead of nav_hidden
-if cols[1].button(label="", icon=":material/drag_pan:", width="stretch", help="Sort the quick navigation"):
+hcols = st.columns([0.78, 0.11, 0.11], gap="small", vertical_alignment="bottom")
+hcols[0].subheader(body="Home Page", width="stretch", divider="violet")
+if hcols[1].button("", icon=":material/drag_pan:", width="stretch", help="Sort / reorder cards"):
     st.session_state.temp_quick_cache = st.session_state.quick_cache
     st.switch_page(st.session_state.nav_home["quick_sort"])
+if hcols[2].button("", icon=":material/add_box:", width="stretch", help="Add a new card"):
+    st.session_state.show_add_panel = not st.session_state.show_add_panel
+    st.session_state.new_card_widgets = []
 
-# --- Sidebar Configuration ---
-column_amount = st.sidebar.slider(
-    label="Grid Columns", min_value=1, max_value=5, value=3,
-    help="Change the number of cards shown per row.",
-)
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+column_amount = st.sidebar.slider("Grid Columns", min_value=1, max_value=5, value=3,
+                                  help="Cards shown per row")
+card_height = st.sidebar.slider("Card Height (px)", min_value=100, max_value=600, value=250, step=25,
+                                help="Fixed height for every card — keeps the grid uniform")
 
-# --- Dynamic Grid Rendering ---
+# ── Add-Card Panel ────────────────────────────────────────────────────────────
+if st.session_state.show_add_panel:
+    INTERNAL_PAGES = build_internal_pages()
+
+    with st.container(border=True):
+        st.markdown('<div class="add-panel-label">✦ New Card Builder</div>', unsafe_allow_html=True)
+
+        # Staged widget list preview
+        if st.session_state.new_card_widgets:
+            with st.expander(f"📋 {len(st.session_state.new_card_widgets)} widget(s) staged — click to review", expanded=False):
+                for idx, w in enumerate(st.session_state.new_card_widgets):
+                    c1, c2 = st.columns([0.88, 0.12])
+                    wtype  = w["widget"]
+                    winput = w["input"]
+                    if wtype == "link button":
+                        parts = winput.split(" | ")
+                        desc  = f'**{parts[0]}** → `{parts[1]}`' if len(parts) == 2 else winput
+                    elif wtype == "clickable image":
+                        parts = winput.split(" | ")
+                        desc  = f'Image: `{parts[0]}`  ↗ `{parts[1]}`' if len(parts) == 2 else winput
+                    else:
+                        desc = winput
+                    c1.markdown(f'<span class="preview-badge">{wtype}</span>&nbsp; {desc}', unsafe_allow_html=True)
+                    if c2.button("", icon=":material/remove_circle_outline:", key=f"rem_staged_{idx}", help="Remove"):
+                        st.session_state.new_card_widgets.pop(idx)
+                        st.rerun()
+
+        # Widget type selector
+        widget_type = st.selectbox(
+            "Widget type", options=WIDGET_OPTIONS, index=None,
+            placeholder="Pick a widget type…", label_visibility="collapsed",
+            key="panel_widget_type"
+        )
+
+        # ── Per-type rich forms ───────────────────────────────────────────────
+        widget_input = ""
+
+        if widget_type == "link button":
+            st.markdown('<div class="add-panel-label">🔗 Link Button</div>', unsafe_allow_html=True)
+            fcols = st.columns(2, gap="small")
+            lbl = fcols[0].text_input("Button label", placeholder="e.g. Open GitHub", key="panel_lbl")
+            url = fcols[1].text_input("Destination URL", placeholder="https://…", key="panel_url")
+            widget_input = f"{lbl} | {url}" if (lbl or url) else ""
+            if lbl or url:
+                st.markdown('<div class="add-panel-label">Preview</div>', unsafe_allow_html=True)
+                with st.container(border=True):
+                    preview_label = lbl or "Button"
+                    preview_url   = url  or "#"
+                    st.link_button(label=preview_label, url=preview_url, width="stretch")
+                    st.caption(f"↗ Opens: `{url}`" if url else "↗ No URL set yet")
+
+        elif widget_type == "clickable image":
+            st.markdown('<div class="add-panel-label">🖼️ Clickable Image</div>', unsafe_allow_html=True)
+            img_url  = st.text_input("Image URL (what to display)", placeholder="https://…/image.jpg",
+                                     key="panel_img_url",
+                                     help="The image shown on the card")
+            link_url = st.text_input("Click destination URL (where to go)", placeholder="https://…",
+                                     key="panel_img_link",
+                                     help="The page that opens when the user clicks the image")
+            widget_input = f"{img_url} | {link_url}" if (img_url or link_url) else ""
+
+            if img_url or link_url:
+                st.markdown('<div class="add-panel-label">Preview</div>', unsafe_allow_html=True)
+                pcols = st.columns([0.55, 0.45], gap="medium")
+                with pcols[0]:
+                    st.markdown('<div class="add-panel-label">Image displayed</div>', unsafe_allow_html=True)
+                    if img_url:
+                        cached = get_image_cache(img_url)
+                        if cached:
+                            st.image(cached, width="stretch")
+                        else:
+                            st.warning("Could not load image from that URL.", icon="⚠️")
+                    else:
+                        st.markdown(
+                            '<div style="height:80px;border:1px dashed #7c3aed44;border-radius:6px;'
+                            'display:flex;align-items:center;justify-content:center;'
+                            'color:#6b7280;font-size:0.75rem;">No image URL yet</div>',
+                            unsafe_allow_html=True
+                        )
+                with pcols[1]:
+                    st.markdown('<div class="add-panel-label">On click → opens</div>', unsafe_allow_html=True)
+                    if link_url:
+                        st.markdown(
+                            f'<div style="background:#1e1030;border:1px solid #7c3aed44;border-radius:8px;'
+                            f'padding:10px 12px;font-family:monospace;font-size:0.78rem;color:#a78bfa;'
+                            f'word-break:break-all;margin-top:4px;">↗ {link_url}</div>',
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        st.caption("No destination URL set yet")
+
+        elif widget_type == "image":
+            st.markdown('<div class="add-panel-label">🖼️ Static Image</div>', unsafe_allow_html=True)
+            img_url = st.text_input("Image URL", placeholder="https://…/image.jpg", key="panel_input")
+            widget_input = img_url or ""
+            if img_url:
+                st.markdown('<div class="add-panel-label">Preview</div>', unsafe_allow_html=True)
+                cached = get_image_cache(img_url)
+                if cached:
+                    st.image(cached, width="stretch")
+                else:
+                    st.warning("Could not load image from that URL.", icon="⚠️")
+
+        elif widget_type == "internal page":
+            st.markdown('<div class="add-panel-label">📌 Internal Page Link</div>', unsafe_allow_html=True)
+            page_choice = st.selectbox(
+                "Page", options=list(INTERNAL_PAGES.keys()), index=None,
+                placeholder="Choose a page…", label_visibility="collapsed",
+                key="panel_page_choice"
+            )
+            widget_input = page_choice or ""
+            if page_choice:
+                st.markdown('<div class="add-panel-label">Preview</div>', unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.button(page_choice, width="stretch", disabled=True)
+                    st.caption("Will navigate to this page when clicked")
+
+        elif widget_type == "text":
+            st.markdown('<div class="add-panel-label">📝 Text</div>', unsafe_allow_html=True)
+            widget_input = st.text_area("Text content", placeholder="Enter text…",
+                                        label_visibility="collapsed", key="panel_input", height=80)
+
+        elif widget_type == "caption":
+            st.markdown('<div class="add-panel-label">💬 Caption</div>', unsafe_allow_html=True)
+            widget_input = st.text_input("Caption text", placeholder="Small descriptive text…",
+                                         label_visibility="collapsed", key="panel_input")
+            if widget_input:
+                st.caption(f"Preview: {widget_input}")
+
+        # Action buttons
+        acols = st.columns(3, gap="small")
+        can_add = bool(widget_type and widget_input.strip())
+
+        if acols[0].button("＋ Add widget", disabled=not can_add, width="stretch", type="secondary"):
+            st.session_state.new_card_widgets.append({"widget": widget_type, "input": widget_input.strip()})
+            
+            # Removed "panel_widget_type" so the builder remembers the last selected widget type
+            for k in ("panel_input", "panel_lbl", "panel_url",
+                      "panel_page_choice", "panel_img_url", "panel_img_link"):
+                if k in st.session_state:
+                    del st.session_state[k]
+            st.rerun()
+
+        can_save = len(st.session_state.new_card_widgets) > 0
+        if acols[1].button("💾 Save card", disabled=not can_save, width="stretch", type="primary"):
+            new_cache = st.session_state.quick_cache + [st.session_state.new_card_widgets]
+            write_cache(replace_data=new_cache)
+            st.session_state.new_card_widgets = []
+            st.session_state.show_add_panel = False
+            
+            # Make sure we clean up the widget type ONLY when completely saving the card
+            if "panel_widget_type" in st.session_state:
+                del st.session_state["panel_widget_type"]
+            st.rerun()
+
+        if acols[2].button("✕ Cancel", width="stretch"):
+            st.session_state.show_add_panel = False
+            st.session_state.new_card_widgets = []
+            if "panel_widget_type" in st.session_state:
+                del st.session_state["panel_widget_type"]
+            st.rerun()
+
+    st.divider()
+
+# ── Grid Rendering ────────────────────────────────────────────────────────────
 total_cards = len(st.session_state.quick_cache)
 
-for i in range(0, total_cards + 1, column_amount):
+# Build INTERNAL_PAGES once for the grid render (needed for internal page widget)
+INTERNAL_PAGES = build_internal_pages()
+
+for i in range(0, total_cards, column_amount):
     grid_cols = st.columns(spec=column_amount, gap="small", vertical_alignment="top")
 
     for j in range(column_amount):
-        current_index = i + j
+        idx = i + j
+        if idx >= total_cards:
+            break
 
+        card_data = st.session_state.quick_cache[idx]
         with grid_cols[j]:
-            if current_index < total_cards:
-                card_data = st.session_state.quick_cache[current_index]
-                with st.container(border=True, height="stretch"):
-                    for item in card_data:
-                        widget_type  = item.get("widget")
-                        widget_input = item.get("input", "")
+            with st.container(border=True, height=card_height):
+                # Use enumerate to grab a sub_idx to prevent key collisions!
+                for sub_idx, item in enumerate(card_data):
+                    widget_type  = item.get("widget")
+                    widget_input = item.get("input", "")
 
-                        if widget_type == "image":
-                            img = get_image_cache(widget_input)
-                            st.image(img if img else widget_input, width="stretch")
+                    if widget_type == "image":
+                        img = get_image_cache(widget_input)
+                        st.image(img if img else widget_input, width="stretch")
 
-                        elif widget_type == "link button":
-                            parts = widget_input.split(" | ")
-                            label = parts[0]
-                            url   = parts[1] if len(parts) > 1 else parts[0]
-                            st.link_button(label=label, url=url, width="stretch")
+                    elif widget_type == "link button":
+                        parts = widget_input.split(" | ")
+                        label = parts[0]
+                        url   = parts[1] if len(parts) > 1 else parts[0]
+                        st.link_button(label=label, url=url, width="stretch")
 
-                        elif widget_type == "text":
-                            st.write(widget_input)
+                    elif widget_type == "text":
+                        st.write(widget_input)
 
-                        elif widget_type == "caption":
-                            st.caption(widget_input)
+                    elif widget_type == "caption":
+                        st.caption(widget_input)
 
-                        elif widget_type == "clickable image":
-                            parts      = widget_input.split(" | ")
-                            img_url    = parts[0]
-                            img_cached = get_image_cache(img_url)
-                            if img_cached:
-                                clickable_images(
-                                    paths=[img_cached],
-                                    titles=["Image"],
-                                    div_style={"display": "flex", "justify-content": "center"},
-                                    img_style={"cursor": "pointer", "width": "100%", "border-radius": "8px"},
-                                )
-                            else:
-                                st.warning("Image failed to load.")
+                    elif widget_type == "clickable image":
+                        parts    = widget_input.split(" | ")
+                        img_url  = parts[0].strip()
+                        dest_url = parts[1].strip() if len(parts) > 1 else ""
+                        cached   = get_image_cache(img_url)
+                        src      = cached if cached else img_url
+                        if dest_url:
+                            st.markdown(
+                                f'<a href="{dest_url}" target="_blank" rel="noopener noreferrer">'
+                                f'<img src="{src}" style="width:100%;border-radius:8px;cursor:pointer;" />'
+                                f'</a>',
+                                unsafe_allow_html=True,
+                            )
+                        else:
+                            st.image(src, width="stretch")
 
-            elif current_index == total_cards:
-                with st.container(border=True, height="stretch"):
-                    if not st.session_state.hide_add_button:
-                        if st.button("➕ Add Card", key="add_card_btn", width="stretch"):
-                            st.session_state.hide_add_button = True
-                            st.rerun()
-                    else:
-                        st.selectbox(
-                            label="Widget Type",
-                            placeholder="Choose a widget to add...",
-                            index=None,
-                            options=["image", "link button", "text", "caption", "clickable image"],
-                            key="temp_data_widget",
-                            label_visibility="collapsed"
-                        )
-                        st.text_input(
-                            label="Widget Input",
-                            placeholder="Enter widget details or URL",
-                            key="temp_data_input",
-                            label_visibility="collapsed",
-                            help="For link buttons, use format 'Label | URL'"
-                        )
-                        render_control_bar(is_disabled=not st.session_state.temp_data_widget)
-                        if st.session_state.temp_data:
-                            st.caption("Current card configuration:")
-                            st.write(st.session_state.temp_data)
+                    elif widget_type == "internal page":
+                        if widget_input in INTERNAL_PAGES:
+                            key_name, nav_key = INTERNAL_PAGES[widget_input]
+                            nav_dict  = st.session_state.get(nav_key, {})
+                            page_path = nav_dict.get(key_name)
+                            # Incorporate sub_idx into the key to allow duplicate identical widgets
+                            if page_path and st.button(widget_input, width="stretch", key=f"nav_{idx}_{sub_idx}_{key_name}"):
+                                st.switch_page(page_path)
+                        else:
+                            st.caption(f"⚠️ Page not found: {widget_input}")
 
 apply_footer()

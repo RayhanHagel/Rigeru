@@ -6,8 +6,6 @@ import warnings
 import shutil
 import subprocess
 import random as _random
-import numpy as np
-import cv2
 
 import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
@@ -64,6 +62,7 @@ def format_ass_time(seconds: float) -> str:
 
 @st.cache_data(show_spinner=False, ttl=30)
 def get_available_cameras() -> list[int]:
+    import cv2
     try:
         cv2.setLogLevel(0)
     except AttributeError:
@@ -135,6 +134,9 @@ def load_yolo_model(model_name: str = "yolov8n.pt", optimization: str = "PyTorch
 # MEMORY OPTIMIZED IMAGE ANALYSIS
 # ─────────────────────────────────────────────
 def analyze_image(image_bytes: bytes, model, resolution: int, conf_thresh: float):
+    import cv2
+    import numpy as np
+    
     try:
         nparr = np.frombuffer(image_bytes, np.uint8)
         bgr_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR) 
@@ -165,6 +167,8 @@ def analyze_image(image_bytes: bytes, model, resolution: int, conf_thresh: float
 
 
 def render_image_boxes(rgb_img, obj_data, selected_ids: list):
+    import cv2
+    
     out_img = rgb_img.copy()
     overlay = rgb_img.copy()
     selected_set = set(selected_ids)
@@ -212,6 +216,8 @@ def process_video_object_detection(
     input_path: str, model, resolution: int, conf_thresh: float,
     output_method: str, progress_hook, encoder: str = "libx264"
 ) -> tuple:
+    import cv2
+    
     filename = os.path.basename(input_path)
     cap = cv2.VideoCapture(input_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
@@ -235,6 +241,25 @@ def process_video_object_detection(
         else:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             writer_cv2 = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
+
+    # Threaded Writer Implementation
+    write_queue = queue.Queue(maxsize=30)
+    
+    def post_process_and_write():
+        while True:
+            frame = write_queue.get()
+            if frame is None: 
+                break
+            if writer_proc:
+                writer_proc.stdin.write(frame.tobytes())
+            elif writer_cv2:
+                writer_cv2.write(frame)
+            write_queue.task_done()
+
+    if not is_ass:
+        writer_thread = threading.Thread(target=post_process_and_write, daemon=True)
+        add_script_run_ctx(writer_thread)
+        writer_thread.start()
 
     try:
         frame_idx = 0
@@ -303,10 +328,8 @@ def process_video_object_detection(
                         cv2.putText(frame, text, (x1 + 5, label_y - 4), font, 0.5, text_color, 1, cv2.LINE_AA)
 
             if not is_ass:
-                if writer_proc:
-                    writer_proc.stdin.write(frame.tobytes())
-                elif writer_cv2:
-                    writer_cv2.write(frame)
+                # Delegate I/O to background thread
+                write_queue.put(frame)
 
             frame_idx += 1
             if progress_hook and frame_idx % 10 == 0:
@@ -318,6 +341,8 @@ def process_video_object_detection(
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(ass_header + "\n".join(ass_events))
         else:
+            write_queue.put(None)
+            writer_thread.join()
             if writer_proc:
                 writer_proc.stdin.close()
                 writer_proc.wait()
@@ -331,6 +356,8 @@ def process_video_object_detection(
 # HYBRID WEBCAM (NATIVE GPU OR CPU EXTRAPOLATION)
 # ─────────────────────────────────────────────
 def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, stop_flag_func, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False, ai_fps: float = 30.0):
+    import cv2
+    
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
         placeholder.error(f"Could not access Camera {camera_index}.")

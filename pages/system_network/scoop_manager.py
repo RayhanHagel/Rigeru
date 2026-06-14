@@ -15,7 +15,8 @@ if "scoop_installed_list" not in st.session_state:
     st.session_state.scoop_installed_list = []
 
 st.header("🍦 Scoop Package Manager")
-st.markdown("Visually search, install, and manage your Windows command-line utilities via Scoop.")
+st.markdown(
+    "Visually search, install, and manage your Windows command-line utilities via Scoop.")
 
 # --- Install Scoop if missing ---
 if not is_scoop_installed():
@@ -30,7 +31,8 @@ if not is_scoop_installed():
             st.code(log)
     st.stop()
 
-tab_search, tab_manage, tab_update = st.tabs(["🔍 Search & Install", "📦 Manage Installed", "⚙️ Maintenance"])
+tab_search, tab_manage, tab_update = st.tabs(
+    ["🔍 Search & Install", "📦 Manage Installed", "⚙️ Maintenance"])
 
 # --- TAB 1: Search & Install ---
 with tab_search:
@@ -57,12 +59,14 @@ with tab_search:
 
     # --- Checkable Results ---
     if st.session_state.scoop_search_results:
-        st.markdown(f"### Results ({len(st.session_state.scoop_search_results)} found)")
+        st.markdown(
+            f"### Results ({len(st.session_state.scoop_search_results)} found)")
 
         for pkg in st.session_state.scoop_search_results:
             pkg_name = pkg["name"]
             label = f"**{pkg_name}** `{pkg['version']}` — bucket: `{pkg['bucket']}`"
-            checked = st.checkbox(label, key=f"scoop_chk_{pkg_name}", value=(pkg_name in st.session_state.scoop_selected_pkgs))
+            checked = st.checkbox(label, key=f"scoop_chk_{pkg_name}", value=(
+                pkg_name in st.session_state.scoop_selected_pkgs))
             if checked:
                 st.session_state.scoop_selected_pkgs.add(pkg_name)
             else:
@@ -71,7 +75,8 @@ with tab_search:
         selected = list(st.session_state.scoop_selected_pkgs)
         if selected:
             st.divider()
-            st.markdown(f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
+            st.markdown(
+                f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
             if st.button(f"⬇️ Install {len(selected)} Package(s)", type="primary", width="stretch", key="scoop_install_selected"):
                 with st.spinner(f"Installing {', '.join(selected)}..."):
                     success, log = install_packages(selected)
@@ -88,7 +93,7 @@ with tab_manage:
     col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
     col_hdr.markdown("### Currently Installed Packages")
 
-    if col_ref.button("🔄 Refresh List", width="stretch", key="scoop_refresh_installed") or not st.session_state.scoop_installed_list:
+    if col_ref.button("Refresh List", width="stretch", key="scoop_refresh_installed", icon=":material/refresh:") or not st.session_state.scoop_installed_list:
         with st.spinner("Fetching installed packages..."):
             success, apps = list_installed()
             if success:
@@ -98,7 +103,8 @@ with tab_manage:
 
     for pkg in st.session_state.scoop_installed_list:
         with st.container(border=True):
-            col_name, col_ver, col_act1, col_act2 = st.columns([2, 2, 1, 1], vertical_alignment="center")
+            col_name, col_ver, col_act1, col_act2 = st.columns(
+                [2, 2, 1, 1], vertical_alignment="center")
             col_name.markdown(f"**{pkg.get('name', 'Unknown')}**")
 
             if pkg.get('is_outdated'):

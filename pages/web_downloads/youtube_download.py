@@ -1,5 +1,8 @@
 import os
+import threading
 import streamlit as st
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+
 from utilities.util_yt import search_youtube, download_youtube, open_file_in_os
 from utilities.util_network import get_image_cache
 from utilities.util_persistent import apply_footer
@@ -13,7 +16,7 @@ if "yt_last_download" not in st.session_state:
     st.session_state.yt_last_download = ""
 
 st.header("🟥 YouTube Downloader & Search")
-st.markdown("Search videos directly or paste a link (including playlists) to download locally.")
+st.markdown("Search videos directly or paste a link (including playlists) to download locally. Downloads process in the background.")
 
 # --- Global Output Folder ---
 with st.container(border=True):
@@ -39,7 +42,6 @@ with tab1:
         key="yt_search_input"
     )
 
-    # FIX: Replaced invalid `width="stretch"` with `width="stretch"`
     if col_btn.button("Search", type="primary", width="stretch", key="yt_search_btn"):
         if search_query:
             with st.spinner("Searching YouTube..."):
@@ -114,18 +116,30 @@ with tab1:
                         )
 
                     if ctrl_dl.button("⬇️", key=f"yt_dl_{idx}", help="Download", width="stretch"):
-                        with st.spinner(f"Downloading: {vid['title']}..."):
+                        status_msg = st.empty()
+                        
+                        def _search_dl_task(v_url, v_title, audio_flag, res, status_placeholder):
                             success, msg, final_path = download_youtube(
-                                url=vid['url'],
+                                url=v_url,
                                 output_dir=st.session_state.yt_dest_folder,
-                                is_audio=is_audio,
-                                resolution=resolution
+                                is_audio=audio_flag,
+                                resolution=res
                             )
-                        if success:
-                            st.success(msg)
-                            st.session_state.yt_last_download = final_path
-                        else:
-                            st.error(msg)
+                            if success:
+                                status_placeholder.success(f"✅ {v_title} downloaded successfully!")
+                                st.session_state.yt_last_download = final_path
+                            else:
+                                status_placeholder.error(msg)
+                                
+                        status_msg.info(f"Downloading '{vid['title']}' in background...")
+                        
+                        # Dispatch to background thread
+                        dl_thread = threading.Thread(
+                            target=_search_dl_task, 
+                            args=(vid['url'], vid['title'], is_audio, resolution, status_msg)
+                        )
+                        add_script_run_ctx(dl_thread)
+                        dl_thread.start()
 
 # ─────────────────────────────────────────────
 # TAB 2 — Direct URL / Playlist
@@ -161,8 +175,11 @@ with tab2:
             st.error("Destination folder does not exist. Please enter a valid path above.")
         else:
             is_audio = "Audio" in dl_format_direct
-            progress_bar = st.progress(0)
+            
+            # Placeholders for thread updates
+            progress_bar = st.progress(0.0)
             status_text = st.empty()
+            status_text.info("Initializing background download...")
 
             def yt_progress_hook(d):
                 if d['status'] == 'downloading':
@@ -180,20 +197,26 @@ with tab2:
                 elif d['status'] == 'finished':
                     status_text.text("Download complete! Merging/Converting...")
 
-            success, msg, final_path = download_youtube(
-                url=direct_url,
-                output_dir=st.session_state.yt_dest_folder,
-                is_audio=is_audio,
-                resolution=dl_resolution,
-                progress_hook=yt_progress_hook
-            )
+            def _direct_download_task():
+                success, msg, final_path = download_youtube(
+                    url=direct_url,
+                    output_dir=st.session_state.yt_dest_folder,
+                    is_audio=is_audio,
+                    resolution=dl_resolution,
+                    progress_hook=yt_progress_hook
+                )
 
-            if success:
-                progress_bar.progress(1.0)
-                status_text.success(msg)
-                st.session_state.yt_last_download = final_path
-            else:
-                status_text.error(msg)
+                if success:
+                    progress_bar.progress(1.0)
+                    status_text.success(msg)
+                    st.session_state.yt_last_download = final_path
+                else:
+                    status_text.error(msg)
+            
+            # Start background thread to prevent UI freezing
+            dl_thread = threading.Thread(target=_direct_download_task)
+            add_script_run_ctx(dl_thread) # Allows thread to update Streamlit widgets
+            dl_thread.start()
 
 # --- Post-Download Action ---
 if st.session_state.yt_last_download and os.path.exists(st.session_state.yt_last_download):

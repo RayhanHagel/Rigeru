@@ -43,16 +43,17 @@ with st.container(border=True):
             
         st.markdown(f"**Previewing:** `{first_url}`")
         
-        preview_path = os.path.join(TEMP_DIR, "preview_screenshot.png")
+        @st.fragment
+        def load_preview():
+            preview_path = os.path.join(TEMP_DIR, "preview_screenshot.png")
+            with st.spinner("Generating live Playwright screenshot..."):
+                success, result = get_page_preview_image(first_url, preview_path)
+                if success:
+                    st.image(result, width='stretch', caption="Target DOM Render")
+                else:
+                    st.error(result)
         
-        with st.spinner("Generating live Playwright screenshot..."):
-            success, result = get_page_preview_image(first_url, preview_path)
-            if success:
-                st.image(result, width='stretch', caption="Target DOM Render")
-            else:
-                st.error(result)
-                
-        st.divider()
+        load_preview()
 
     if st.button("🚀 Start Scraping", type="primary", width='stretch'):
         if not links_input.strip() or not css_selector.strip():
