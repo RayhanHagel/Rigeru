@@ -20,13 +20,15 @@ st.markdown("Visually search, install, and manage your Windows applications usin
 # --- Install winget if missing ---
 if not is_winget_installed():
     st.warning("⚠️ Winget (App Installer) is not detected on this system.")
-    st.markdown("Winget is included with **Windows 10/11** via the **App Installer** package.")
+    st.markdown(
+        "Winget is included with **Windows 10/11** via the **App Installer** package.")
     if st.button("📦 Open Microsoft Store (App Installer)", type="primary", width="stretch"):
         ok, msg = install_winget()
         st.info(msg)
     st.stop()
 
-tab_search, tab_manage, tab_update = st.tabs(["🔍 Search & Install", "📦 Manage Installed", "⚙️ Batch Upgrades"])
+tab_search, tab_manage, tab_update = st.tabs(
+    ["🔍 Search & Install", "📦 Manage Installed", "⚙️ Batch Upgrades"])
 
 # --- TAB 1: Search & Install ---
 with tab_search:
@@ -53,16 +55,18 @@ with tab_search:
 
     # --- Checkable Results ---
     if st.session_state.winget_search_results:
-        st.markdown(f"### Results ({len(st.session_state.winget_search_results)} found)")
+        st.markdown(
+            f"### Results ({len(st.session_state.winget_search_results)} found)")
 
         for idx, pkg in enumerate(st.session_state.winget_search_results):
             pkg_id = pkg["id"]
             label = f"**{pkg['name']}** `{pkg_id}` — `{pkg['version']}` — source: `{pkg['source']}`"
-            
+
             # FIX: Append an enumerate index (_idx) to guarantee absolute uniqueness
             safe_key = f"{pkg_id.replace('.', '_').replace(' ', '_')}_{idx}"
-            
-            checked = st.checkbox(label, key=f"winget_chk_{safe_key}", value=(pkg_id in st.session_state.winget_selected_pkgs))
+
+            checked = st.checkbox(label, key=f"winget_chk_{safe_key}", value=(
+                pkg_id in st.session_state.winget_selected_pkgs))
             if checked:
                 st.session_state.winget_selected_pkgs.add(pkg_id)
             else:
@@ -71,7 +75,8 @@ with tab_search:
         selected = list(st.session_state.winget_selected_pkgs)
         if selected:
             st.divider()
-            st.markdown(f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
+            st.markdown(
+                f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
             if st.button(f"⬇️ Install {len(selected)} Package(s)", type="primary", width="stretch", key="winget_install_selected"):
                 with st.spinner(f"Installing {len(selected)} package(s)..."):
                     success, log = install_packages(selected)
@@ -88,7 +93,7 @@ with tab_manage:
     col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
     col_hdr.markdown("### Currently Installed Software")
 
-    if col_ref.button("🔄 Refresh List", key="winget_refresh", width="stretch") or not st.session_state.winget_installed_list:
+    if col_ref.button("Refresh List", key="winget_refresh", width="stretch", icon=":material/refresh:") or not st.session_state.winget_installed_list:
         with st.spinner("Fetching installed packages..."):
             success, apps = list_installed()
             if success:
@@ -98,12 +103,13 @@ with tab_manage:
 
     for idx, pkg in enumerate(st.session_state.winget_installed_list):
         target_id = pkg.get('id', pkg.get('name', ''))
-        
+
         # FIX: Append an enumerate index (_idx) to guarantee absolute uniqueness for duplicate names like Microsoft.DirectX
         safe_key = f"{target_id.replace('.', '_').replace(' ', '_')}_{idx}"
 
         with st.container(border=True):
-            col_name, col_ver, col_upd, col_un = st.columns([2, 2, 1, 1], vertical_alignment="center")
+            col_name, col_ver, col_upd, col_un = st.columns(
+                [2, 2, 1, 1], vertical_alignment="center")
             col_name.markdown(f"**{pkg.get('name', 'Unknown')}**")
             col_name.caption(f"`{target_id}`")
 
@@ -139,7 +145,8 @@ with tab_manage:
 # --- TAB 3: Upgrades ---
 with tab_update:
     st.markdown("### Batch Software Upgrades")
-    st.info("Winget will scan your system for outdated software and upgrade them silently.")
+    st.info(
+        "Winget will scan your system for outdated software and upgrade them silently.")
 
     if st.button("🚀 Upgrade All Outdated Packages", type="primary", key="winget_upgrade_all"):
         with st.spinner("Scanning and upgrading packages..."):

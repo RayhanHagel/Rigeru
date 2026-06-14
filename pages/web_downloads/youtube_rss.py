@@ -103,11 +103,14 @@ else:
         all_videos = []
         channel_data = {}
         
+        from streamlit.runtime.scriptrunner import add_script_run_ctx
+        import threading
+        
         def fetch_single_channel(channel):
             success, videos = fetch_latest_videos(channel['id'], limit=15)
             return channel, success, videos
-
-        with st.spinner(f"Fetching feeds for {len(channels)} channels..."):
+        
+        def _fetch_all_feeds_background():
             with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
                 future_to_channel = {executor.submit(fetch_single_channel, ch): ch for ch in channels}
                 for future in concurrent.futures.as_completed(future_to_channel):
@@ -124,6 +127,19 @@ else:
                             all_videos.append(v)
                     else:
                         channel_data[channel['id']] = {"name": channel['name'], "videos": []}
+            
+            all_videos.sort(key=lambda x: x.get('published', ''), reverse=True)
+            save_feed_cache({
+                "tracked_ids": current_tracked_ids,
+                "channel_data": channel_data,
+                "all_videos": all_videos
+            })
+        
+        with st.spinner(f"Fetching feeds for {len(channels)} channels in background..."):
+            fetch_thread = threading.Thread(target=_fetch_all_feeds_background)
+            add_script_run_ctx(fetch_thread)
+            fetch_thread.start()
+            fetch_thread.join()
 
         # Sort all videos by publication date descending
         all_videos.sort(key=lambda x: x.get('published', ''), reverse=True)

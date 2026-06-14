@@ -1,15 +1,7 @@
 import os
 import sys
-import torch
 from PIL import Image
 import streamlit as st
-
-# --- HOTFIX FOR MODERN TORCHVISION ---
-try:
-    import torchvision.transforms.functional as TF
-    sys.modules['torchvision.transforms.functional_tensor'] = TF
-except ImportError:
-    pass
 
 # Model configuration table — covers all scales exposed in the UI
 _MODEL_CONFIG = {
@@ -31,10 +23,19 @@ _MODEL_CONFIG = {
     },
 }
 
-
 @st.cache_resource(show_spinner=False)
 def _load_upscale_model(scale: int, device: str):
     """Loads the Real-ESRGAN model into memory (cached per scale+device)."""
+    import torch
+    
+    # --- HOTFIX FOR MODERN TORCHVISION ---
+    # Moved inside the function to prevent PyTorch from loading on app start
+    try:
+        import torchvision.transforms.functional as TF
+        sys.modules['torchvision.transforms.functional_tensor'] = TF
+    except ImportError:
+        pass
+
     from basicsr.archs.rrdbnet_arch import RRDBNet
     from realesrgan import RealESRGANer
 
@@ -111,6 +112,7 @@ def check_model_downloaded(scale: int) -> bool:
 def get_compute_device() -> list[str]:
     """Returns available compute devices (CUDA GPU(s) + CPU)."""
     try:
+        import torch
         if torch.cuda.is_available():
             return ["cuda", "cpu"]
     except Exception:

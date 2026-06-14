@@ -7,12 +7,18 @@ st.header("💱 Currency Converter & Tracker")
 st.markdown("Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast.")
 
 # Fetching currencies is cached and threaded, so it's non-blocking
-with st.spinner("Initializing..."):
-    success, currencies = get_available_currencies()
-
-if not success:
-    st.error(f"Failed to load currencies: {currencies}")
-    st.stop()
+if "currencies_loaded" not in st.session_state:
+    with st.spinner("Loading currency data..."):
+        success, currencies = get_available_currencies()
+        if success:
+            st.session_state.currencies = currencies
+            st.session_state.currencies_loaded = True
+        else:
+            st.error(f"Failed to load currencies: {currencies}")
+            st.stop()
+else:
+    success = True
+    currencies = st.session_state.currencies
 
 currency_options = [f"{code} - {name}" for code, name in currencies.items()]
 default_base_idx = next((i for i, c in enumerate(currency_options) if c.startswith('USD')), 0)

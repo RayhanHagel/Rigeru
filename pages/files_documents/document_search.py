@@ -4,6 +4,8 @@ import subprocess
 import streamlit as st
 from utilities.util_doc_search import build_index, search_documents
 from utilities.util_persistent import apply_footer
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+import threading
 
 # --- State Initialization ---
 if "ds_status" not in st.session_state:
@@ -25,10 +27,16 @@ with st.expander("⚙️ Indexing Settings", expanded=False):
         if not os.path.isdir(target_dir):
             st.session_state.ds_status = "❌ Error: Directory not found."
         else:
-            with st.spinner("Scanning folder... skipping unchanged files."):
+            st.session_state.ds_status = "🔄 Building index in background..."
+            
+            def _build_index_bg():
                 indexed, skipped = build_index(target_dir)
                 st.session_state.ds_status = f"✅ Indexed {indexed} new/modified files. Skipped {skipped} unchanged files."
-        st.rerun()
+            
+            index_thread = threading.Thread(target=_build_index_bg)
+            add_script_run_ctx(index_thread)
+            index_thread.start()
+            st.rerun()
         
     st.caption(st.session_state.ds_status)
 

@@ -29,7 +29,7 @@ with st.expander("➕ Add New Product to Track", expanded=False):
         prod_name = col_name.text_input("Product Name", placeholder="e.g., Sony WH-1000XM5")
         prod_url = col_url.text_input("Product URL", placeholder="https://www.amazon.com/dp/...")
         
-        if st.form_submit_button("Start Tracking", type="primary", use_container_width=True):
+        if st.form_submit_button("Start Tracking", type="primary", width="stretch"):
             if not prod_name or not prod_url:
                 st.warning("Please fill in both fields.")
             else:
@@ -49,7 +49,7 @@ col_title.subheader("Your Tracked Items")
 if "is_refreshing" not in st.session_state:
     st.session_state.is_refreshing = False
 
-if col_btn.button("🔄 Refresh All Prices", type="primary", use_container_width=True, disabled=st.session_state.is_refreshing):
+if col_btn.button("🔄 Refresh All Prices", type="primary", width="stretch", disabled=st.session_state.is_refreshing):
     st.session_state.is_refreshing = True
     if os.path.exists(FLAG_FILE):
         os.remove(FLAG_FILE)
@@ -239,11 +239,11 @@ else:
                             key=f"btn_{item['id']}", 
                             on_click=toggle_state, 
                             args=(graph_key,), 
-                            use_container_width=True
+                            width="stretch"
                         )
                              
                 with col_del:
-                    if st.button("🗑️", key=f"del_{item['id']}", help="Stop tracking", use_container_width=True):
+                    if st.button("🗑️", key=f"del_{item['id']}", help="Stop tracking", width="stretch"):
                         delete_item(item['id'])
                         st.rerun()
 

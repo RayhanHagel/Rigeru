@@ -15,6 +15,7 @@ cache/
 # Testing Items
 test.py
 test/
+app.log
 
 # Vscode
 .vscode/

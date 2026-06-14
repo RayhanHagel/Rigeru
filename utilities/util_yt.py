@@ -1,13 +1,14 @@
 import os
 import sys
 import subprocess
-import yt_dlp
+
 
 def search_youtube(query: str, limit: int = 10) -> tuple[bool, list | str]:
     """
     Searches YouTube and returns structured video results.
     Live streams are excluded. Each result includes a thumbnail URL.
     """
+    import yt_dlp
     ydl_opts = {
         'extract_flat': True,
         'quiet': True,
@@ -57,6 +58,7 @@ def get_available_resolutions(url: str) -> list[str]:
     Fetches the available video resolutions for a given URL.
     Returns a list like ['Best', '1080p', '720p', '480p', '360p'].
     """
+    import yt_dlp
     ydl_opts = {'quiet': True, 'no_warnings': True}
     resolutions = {'Best'}
     try:
@@ -81,6 +83,7 @@ def download_youtube(
     progress_hook=None
 ) -> tuple[bool, str, str | None]:
     """Downloads video/audio and passes progress back to Streamlit."""
+    import yt_dlp
     if not os.path.isdir(output_dir):
         return False, "Invalid output directory.", None
 

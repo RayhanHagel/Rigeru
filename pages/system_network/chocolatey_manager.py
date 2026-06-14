@@ -15,7 +15,8 @@ if "choco_installed_list" not in st.session_state:
     st.session_state.choco_installed_list = []
 
 st.header("🍫 Chocolatey Package Manager")
-st.markdown("Visually search, install, and manage Windows software packages via Chocolatey.")
+st.markdown(
+    "Visually search, install, and manage Windows software packages via Chocolatey.")
 
 # --- Install Chocolatey if missing ---
 if not is_choco_installed():
@@ -25,13 +26,16 @@ if not is_choco_installed():
         with st.spinner("Running Chocolatey bootstrap via PowerShell (this may take a minute)..."):
             success, log = install_choco()
         if success:
-            st.success("Chocolatey installed successfully! Please restart the app.")
+            st.success(
+                "Chocolatey installed successfully! Please restart the app.")
         else:
-            st.error("Installation failed. Make sure you're running as Administrator.")
+            st.error(
+                "Installation failed. Make sure you're running as Administrator.")
             st.code(log)
     st.stop()
 
-tab_search, tab_manage, tab_update = st.tabs(["🔍 Search & Install", "📦 Manage Installed", "⚙️ Batch Upgrades"])
+tab_search, tab_manage, tab_update = st.tabs(
+    ["🔍 Search & Install", "📦 Manage Installed", "⚙️ Batch Upgrades"])
 
 # --- TAB 1: Search & Install ---
 with tab_search:
@@ -51,20 +55,23 @@ with tab_search:
                         st.session_state.choco_search_results = results
                         st.session_state.choco_selected_pkgs = set()
                     else:
-                        st.error("No results found or Chocolatey search failed.")
+                        st.error(
+                            "No results found or Chocolatey search failed.")
                         st.session_state.choco_search_results = []
             else:
                 st.warning("Please enter a package name to search.")
 
     # --- Checkable Results ---
     if st.session_state.choco_search_results:
-        st.markdown(f"### Results ({len(st.session_state.choco_search_results)} found)")
+        st.markdown(
+            f"### Results ({len(st.session_state.choco_search_results)} found)")
 
         for pkg in st.session_state.choco_search_results:
             pkg_name = pkg["name"]
             label = f"**{pkg_name}** — `{pkg['version']}`"
             safe_key = pkg_name.replace(".", "_").replace(" ", "_")
-            checked = st.checkbox(label, key=f"choco_chk_{safe_key}", value=(pkg_name in st.session_state.choco_selected_pkgs))
+            checked = st.checkbox(label, key=f"choco_chk_{safe_key}", value=(
+                pkg_name in st.session_state.choco_selected_pkgs))
             if checked:
                 st.session_state.choco_selected_pkgs.add(pkg_name)
             else:
@@ -73,7 +80,8 @@ with tab_search:
         selected = list(st.session_state.choco_selected_pkgs)
         if selected:
             st.divider()
-            st.markdown(f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
+            st.markdown(
+                f"**Selected for install:** {', '.join(f'`{p}`' for p in selected)}")
             if st.button(f"⬇️ Install {len(selected)} Package(s)", type="primary", width="stretch", key="choco_install_selected"):
                 with st.spinner(f"Installing {', '.join(selected)} (requires admin)..."):
                     success, log = install_packages(selected)
@@ -90,7 +98,7 @@ with tab_manage:
     col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
     col_hdr.markdown("### Currently Installed Packages")
 
-    if col_ref.button("🔄 Refresh List", width="stretch", key="choco_refresh") or not st.session_state.choco_installed_list:
+    if col_ref.button("Refresh List", width="stretch", key="choco_refresh", icon=":material/refresh:") or not st.session_state.choco_installed_list:
         with st.spinner("Fetching installed packages..."):
             success, apps = list_installed()
             if success:
@@ -103,7 +111,8 @@ with tab_manage:
         safe_key = pkg_name.replace(".", "_").replace(" ", "_")
 
         with st.container(border=True):
-            col_name, col_ver, col_upd, col_un = st.columns([2, 2, 1, 1], vertical_alignment="center")
+            col_name, col_ver, col_upd, col_un = st.columns(
+                [2, 2, 1, 1], vertical_alignment="center")
             col_name.markdown(f"**{pkg_name}**")
 
             if pkg.get('is_outdated'):
@@ -138,7 +147,8 @@ with tab_manage:
 # --- TAB 3: Batch Upgrades ---
 with tab_update:
     st.markdown("### Batch Software Upgrades")
-    st.info("Chocolatey will scan your system for outdated software and upgrade them all.")
+    st.info(
+        "Chocolatey will scan your system for outdated software and upgrade them all.")
 
     if st.button("🚀 Upgrade All Packages", type="primary", key="choco_upgrade_all"):
         with st.spinner("Upgrading all packages (requires admin)..."):

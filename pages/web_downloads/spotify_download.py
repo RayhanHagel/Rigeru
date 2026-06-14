@@ -3,6 +3,7 @@ import json
 import streamlit as st
 from utilities.util_spotify_dl import get_playlist_tracks, download_track_audio
 from utilities.util_persistent import apply_footer
+import concurrent.futures
 
 
 # --- Credential Management ---
@@ -87,7 +88,7 @@ if st.session_state.sp_tracks:
 
     with st.expander("View Tracklist", expanded=False):
         st.code("\n".join(st.session_state.sp_tracks), language="text")
-
+    
     if st.button("🚀 Start Bulk YouTube Download", type="primary", width="stretch"):
         if not os.path.isdir(st.session_state.sp_dest):
             st.error(f"Destination folder not found: `{st.session_state.sp_dest}`")
@@ -104,12 +105,21 @@ if st.session_state.sp_tracks:
             download_logs = []
 
             total = len(st.session_state.sp_tracks)
-            for idx, track_query in enumerate(st.session_state.sp_tracks):
-                status_text.text(f"Downloading {idx + 1}/{total}: {track_query}")
+            
+            def _download_worker(idx_query):
+                idx, track_query = idx_query
                 success, log_msg = download_track_audio(track_query, final_dest)
-                download_logs.insert(0, log_msg)
-                log_box.code("\n".join(download_logs[:10]), language="text")
-                progress_bar.progress((idx + 1) / total)
+                return idx, success, log_msg
+
+            with st.spinner(f"Downloading {total} tracks..."):
+                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                    futures = [executor.submit(_download_worker, (idx, tq)) for idx, tq in enumerate(st.session_state.sp_tracks)]
+                    
+                    for future in concurrent.futures.as_completed(futures):
+                        idx, success, log_msg = future.result()
+                        download_logs.insert(0, f"{idx + 1}. {log_msg}")
+                        log_box.code("\n".join(download_logs[:10]), language="text")
+                        progress_bar.progress((idx + 1) / total)
 
             st.success(f"🎉 Playlist download complete! Saved to: {final_dest}")
 

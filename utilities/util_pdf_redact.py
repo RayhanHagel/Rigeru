@@ -1,16 +1,14 @@
 import io
 
-try:
-    import fitz  # PyMuPDF
-except ImportError:
-    fitz = None
 
 def redact_pdf_text(pdf_bytes: bytes, words_to_redact: list[str]) -> tuple[bool, bytes | str, int]:
     """
     Searches a PDF for specific words and permanently redacts them.
     Returns: (Success, Processed PDF Bytes / Error Message, Total Redactions Made)
     """
-    if not fitz:
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
         return False, "Missing dependency. Please run: `pip install pymupdf`", 0
 
     if not words_to_redact:
