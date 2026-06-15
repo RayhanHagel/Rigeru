@@ -6,6 +6,11 @@ import queue
 import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 
+# Import shared utilities
+from utilities.util_huggingface import download_hf_file, quantize_onnx_model
+from utilities.util_subtitles import format_ass_time
+from utilities.util_image_fx import make_blur_fn, apply_blur_fn
+
 CACHE_DIR = os.path.join(".", "cache")
 TEMP_DIR = os.path.join(CACHE_DIR, "temp")
 
@@ -14,103 +19,16 @@ def _ensure_paths():
     os.makedirs(CACHE_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Hardware & Encoder Probing
-# ---------------------------------------------------------------------------
-
-
-@st.cache_data
-def get_available_encoders():
-    """Probes local FFmpeg for available hardware accelerated encoders."""
-    if not shutil.which("ffmpeg"):
-        return ["cv2 (No FFmpeg / Fallback)"]
-
-    try:
-        res = subprocess.run(["ffmpeg", "-encoders"],
-                             capture_output=True, text=True)
-        hw_candidates = {
-            'h264_nvenc':        'h264_nvenc (Nvidia GPU)',
-            'hevc_nvenc':        'hevc_nvenc (Nvidia GPU H.265)',
-            'h264_videotoolbox': 'h264_videotoolbox (Apple Silicon)',
-            'h264_qsv':          'h264_qsv (Intel QuickSync)',
-            'h264_amf':          'h264_amf (AMD GPU)'
-        }
-
-        available = ["libx264 (CPU Standard)"]
-        for enc, label in hw_candidates.items():
-            if enc in res.stdout:
-                available.append(label)
-        return available
-    except Exception:
-        return ["libx264 (CPU Standard)"]
 
 # ---------------------------------------------------------------------------
 # Download & Model Loading
 # ---------------------------------------------------------------------------
 
-
-def _ensure_nudenet_model(model_name: str) -> str:
-    if model_name == "default" or "320" in model_name:
-        return "default"
-
-    model_path = os.path.join(CACHE_DIR, "models", model_name)
-    if os.path.exists(model_path):
-        return model_path
-
-    print(f"Downloading {model_name} from Hugging Face...")
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
-
-    try:
-        # LAZY IMPORT
-        from huggingface_hub import hf_hub_download
-        if "640" in model_name:
-            downloaded_path = hf_hub_download(
-                repo_id="xxparthparekhxx/NudeNet-FastAPI",
-                filename="640m.onnx",
-                repo_type="space"
-            )
-        else:
-            downloaded_path = hf_hub_download(
-                repo_id="deepghs/nudenet_onnx", filename="320n.onnx")
-
-        shutil.copy2(downloaded_path, model_path)
-        return model_path
-    except Exception as e:
-        print(f"Failed to download {model_name} from Hugging Face: {e}")
-        return "default"
-
-
-def _quantize_nudenet_model(model_name: str) -> str:
-    actual_name = "320n.onnx" if (
-        model_name == "default" or "320" in model_name) else model_name
-    base_model_path = _ensure_nudenet_model(actual_name)
-
-    if base_model_path == "default":
-        print("Could not locate base model for quantization. Falling back to default FP32.")
-        return "default"
-
-    quant_path = base_model_path.replace(".onnx", "_int8.onnx")
-
-    if os.path.exists(quant_path):
-        return quant_path
-
-    try:
-        # LAZY IMPORT
-        from onnxruntime.quantization import quantize_dynamic, QuantType
-        print(f"Quantizing {actual_name} to INT8. This only happens once...")
-        quantize_dynamic(base_model_path, quant_path,
-                         weight_type=QuantType.QUInt8)
-        return quant_path
-    except Exception as e:
-        print(f"Quantization failed: {e}. Falling back to FP32.")
-        return base_model_path
-
-
 @st.cache_resource(show_spinner=False)
 def load_nsfw_detector(model_type: str = "default", engine: str = "cpu", precision: str = "fp32"):
     try:
-        # LAZY IMPORT
         from nudenet import NudeDetector
+
         if engine == "tensorrt":
             providers = ['TensorrtExecutionProvider',
                          'CUDAExecutionProvider', 'CPUExecutionProvider']
@@ -119,10 +37,25 @@ def load_nsfw_detector(model_type: str = "default", engine: str = "cpu", precisi
         else:
             providers = ['CPUExecutionProvider']
 
-        if precision == "int8":
-            final_model_path = _quantize_nudenet_model(model_type)
+        # Determine target file and repo
+        actual_name = "320n.onnx" if (
+            model_type == "default" or "320" in model_type) else "640m.onnx"
+        model_path = os.path.join(CACHE_DIR, "models", actual_name)
+
+        if "640" in actual_name:
+            success = download_hf_file(
+                "xxparthparekhxx/NudeNet-FastAPI", "640m.onnx", model_path, repo_type="space")
         else:
-            final_model_path = _ensure_nudenet_model(model_type)
+            success = download_hf_file(
+                "deepghs/nudenet_onnx", "320n.onnx", model_path)
+
+        final_model_path = model_path if success else "default"
+
+        # Apply Quantization if requested
+        if precision == "int8" and final_model_path != "default":
+            quant_path = final_model_path.replace(".onnx", "_int8.onnx")
+            final_model_path = quantize_onnx_model(
+                final_model_path, quant_path)
 
         if final_model_path != "default" and os.path.exists(final_model_path):
             return NudeDetector(model_path=final_model_path, providers=providers), True
@@ -133,50 +66,13 @@ def load_nsfw_detector(model_type: str = "default", engine: str = "cpu", precisi
         return None, False
     except Exception as e:
         print(f"Warning loading detector: {e}")
-        # LAZY IMPORT
         from nudenet import NudeDetector
         return NudeDetector(providers=['CPUExecutionProvider']), True
 
 
-def format_ass_time(seconds: float) -> str:
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    centisecs = int((seconds * 100) % 100)
-    return f"{hours}:{minutes:02d}:{secs:02d}.{centisecs:02d}"
-
-# ---------------------------------------------------------------------------
-# Blur Helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_blur_fn(blur_intensity: int, blur_type: str):
-    # LAZY IMPORT
-    import cv2
-    if blur_type == "Gaussian":
-        k = int(blur_intensity) * 2 + 1
-        return lambda roi: cv2.GaussianBlur(roi, (k, k), 30)
-    else:
-        ratio = max(1, 100 - blur_intensity) / 100.0
-
-        def _blur(roi):
-            h, w = roi.shape[:2]
-            sw, sh = max(1, int(w * ratio)), max(1, int(h * ratio))
-            return cv2.resize(cv2.resize(roi, (sw, sh), interpolation=cv2.INTER_LINEAR), (w, h), interpolation=cv2.INTER_NEAREST)
-        return _blur
-
-
-def _apply_blur_fn(image, x, y, w, h, blur_fn):
-    ih, iw = image.shape[:2]
-    x, y, x2, y2 = max(0, x), max(0, y), min(iw, x + w), min(ih, y + h)
-    if x2 > x and y2 > y:
-        image[y:y2, x:x2] = blur_fn(image[y:y2, x:x2])
-    return image
-
 # ---------------------------------------------------------------------------
 # Core Processing
 # ---------------------------------------------------------------------------
-
 
 def process_media_censor(
     input_path: str,
@@ -213,13 +109,13 @@ def process_media_censor(
         if img is None:
             return False, "Could not open image file."
 
-        blur_fn = _make_blur_fn(blur_intensity, blur_type)
+        blur_fn = make_blur_fn(blur_intensity, blur_type)
         try:
             detections = detector.detect(img)
             for det in detections:
                 if det['class'] in target_classes and det['score'] > 0.4:
                     x, y, w, h = [int(v) for v in det['box']]
-                    img = _apply_blur_fn(img, x, y, w, h, blur_fn)
+                    img = apply_blur_fn(img, x, y, w, h, blur_fn)
         except Exception:
             pass
 
@@ -306,7 +202,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
         # METHOD B: Hard Re-encode (FFmpeg + Multithreading)
         # ==========================================
         elif method == "reencode":
-            blur_fn = _make_blur_fn(blur_intensity, blur_type)
+            blur_fn = make_blur_fn(blur_intensity, blur_type)
             final_out_path = os.path.join(
                 TEMP_DIR, f"final_censored_{filename}")
             has_ffmpeg = shutil.which("ffmpeg") is not None
@@ -374,7 +270,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
 
                     for box in boxes:
                         x, y, w, h = [int(v) for v in box]
-                        frame = _apply_blur_fn(frame, x, y, w, h, blur_fn)
+                        frame = apply_blur_fn(frame, x, y, w, h, blur_fn)
 
                     with write_cond:
                         write_queue[idx] = frame

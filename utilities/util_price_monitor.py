@@ -1,9 +1,10 @@
 import os
-import json
 import re
 import random
 import asyncio
 from datetime import datetime
+from utilities.util_json import load_json, save_json
+from utilities.util_playwright import get_async_stealth_page
 
 # Global Path Management
 CACHE_DIR = os.path.join(".", "cache")
@@ -19,20 +20,13 @@ def _ensure_paths():
 def load_tracked_items() -> list:
     """Loads tracked items from the local JSON file."""
     _ensure_paths()
-    if not os.path.exists(DB_FILE):
-        return []
-    try:
-        with open(DB_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return load_json(DB_FILE, default_factory=list)
 
 
 def save_tracked_items(items: list):
     """Saves tracked items to the local JSON file."""
     _ensure_paths()
-    with open(DB_FILE, 'w') as f:
-        json.dump(items, f, indent=4)
+    save_json(DB_FILE, items)
 
 
 def add_item(name: str, url: str) -> tuple[bool, str]:
@@ -79,40 +73,9 @@ def _parse_price(price_str: str, domain: str) -> float | None:
 
 
 async def _scrape_price_async(url: str) -> tuple[bool, dict | str]:
-    """Asynchronous core function utilizing the new playwright-stealth API."""
+    """Asynchronous core function utilizing the centralized stealth API."""
     try:
-        from playwright.async_api import async_playwright
-    except ImportError:
-        return False, "Playwright not installed. Run: pip install playwright"
-
-    try:
-        from playwright_stealth import Stealth
-    except ImportError:
-        return False, "playwright-stealth not installed. Run: pip install playwright-stealth"
-
-    try:
-        async with Stealth().use_async(async_playwright()) as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-web-security',
-                    '--disable-features=IsolateOrigins,site-per-process',
-                    '--window-size=1920,1080',
-                    '--disable-infobars'
-                ]
-            )
-
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width": 1920, "height": 1080},
-                device_scale_factor=1,
-                has_touch=False,
-                ignore_https_errors=True
-            )
-
-            await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            page = await context.new_page()
+        async with get_async_stealth_page() as page:
             await asyncio.sleep(random.uniform(1.0, 3.0))
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_timeout(random.randint(3000, 5000))
@@ -165,8 +128,6 @@ async def _scrape_price_async(url: str) -> tuple[bool, dict | str]:
 
             else:
                 price_text = await page.inner_text("body")
-
-            await browser.close()
 
             # Parse extracted text
             current_price = _parse_price(price_text, domain)

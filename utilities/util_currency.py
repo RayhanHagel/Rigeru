@@ -1,15 +1,16 @@
-import requests
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import streamlit as st
 from concurrent.futures import ThreadPoolExecutor
+from utilities.util_network import better_get
 
 def fetch_url(url: str) -> dict:
     """Helper function to fetch URL data to be run in a thread."""
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    return response.json()
+    response = better_get(url)
+    if response and response.status_code == 200:
+        return response.json()
+    raise Exception(f"Failed to fetch data from {url}")
 
 @st.cache_data(ttl=3600, show_spinner=False) 
 def get_available_currencies() -> tuple[bool, dict | str]:

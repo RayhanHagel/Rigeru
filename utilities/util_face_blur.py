@@ -6,12 +6,16 @@ import subprocess
 import threading
 import queue
 import json
-import zipfile
 import warnings
 from collections import defaultdict
 
 import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
+
+# Import shared utilities
+from utilities.util_huggingface import download_hf_file, quantize_onnx_model
+from utilities.util_subtitles import format_ass_time
+from utilities.util_image_fx import make_blur_fn, apply_blur_fn
 
 # Silence underlying library warnings and ONNX GPU fallback warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -27,45 +31,6 @@ _FACE_PADDING_RATIO = 0.2
 
 def _ensure_paths():
     os.makedirs(TEMP_DIR, exist_ok=True)
-
-
-def format_ass_time(seconds: float) -> str:
-    """Formats time in seconds to ASS subtitle timestamp format (H:MM:SS.cs)"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    centisecs = int((seconds * 100) % 100)
-    return f"{hours}:{minutes:02d}:{secs:02d}.{centisecs:02d}"
-
-# ---------------------------------------------------------------------------
-# Hardware & Encoder Probing
-# ---------------------------------------------------------------------------
-
-
-@st.cache_data
-def get_available_encoders():
-    """Probes local FFmpeg for available hardware accelerated encoders."""
-    if not shutil.which("ffmpeg"):
-        return ["cv2 (No FFmpeg / Fallback)"]
-
-    try:
-        res = subprocess.run(["ffmpeg", "-encoders"],
-                             capture_output=True, text=True)
-        hw_candidates = {
-            'h264_nvenc':        'h264_nvenc (Nvidia GPU)',
-            'hevc_nvenc':        'hevc_nvenc (Nvidia GPU H.265)',
-            'h264_videotoolbox': 'h264_videotoolbox (Apple Silicon)',
-            'h264_qsv':          'h264_qsv (Intel QuickSync)',
-            'h264_amf':          'h264_amf (AMD GPU)'
-        }
-
-        available = ["libx264 (CPU Standard)"]
-        for enc, label in hw_candidates.items():
-            if enc in res.stdout:
-                available.append(label)
-        return available
-    except Exception:
-        return ["libx264 (CPU Standard)"]
 
 # ---------------------------------------------------------------------------
 # Caching & Model Quantization Helpers
@@ -85,30 +50,27 @@ def load_frame_cache(cache_path: str) -> dict:
 
 
 def _quantize_insightface_model(model_name: str) -> str:
-    """Dynamically quantizes an InsightFace model to INT8 to save RAM and boost CPU speed."""
+    """Dynamically quantizes an InsightFace model directory to INT8."""
     base_dir = os.path.join(CACHE_DIR, "models", model_name)
     quant_dir = os.path.join(CACHE_DIR, "models", f"{model_name}_int8")
 
     if os.path.exists(quant_dir) and len(os.listdir(quant_dir)) > 0:
         return f"{model_name}_int8"
 
-    try:
-        from onnxruntime.quantization import quantize_dynamic, QuantType
-        os.makedirs(quant_dir, exist_ok=True)
-        print(f"Quantizing {model_name} to INT8. This only happens once...")
+    os.makedirs(quant_dir, exist_ok=True)
+    print(f"Quantizing {model_name} to INT8. This only happens once...")
 
-        for f in os.listdir(base_dir):
-            src_file = os.path.join(base_dir, f)
-            dst_file = os.path.join(quant_dir, f)
-            if f.endswith('.onnx') and not any(x in f for x in ['w600k', 'recognition']):
-                quantize_dynamic(src_file, dst_file,
-                                 weight_type=QuantType.QUInt8)
-            else:
-                shutil.copy2(src_file, dst_file)
-        return f"{model_name}_int8"
-    except Exception as e:
-        print(f"Quantization failed: {e}. Falling back to FP32.")
-        return model_name
+    for f in os.listdir(base_dir):
+        src_file = os.path.join(base_dir, f)
+        dst_file = os.path.join(quant_dir, f)
+
+        # Only quantize detection models. Recognition models degrade heavily in int8.
+        if f.endswith('.onnx') and not any(x in f for x in ['w600k', 'recognition']):
+            quantize_onnx_model(src_file, dst_file)
+        else:
+            shutil.copy2(src_file, dst_file)
+
+    return f"{model_name}_int8"
 
 
 def _ensure_hf_model(model_name: str, precision: str = "fp32"):
@@ -130,18 +92,18 @@ def _ensure_hf_model(model_name: str, precision: str = "fp32"):
         }
 
         if model_name in hf_sources:
-            try:
-                from huggingface_hub import hf_hub_download
-                source = hf_sources[model_name]
-                zip_path = hf_hub_download(
-                    repo_id=source["repo_id"], filename=source["filename"],
-                    token=hf_token, repo_type="model"
-                )
-                os.makedirs(models_dir, exist_ok=True)
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(models_dir)
-            except Exception as e:
-                return False, f"Hugging Face Download Failed: {str(e)}", model_name
+            source = hf_sources[model_name]
+            # Since util_huggingface automatically extracts .zips, we just point output_path to a temp zip file inside models_dir
+            zip_target = os.path.join(models_dir, source["filename"])
+            success = download_hf_file(
+                source["repo_id"], source["filename"], zip_target, token=hf_token)
+
+            if not success:
+                return False, f"Hugging Face Download Failed for {model_name}", model_name
+
+            # Clean up the downloaded zip file after extraction
+            if os.path.exists(zip_target):
+                os.remove(zip_target)
 
     final_model_name = model_name
     if precision == "int8":
@@ -224,31 +186,8 @@ def load_face_detector(det_model: str = "buffalo_l", rec_model: str = None, prec
         return None, f"Model Error: {str(e)}"
 
 # ---------------------------------------------------------------------------
-# Blur & Maths Helpers
+# Maths Helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_blur_fn(blur_intensity: int, blur_type: str):
-    import cv2
-    if blur_type == "Gaussian":
-        k = int(blur_intensity) * 2 + 1
-        return lambda roi: cv2.GaussianBlur(roi, (k, k), 30)
-    else:
-        ratio = max(1, 100 - blur_intensity) / 100.0
-
-        def _blur(roi):
-            h, w = roi.shape[:2]
-            sw, sh = max(1, int(w * ratio)), max(1, int(h * ratio))
-            return cv2.resize(cv2.resize(roi, (sw, sh), interpolation=cv2.INTER_LINEAR), (w, h), interpolation=cv2.INTER_NEAREST)
-        return _blur
-
-
-def _apply_blur_fn(image, x, y, w, h, blur_fn):
-    ih, iw = image.shape[:2]
-    x, y, x2, y2 = max(0, x), max(0, y), min(iw, x + w), min(ih, y + h)
-    if x2 > x and y2 > y:
-        image[y:y2, x:x2] = blur_fn(image[y:y2, x:x2])
-    return image
 
 
 def _padded_crop(img_rgb, box, pad_ratio=_FACE_PADDING_RATIO, out_size=150):
@@ -258,6 +197,7 @@ def _padded_crop(img_rgb, box, pad_ratio=_FACE_PADDING_RATIO, out_size=150):
     pad_x, pad_y = int((x2 - x) * pad_ratio), int((y2 - y) * pad_ratio)
     cx, cy, cx2, cy2 = max(0, x - pad_x), max(0, y -
                                               pad_y), min(iw, x2 + pad_x), min(ih, y2 + pad_y)
+
     if cx2 > cx and cy2 > cy:
         return cv2.resize(img_rgb[cy:cy2, cx:cx2].copy(), (out_size, out_size), interpolation=cv2.INTER_AREA)
     return np.zeros((out_size, out_size, 3), dtype=np.uint8)
@@ -550,10 +490,10 @@ def process_media_blur(input_path: str, blur_intensity: int = 50, blur_type: str
 
     if not is_video:
         img = cv2.imread(input_path)
-        blur_fn = _make_blur_fn(blur_intensity, blur_type)
+        blur_fn = make_blur_fn(blur_intensity, blur_type)
         for target in selected_faces:
             x, y, x2, y2 = target['box']
-            img = _apply_blur_fn(img, x, y, x2 - x, y2 - y, blur_fn)
+            img = apply_blur_fn(img, x, y, x2 - x, y2 - y, blur_fn)
         cv2.imwrite(out_path, img)
         if progress_hook:
             progress_hook(1.0)
@@ -633,11 +573,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
 
                 for box in interpolated[current_frame]:
                     x, y, x2, y2 = box
-                    w_box = x2 - x
-                    h_box = y2 - y
-
-                    x_c, y_c = max(0, x), max(0, y)
-                    x2_c, y2_c = min(width, x2), min(height, y2)
+                    w_box, h_box = x2 - x, y2 - y
+                    x_c, y_c, x2_c, y2_c = max(0, x), max(
+                        0, y), min(width, x2), min(height, y2)
 
                     if x2_c > x_c and y2_c > y_c:
                         roi = frame[y_c:y2_c, x_c:x2_c]
@@ -669,7 +607,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
     # ==========================================
     # EXISTING RE-ENCODE LOGIC
     # ==========================================
-    blur_fn = _make_blur_fn(blur_intensity, blur_type)
+    blur_fn = make_blur_fn(blur_intensity, blur_type)
     final_out_path = os.path.join(TEMP_DIR, f"final_{filename}")
     has_ffmpeg = shutil.which("ffmpeg") is not None
 
@@ -725,8 +663,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
             if idx in frames_needing_blur:
                 for box in interpolated[idx]:
                     x, y, x2, y2 = box
-                    frame = _apply_blur_fn(
-                        frame, x, y, x2 - x, y2 - y, blur_fn)
+                    frame = apply_blur_fn(frame, x, y, x2 - x, y2 - y, blur_fn)
 
             with write_cond:
                 write_queue[idx] = frame
