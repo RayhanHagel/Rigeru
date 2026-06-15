@@ -10,6 +10,9 @@ import random as _random
 import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 
+# Import shared utilities
+from utilities.util_subtitles import format_ass_time
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", module="ultralytics")
 os.environ['YOLO_VERBOSE'] = 'False'
@@ -22,42 +25,12 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 _color_cache: dict[int, tuple] = {}
 
 
-@st.cache_data
-def get_available_encoders():
-    if not shutil.which("ffmpeg"):
-        return ["cv2 (No FFmpeg / Fallback)"]
-    try:
-        res = subprocess.run(["ffmpeg", "-encoders"], capture_output=True, text=True)
-        hw_candidates = {
-            'h264_nvenc':        'h264_nvenc (Nvidia GPU)',
-            'hevc_nvenc':        'hevc_nvenc (Nvidia GPU H.265)',
-            'h264_videotoolbox': 'h264_videotoolbox (Apple Silicon)',
-            'h264_qsv':          'h264_qsv (Intel QuickSync)',
-            'h264_amf':          'h264_amf (AMD GPU)'
-        }
-        available = ["libx264 (CPU Standard)"]
-        for enc, label in hw_candidates.items():
-            if enc in res.stdout:
-                available.append(label)
-        return available
-    except Exception:
-        return ["libx264 (CPU Standard)"]
-
-
 def get_class_color(cls_id: int) -> tuple:
     cls_id = int(cls_id)
     if cls_id not in _color_cache:
         rng = _random.Random(cls_id * 812)
         _color_cache[cls_id] = (rng.randint(50, 255), rng.randint(50, 255), rng.randint(50, 255))
     return _color_cache[cls_id]
-
-
-def format_ass_time(seconds: float) -> str:
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    centisecs = int(round(seconds * 100) % 100)
-    return f"{hours}:{minutes:02d}:{secs:02d}.{centisecs:02d}"
 
 
 @st.cache_data(show_spinner=False, ttl=30)

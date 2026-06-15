@@ -39,6 +39,9 @@ st.session_state.nav_home = {
 st.session_state.nav_manga = { 
     "manga_search":  os.path.join("pages", "media_entertainment", "manga_search.py"),
     "manga_library": os.path.join("pages", "media_entertainment", "manga_library.py"),
+    "manga_read":    os.path.join("pages", "manga", "manga_read.py"),
+    "manga_sort":    os.path.join("pages", "manga", "manga_sort.py"),
+    "manga_pdf":    os.path.join("pages", "manga", "manga_pdf.py")
 }
 
 st.session_state.nav_media_feeds = { 
@@ -121,8 +124,8 @@ pages = {
     ],
 
     "📺 Media & Entertainment": [
-        st.Page(st.session_state.nav_manga["manga_library"],       title="Manga Library",      icon=":material/menu_book:"),
         st.Page(st.session_state.nav_manga["manga_search"],        title="Manga Search",       icon=":material/search:"),
+        st.Page(st.session_state.nav_manga["manga_library"],       title="Manga Library",      icon=":material/menu_book:"),
         st.Page(st.session_state.nav_media_feeds["twitch_player"], title="Twitch Watch",       icon=":material/live_tv:"),
         st.Page(st.session_state.nav_media_feeds["spotify_scrobbler"], title="Spotify Scrobbler", icon=":material/graphic_eq:"),
         st.Page(st.session_state.nav_web_feeds["malsync"],         title="MAL Local Tracker",  icon=":material/collections_bookmark:"),
@@ -181,6 +184,12 @@ pages = {
         st.Page(st.session_state.nav_system["network"],  title="Network Monitor",       icon=":material/radar:"),
         st.Page(st.session_state.nav_system["ping"],     title="Ping Test",             icon=":material/network_ping:"),
     ],
+    
+    "Hidden" : [
+        st.Page(st.session_state.nav_manga["manga_read"], title="Manga Reader", icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_manga["manga_sort"], title="Manga Sort", icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_manga["manga_pdf"], title="Manga PDF", icon=":material/book:", visibility="hidden"),
+    ]
 }
 
 # --- Initialization & Rendering ---

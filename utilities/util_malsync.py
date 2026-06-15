@@ -1,33 +1,24 @@
 import os
-import json
-import requests
 import streamlit as st
+from utilities.util_json import load_json, save_json
+from utilities.util_network import better_get
 
 # Route the DB file to the cache folder
 CACHE_DIR = "cache"
-os.makedirs(CACHE_DIR, exist_ok=True)
 DB_FILE = os.path.join(CACHE_DIR, "anime_tracking.json")
 
 def load_anime_list() -> dict:
-    if not os.path.exists(DB_FILE):
-        return {}
-    try:
-        with open(DB_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return load_json(DB_FILE, default_factory=dict)
 
 def save_anime_list(data: dict):
-    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-    with open(DB_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
+    save_json(DB_FILE, data)
 
 @st.cache_data(ttl=3600)
 def search_mal(query: str) -> tuple[bool, list | str]:
     url = f"https://api.jikan.moe/v4/anime?q={query}&sfw=true&limit=10"
     try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
+        response = better_get(url)
+        if response and response.status_code == 200:
             data = response.json().get("data", [])
             results = []
             for item in data:
@@ -90,13 +81,14 @@ def remove_from_library(mal_id: str):
 
 def import_user_list(username: str) -> tuple[bool, str]:
     """Imports 'Watching' and 'Completed' anime from a user's MAL list via Jikan API."""
-    url = f"https://api.jikan.moe/v4/users/{username}/animelist?status=1" # 1 = Watching, 2 = Completed
     try:
-        # Fetch Watching
-        resp_watching = requests.get(f"https://api.jikan.moe/v4/users/{username}/animelist?status=1", timeout=10)
-        # Fetch Completed
-        resp_completed = requests.get(f"https://api.jikan.moe/v4/users/{username}/animelist?status=2", timeout=10)
+        # Fetch Watching & Completed using our bot-bypassing robust request method
+        resp_watching = better_get(f"https://api.jikan.moe/v4/users/{username}/animelist?status=1")
+        resp_completed = better_get(f"https://api.jikan.moe/v4/users/{username}/animelist?status=2")
         
+        if not resp_watching or not resp_completed:
+            return False, "Failed to connect to MyAnimeList servers."
+            
         if resp_watching.status_code == 403 or resp_completed.status_code == 403:
             return False, "Profile is Private. Please read the Help steps above to temporarily make it Public."
             

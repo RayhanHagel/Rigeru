@@ -1,7 +1,6 @@
 import os
 import struct
-import requests
-import io
+from utilities.util_network import better_get, better_post
 
 def hash_file(file_path: str) -> str:
     """
@@ -50,7 +49,6 @@ def search_opensubtitles(file_path: str, api_key: str, language: str = "en") -> 
     url = "https://api.opensubtitles.com/api/v1/subtitles"
     headers = {
         "Api-Key": api_key,
-        "User-Agent": "RigeruApp v1.0"
     }
     params = {
         "moviehash": video_hash,
@@ -58,15 +56,17 @@ def search_opensubtitles(file_path: str, api_key: str, language: str = "en") -> 
     }
     
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        if response.status_code == 200:
+        response = better_get(url, headers=headers, params=params)
+        if response and response.status_code == 200:
             data = response.json()
             results = data.get("data", [])
             return True, results
-        elif response.status_code == 401:
+        elif response and response.status_code == 401:
             return False, "Unauthorized. Please check your API key."
-        else:
+        elif response:
             return False, f"API Error: {response.status_code}"
+        else:
+            return False, "Failed to reach OpenSubtitles API."
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
@@ -82,14 +82,14 @@ def download_subtitle(file_id: str, api_key: str) -> tuple[bool, bytes | str, st
     
     try:
         # Step 1: Request a download link
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        if response.status_code == 200:
+        response = better_post(url, headers=headers, json=payload)
+        if response and response.status_code == 200:
             download_url = response.json().get("link")
             file_name = response.json().get("file_name", "subtitle.srt")
             
             # Step 2: Download the actual file
-            sub_resp = requests.get(download_url, timeout=10)
-            if sub_resp.status_code == 200:
+            sub_resp = better_get(download_url)
+            if sub_resp and sub_resp.status_code == 200:
                 return True, sub_resp.content, file_name
                 
         return False, "Failed to request download link from OpenSubtitles.", ""

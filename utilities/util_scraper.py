@@ -1,4 +1,5 @@
 import os
+from utilities.util_playwright import get_sync_page
 
 # Global Path Management
 CACHE_DIR = os.path.join(".", "cache")
@@ -13,21 +14,10 @@ def run_headless_scraper(links: list, css_selector: str) -> tuple:
     elements matching the provided CSS selector.
     """
     import pandas as pd
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return False, "Playwright is not installed. Run: `pip install playwright`"
-
     results = []
 
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
-            page = context.new_page()
-
+        with get_sync_page(headless=True) as page:
             for url in links:
                 clean_url = url.strip()
                 if not clean_url:
@@ -57,8 +47,6 @@ def run_headless_scraper(links: list, css_selector: str) -> tuple:
                 except Exception as e:
                     results.append({"Target URL": clean_url, "Extracted Data": f"[Error: {str(e)}]"})
 
-            browser.close()
-
         if not results:
             return False, "No valid links provided or no data could be extracted."
 
@@ -73,20 +61,9 @@ def get_page_preview_image(url: str, output_path: str) -> tuple[bool, str]:
     Bypasses iframe X-Frame-Options blocking by rendering an actual image.
     """
     _ensure_paths()
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return False, "Playwright is not installed. Run: `pip install playwright`"
 
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                viewport={"width": 1280, "height": 800}
-            )
-            page = context.new_page()
-
+        with get_sync_page(headless=True, viewport={"width": 1280, "height": 800}) as page:
             if not url.startswith('http'):
                 url = 'https://' + url
 
@@ -94,7 +71,6 @@ def get_page_preview_image(url: str, output_path: str) -> tuple[bool, str]:
             page.wait_for_timeout(2000) # Let assets load before screenshot
 
             page.screenshot(path=output_path, full_page=False)
-            browser.close()
 
         return True, output_path
 
