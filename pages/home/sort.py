@@ -56,7 +56,7 @@ else:
         help="Choose one or more cards to permanently remove."
     )
     
-    if del_cols[1].button("Delete Selected", type="primary", use_container_width=True, disabled=not selected_to_delete):
+    if del_cols[1].button("Delete Selected", type="primary", width="stretch", disabled=not selected_to_delete):
         new_cache = [c for i, c in enumerate(cache) if i not in selected_to_delete]
         write_cache(replace_data=new_cache)
         st.session_state.temp_quick_cache = new_cache

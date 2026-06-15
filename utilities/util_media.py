@@ -1,7 +1,7 @@
 import os
+import shutil
 import subprocess
-from PIL import Image, UnidentifiedImageError, ImageOps, ImageFilter
-
+import streamlit as st
 
 def _init_tkinter():
     """Helper to initialize a hidden, top-most tkinter root window."""
@@ -10,7 +10,6 @@ def _init_tkinter():
     root.withdraw()
     root.attributes('-topmost', True)
     return root, tk
-
 
 def open_file_dialog() -> str:
     """Opens a native OS file dialog to select a single file."""
@@ -22,7 +21,6 @@ def open_file_dialog() -> str:
     )
     root.destroy()
     return file_path
-
 
 def open_folder_dialog(initial_dir: str = "") -> str:
     """Opens a native OS folder dialog to select a directory."""
@@ -39,7 +37,6 @@ def open_folder_dialog(initial_dir: str = "") -> str:
     )
     root.destroy()
     return folder_path
-
 
 def process_video(
     input_path: str,
@@ -107,14 +104,12 @@ def process_video(
     cmd.append(output_path)
 
     try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, f"Video saved to: {output_path}"
     except subprocess.CalledProcessError:
         return False, "FFmpeg failed to process the video. Ensure FFmpeg is installed."
     except FileNotFoundError:
         return False, "FFmpeg executable not found on the system."
-
 
 def batch_compress_images(
     input_dir: str,
@@ -132,6 +127,9 @@ def batch_compress_images(
         return False, "Input directory does not exist."
     if not os.path.isdir(output_dir):
         return False, "Output directory does not exist."
+
+    # LAZY IMPORT: PIL is heavy, only load it when compressing images.
+    from PIL import Image, UnidentifiedImageError, ImageOps, ImageFilter
 
     valid_extensions = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
     processed_count = 0
@@ -153,38 +151,25 @@ def batch_compress_images(
 
                 if max_width > 0 and max_height > 0:
                     if fit_mode == "Stretch to Fit":
-                        img = img.resize((max_width, max_height),
-                                         Image.Resampling.LANCZOS)
+                        img = img.resize((max_width, max_height), Image.Resampling.LANCZOS)
                     elif fit_mode == "Pad with Black Bars":
-                        img = ImageOps.pad(
-                            img, (max_width, max_height), color="black")
+                        img = ImageOps.pad(img, (max_width, max_height), color="black")
                     elif fit_mode == "Pad with White Bars":
-                        img = ImageOps.pad(
-                            img, (max_width, max_height), color="white")
+                        img = ImageOps.pad(img, (max_width, max_height), color="white")
                     elif fit_mode == "Pad with Blurred Background":
-                        # Create a zoomed/blurred background filling the box
-                        bg = ImageOps.fit(
-                            img, (max_width, max_height), Image.Resampling.LANCZOS)
+                        bg = ImageOps.fit(img, (max_width, max_height), Image.Resampling.LANCZOS)
                         bg = bg.filter(ImageFilter.GaussianBlur(radius=20))
-
-                        # Resize the original image maintaining aspect ratio
-                        img.thumbnail((max_width, max_height),
-                                      Image.Resampling.LANCZOS)
-
-                        # Paste centered
-                        offset = ((max_width - img.width) // 2,
-                                  (max_height - img.height) // 2)
+                        img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+                        offset = ((max_width - img.width) // 2, (max_height - img.height) // 2)
                         bg.paste(img, offset)
                         img = bg
                     else:  # "Maintain Aspect Ratio (Fit Inside)"
-                        img.thumbnail((max_width, max_height),
-                                      Image.Resampling.LANCZOS)
+                        img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
                 elif max_width > 0:  # Fallback if only width is provided
                     ratio = max_width / float(img.width)
                     new_height = int(float(img.height) * float(ratio))
-                    img = img.resize((max_width, new_height),
-                                     Image.Resampling.LANCZOS)
+                    img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
 
                 img.save(output_path, "JPEG", quality=quality, optimize=True)
                 processed_count += 1
@@ -202,3 +187,27 @@ def batch_compress_images(
         msg += f" (Skipped {error_count} corrupted or unsupported files)."
 
     return True, msg
+
+@st.cache_data
+def get_available_encoders():
+    """Probes local FFmpeg for available hardware accelerated encoders."""
+    if not shutil.which("ffmpeg"):
+        return ["cv2 (No FFmpeg / Fallback)"]
+
+    try:
+        res = subprocess.run(["ffmpeg", "-encoders"], capture_output=True, text=True)
+        hw_candidates = {
+            'h264_nvenc':        'h264_nvenc (Nvidia GPU)',
+            'hevc_nvenc':        'hevc_nvenc (Nvidia GPU H.265)',
+            'h264_videotoolbox': 'h264_videotoolbox (Apple Silicon)',
+            'h264_qsv':          'h264_qsv (Intel QuickSync)',
+            'h264_amf':          'h264_amf (AMD GPU)'
+        }
+
+        available = ["libx264 (CPU Standard)"]
+        for enc, label in hw_candidates.items():
+            if enc in res.stdout:
+                available.append(label)
+        return available
+    except Exception:
+        return ["libx264 (CPU Standard)"]

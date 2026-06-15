@@ -22,10 +22,10 @@ cols[1].button(
     help="Refresh the library"
 )
 
-# Sort Button (Updated routing to nav_hidden)
+# Sort Button (Updated routing to nav_manga)
 if cols[2].button(label="", icon=":material/drag_pan:", width="stretch", help="Sort the library"):
     st.session_state.temp_manga_cache = st.session_state.manga_cache
-    st.switch_page(st.session_state.nav_hidden["manga_sort"])
+    st.switch_page(st.session_state.nav_manga["manga_sort"])
 
 # --- Sidebar Configuration ---
 column_amount = st.sidebar.slider(
@@ -67,9 +67,9 @@ for i in range(0, len(manga_library), column_amount):
                     st.write(f" **{key}**")
                     st.caption(f"Chapter {value['chapter_read']} / {value['chapters_amount']}")
                     
-                    # Routing (Updated to nav_hidden)
+                    # Routing (Updated to nav_manga)
                     if clicked == 0:
                         st.session_state.selected_title = key
-                        st.switch_page(st.session_state.nav_hidden["manga_read"])
+                        st.switch_page(st.session_state.nav_manga["manga_read"])
 
 apply_footer()

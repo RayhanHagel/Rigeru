@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_searchbox import st_searchbox
-from utilities.util_manga import save_config, search_titles, asura_get_chapter
+from utilities.util_manga import save_config, search_titles, asura_get_chapter, mangadex_get_chapter
 from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
@@ -58,9 +58,9 @@ if selected_website_options:
         with st.spinner(f"Fetching details for {clean_title}..."):
             chapter_json = None
             if website == "asurascans.com/":
-                chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)    
+                chapter_json = asura_get_chapter(chapter_url=chapter_url, website=website)
             elif website == "mangadex.org/":
-                pass # TODO: Implement MangaDex fetcher
+                chapter_json = mangadex_get_chapter(chapter_url=chapter_url, website=website)
         
         # Render the Result Card
         if chapter_json is None:
@@ -72,7 +72,11 @@ if selected_website_options:
                 col1, col2 = st.columns([1, 2])
                 
                 with col1:
-                    image = get_image_cache(url=chapter_json.get("image", ""), crop=True)
+                    if website == "asurascans.com/":
+                        image = get_image_cache(url=chapter_json.get("image", ""), crop=True)
+                    else:
+                        image = get_image_cache(url=chapter_json.get("image", ""), crop=True, headers={"User-Agent": "MangaApp/1.0"}, use_default_headers=False, use_tor_proxies=True)
+                    
                     st.image(image=image if image else chapter_json.get("image"), width="stretch")
                 
                 with col2:

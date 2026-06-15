@@ -6,7 +6,7 @@ from utilities.util_network import get_image_cache
 
 # --- State Initialization & Routing ---
 if "selected_title" not in st.session_state:
-    st.switch_page(st.session_state.nav_home["manga_library"])
+    st.switch_page(st.session_state.nav_manga["manga_library"])
 
 if "downloading_all" not in st.session_state:
     st.session_state.downloading_all = False
@@ -98,7 +98,7 @@ with column_outside[1]:
             if chapter_url in chapter_json.get("chapter_downloaded", []):
                 if col_in[1].button("Read", key=f"read_{current_chapter}", icon=":material/library_books:", width="stretch"):
                     st.session_state.open_chapter = current_chapter
-                    st.switch_page(st.session_state.nav_hidden["manga_pdf"])
+                    st.switch_page(st.session_state.nav_manga["manga_pdf"])
 
                 col_in[2].button("Downloaded", key=f"dl_done_{current_chapter}", icon=":material/download_done:", disabled=True, width="stretch")
             else:

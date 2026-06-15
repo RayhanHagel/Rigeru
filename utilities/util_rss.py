@@ -1,39 +1,34 @@
 import os
-import json
 import feedparser
 import time
 from datetime import datetime
 import streamlit as st
 import re
 import xml.etree.ElementTree as ET
-from utilities.util_network import better_get
 
-CACHE_FILE = "./cache/rss_subscriptions.json"
+# Import shared utilities
+from utilities.util_network import better_get
+from utilities.util_json import load_json, save_json
+
+CACHE_FILE = os.path.join(".", "cache", "rss_subscriptions.json")
 
 def load_subscriptions() -> dict:
     """Loads saved RSS feed URLs and their titles from local cache."""
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, "r") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    return {url: url for url in data}
-                return data
-        except Exception:
-            return {}
-    return {}
+    data = load_json(CACHE_FILE, default_factory=dict)
+    # Backward compatibility for old list-based format
+    if isinstance(data, list):
+        return {url: url for url in data}
+    return data
 
 def save_subscriptions(feed_urls: dict):
     """Saves RSS feed URLs to local cache."""
-    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-    with open(CACHE_FILE, "w") as f:
-        json.dump(feed_urls, f, indent=4)
+    save_json(CACHE_FILE, feed_urls)
 
 def fetch_feed_data(url: str):
     """Robustly fetches feed data using a real User-Agent to bypass bot blocks."""
     try:
         # Utilize the robust fetcher from util_network
-        res = better_get(url, timeout=10)
+        res = better_get(url)
         
         if res and res.status_code == 200:
             # Fix unescaped ampersands which break strict XML parsers
@@ -130,7 +125,7 @@ def parse_opml_links(opml_text: str) -> dict:
 def fetch_remote_recommendations(url: str) -> dict:
     """Fetches and parses a remote Markdown or OPML file via URL."""
     try:
-        response = better_get(url, timeout=10)
+        response = better_get(url)
         if response and response.status_code == 200:
             content = response.text
             if '<opml' in content.lower() or 'xmlurl' in content.lower():
