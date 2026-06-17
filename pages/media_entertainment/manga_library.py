@@ -48,7 +48,13 @@ for i in range(0, len(manga_library), column_amount):
             
             with grid_cols[j]:
                 with st.container(border=True, height="stretch"):
-                    image_encoded = get_image_cache(url=value["image"], crop=True)
+                    use_proxy = value.get("website") == "mangadex.org/"
+                    image_encoded = get_image_cache(
+                        url=value["image"], 
+                        crop=True,
+                        use_tor_proxies=use_proxy,
+                        use_default_headers=not use_proxy
+                    )
                     
                     clicked = -1
                     if image_encoded:
@@ -59,13 +65,12 @@ for i in range(0, len(manga_library), column_amount):
                             img_style={"cursor": "pointer", "width": "100%", "border-radius": "10px"},
                         )
                     else:
-                        # Graceful fallback if the image completely fails to fetch
                         st.warning("Image missing")
                         if st.button("📖 Read", key=f"fallback_{key}", width="stretch"):
                             clicked = 0
                             
                     st.write(f" **{key}**")
-                    st.caption(f"Chapter {value['chapter_read']} / {value['chapters_amount']}")
+                    st.caption(f"Chapter {value.get('chapter_read', 0)} / {value.get('chapters_amount', 0)}")
                     
                     # Routing (Updated to nav_manga)
                     if clicked == 0:

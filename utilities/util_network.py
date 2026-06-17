@@ -37,7 +37,7 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
             continue
     return None
 
-def better_post(url: str, payload: dict | str | bytes = None, json: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, proxies: dict = None, use_default_headers: bool = True) -> requests.Response | None:
+def better_post(url: str, payload: dict | str | bytes = None, json: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_tor_proxies: bool = False, use_default_headers: bool = True) -> requests.Response | None:
     """Robust POST request with timeouts, payload, json support, and proxy support."""
     if use_default_headers:
         req_headers = {**DEFAULT_HEADERS, **(headers or {})}
@@ -46,6 +46,13 @@ def better_post(url: str, payload: dict | str | bytes = None, json: dict = None,
     
     for _ in range(retries):
         try:
+            if use_tor_proxies:
+                proxies = {
+                    'http': 'socks5h://127.0.0.1:9050',
+                    'https': 'socks5h://127.0.0.1:9050'
+                }
+            else:
+                proxies = None
             response = requests.post(url, data=payload, json=json, headers=req_headers, timeout=timeout, proxies=proxies)
             if response.status_code in (429, 500, 502, 503, 504):
                 continue

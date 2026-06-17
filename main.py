@@ -77,10 +77,8 @@ st.session_state.nav_media_proc = {
     "sub_merger":   os.path.join("pages", "subtitles_metadata", "subtitle_merger.py"),
 }
 
-st.session_state.nav_system = { 
-    "scoop":    os.path.join("pages", "system_network", "scoop_manager.py"),
-    "winget":   os.path.join("pages", "system_network", "winget_manager.py"),
-    "choco":    os.path.join("pages", "system_network", "chocolatey_manager.py"),
+st.session_state.nav_system = {
+    "package":    os.path.join("pages", "system_network", "package_manager.py"),
     "env":      os.path.join("pages", "system_network", "environment_variable_manager.py"),
     "services": os.path.join("pages", "system_network", "services.py"),
     "network":  os.path.join("pages", "system_network", "network_monitor.py"),
@@ -174,9 +172,7 @@ pages = {
     ],
 
     "⚙️ System & Network": [
-        st.Page(st.session_state.nav_system["scoop"],    title="Scoop Manager",         icon=":material/inventory_2:"),
-        st.Page(st.session_state.nav_system["winget"],   title="Winget Manager",        icon=":material/widgets:"),
-        st.Page(st.session_state.nav_system["choco"],    title="Chocolatey Manager",    icon=":material/cookie:"),
+        st.Page(st.session_state.nav_system["package"],    title="Package Manager",         icon=":material/widgets:"),
         st.Page(st.session_state.nav_system["docker"],   title="Docker Manager",        icon=":material/terminal:"),
         st.Page(st.session_state.nav_system["env"],      title="Environment Variables", icon=":material/account_tree:"),
         st.Page(st.session_state.nav_system["services"], title="Startup & Services",    icon=":material/speed:"),

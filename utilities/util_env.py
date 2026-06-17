@@ -19,28 +19,28 @@ def get_registry_value(key: int, subkey: str, value_name: str) -> str:
 def guess_application_from_path(folder_path: str) -> str:
     """Scans a directory to figure out which application uses it."""
     if not os.path.exists(folder_path):
-        return "⚠️ Path Does Not Exist (Dead Link)"
+        return ":material/warning: Path Does Not Exist (Dead Link)"
 
     folder_name = os.path.basename(os.path.normpath(folder_path)).lower()
 
     # Common recognizable keywords in folder names
     if "scoop" in folder_path.lower():
-        return f"📦 Scoop App ({folder_name})"
+        return f":material/inventory_2: Scoop App ({folder_name})"
     if "windowsapps" in folder_path.lower():
-        return "🪟 Windows Store App"
+        return ":material/window: Windows Store App"
     if "python" in folder_name:
-        return "🐍 Python Environment"
+        return ":material/terminal: Python Environment"
     if "node" in folder_name or "npm" in folder_name:
-        return "🟢 Node.js / NPM"
+        return ":material/code: Node.js / NPM"
     if "git" in folder_name:
-        return "🔀 Git Version Control"
+        return ":material/fork_right: Git Version Control"
 
     # Scan for dominant executables if folder name is generic
     try:
         exes = [f for f in os.listdir(folder_path) if f.endswith('.exe')]
         if exes:
             # Return the first recognizable exe without the extension
-            return f"⚙️ {exes[0][:-4].capitalize()}"
+            return f":material/settings: {exes[0][:-4].capitalize()}"
     except Exception:
         pass
 
