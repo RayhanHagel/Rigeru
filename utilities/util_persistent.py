@@ -96,6 +96,7 @@ THEMES = {
     }
 }
 
+
 def render_theme_selector():
     """Renders a theme selector dropdown in the sidebar."""
     if "selected_theme" not in st.session_state:
@@ -178,6 +179,19 @@ def apply_theme() -> None:
                 to {{ opacity: 1; transform: translateY(0); }}
             }}
 
+            /* ============================================================
+               ROOT CSS VARIABLES
+               Overrides Streamlit's internal theming variables so that
+               built-in widgets (sliders, toggles, focus rings, etc.)
+               automatically inherit the selected theme colors.
+            ============================================================ */
+            :root {{
+                --primary-color: {theme['HEADING']} !important;
+                --background-color: {theme['BG']} !important;
+                --secondary-background-color: {theme['UI_BG']} !important;
+                --text-color: {theme['TEXT']} !important;
+            }}
+
             /* --- BASE APP STYLING --- */
             html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], [data-testid="stHeader"] {{
                 background-color: {theme['BG']} !important;
@@ -213,7 +227,7 @@ def apply_theme() -> None:
             div.st-key-sticky_footer *, div[data-testid="stSidebar"] p, div[data-testid="stSidebar"] span {{
                 color: {theme['TEXT']} !important;
             }}
-            [data-testid="stSidebarNav"], [data-testid="stSidebarNav"] details, [data-testid="stSidebarNav"] summary, 
+            [data-testid="stSidebarNav"], [data-testid="stSidebarNav"] details, [data-testid="stSidebarNav"] summary,
             [data-testid="stSidebarNav"] ul, [data-testid="stSidebarNav"] li, [data-testid="stSidebarNav"] a {{
                 background-color: transparent !important;
             }}
@@ -246,7 +260,7 @@ def apply_theme() -> None:
             }}
 
             /* --- BUTTONS & PILLS --- */
-            .stButton > button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"], 
+            .stButton > button, [data-testid="baseButton-secondary"], [data-testid="baseButton-primary"],
             button[kind="secondary"], button[kind="primary"], [data-testid="stBaseButton-secondary"] {{
                 background-color: {theme['UI_BG']} !important;
                 border: 1px solid {theme['UI_BORDER']} !important;
@@ -258,7 +272,11 @@ def apply_theme() -> None:
             }}
             .stButton > button:hover, [data-testid="baseButton-secondary"]:hover, button[kind="secondary"]:hover, [data-testid="stBaseButton-secondary"]:hover {{
                 border-color: {theme['HEADING']} !important;
-                background-color: {theme['BG']} !important;
+                background-color: {theme['UI_BG']} !important;
+                color: {theme['HEADING']} !important;
+            }}
+            .stButton > button:hover p, [data-testid="baseButton-secondary"]:hover div {{
+                color: {theme['HEADING']} !important;
             }}
             [data-testid="stPills"] button, [data-testid="stSegmentedControl"] button {{
                 background-color: {theme['UI_BG']} !important;
@@ -266,13 +284,13 @@ def apply_theme() -> None:
                 color: {theme['TEXT']} !important;
             }}
             [data-testid="stPills"] button[data-selected="true"], [data-testid="stSegmentedControl"] button[data-selected="true"] {{
-                background-color: {theme['UI_BORDER']} !important;
+                background-color: {theme['UI_BG']} !important;
                 color: {theme['HEADING']} !important;
                 border-color: {theme['HEADING']} !important;
             }}
 
             /* --- INPUTS: TEXT, NUMBER, DATE, TIME, SELECT --- */
-            .stTextInput > div > div > input, .stNumberInput > div > div > input, .stTextArea > div > div > textarea, 
+            .stTextInput > div > div > input, .stNumberInput > div > div > input, .stTextArea > div > div > textarea,
             .stSelectbox > div > div, .stMultiSelect > div > div {{
                 background: {theme['UI_BG']} !important;
                 border: 1px solid {theme['UI_BORDER']} !important;
@@ -281,6 +299,14 @@ def apply_theme() -> None:
             input::placeholder, textarea::placeholder {{
                 color: {theme['TEXT']} !important;
                 opacity: 0.55 !important;
+            }}
+            /* Focus rings on inputs */
+            .stTextInput > div > div > input:focus,
+            .stNumberInput > div > div > input:focus,
+            .stTextArea > div > div > textarea:focus {{
+                border-color: {theme['HEADING']} !important;
+                box-shadow: 0 0 0 1px {theme['HEADING']} !important;
+                outline: none !important;
             }}
             /* Popover Menus (Selectbox, Date/Time Calendars) */
             [data-baseweb="popover"], [data-baseweb="popover"] > div, [data-baseweb="menu"], ul[role="listbox"], [data-baseweb="calendar"] {{
@@ -334,6 +360,13 @@ def apply_theme() -> None:
             }}
             [data-baseweb="radio"] > div:first-child > div {{
                 background-color: {theme['HEADING']} !important;
+            }}
+            /* Toggle (st.toggle) */
+            [data-testid="stToggle"] label [data-checked="true"] {{
+                background-color: {theme['HEADING']} !important;
+            }}
+            [data-testid="stToggle"] label [data-checked="false"] {{
+                background-color: {theme['UI_BORDER']} !important;
             }}
 
             /* --- SLIDERS --- */
@@ -449,6 +482,26 @@ def apply_theme() -> None:
             .stAppDeployButton {{ display: none; }}
             header {{ background-color: {theme['HEADER_BG']} !important; }}
             #MainMenu {{ visibility: hidden; }}
+            
+            /* --- DATAFRAME BORDER FIX --- */
+            [data-testid="stDataFrameResizable"] {{
+                border: 1px solid {theme['UI_BORDER']} !important;
+                border-radius: 0.5rem !important;
+            }}
+
+            /* --- SIDEBAR COLLAPSE BUTTON ICON --- */
+            [data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"],
+            [data-testid="stBaseButton-headerNoPadding"] [data-testid="stIconMaterial"] {{
+                color: {theme['TEXT']} !important;
+            }}
+
+            /* --- ACTIVE NAV LINK ICON & TEXT --- */
+            [data-testid="stSidebarNav"] a[aria-current="page"] [data-testid="stIconMaterial"] {{
+                color: {theme['HEADING']} !important;
+            }}
+            [data-testid="stSidebarNav"] a[aria-current="page"] [data-testid="stMarkdownContainer"] p {{
+                color: {theme['HEADING']} !important;
+            }}
             </style>
         """,
         unsafe_allow_html=True,
