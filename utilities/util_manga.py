@@ -6,9 +6,10 @@ from urllib.parse import urljoin
 import streamlit as st
 from bs4 import BeautifulSoup
 from PIL import Image
+import time
 
 # Import shared utilities
-from utilities.util_network import better_get
+from utilities.util_network import better_get, better_post
 from utilities.util_json import load_json, save_json
 from utilities.util_playwright import get_async_stealth_page, smooth_scroll_to_bottom
 
@@ -98,15 +99,35 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
         manga_id = chapter_url.split("/title/")[-1].split("||")[0]
         cover_url = chapter_url.split("||")[-1] if "||" in chapter_url else ""
 
-        # Fetch English chapters sorted in ascending order
+        # Fetch Manga Rating via Statistics API
+        stats_url = f"https://api.mangadex.org/statistics/manga/{manga_id}"
+        stats_response = better_get(
+            stats_url,
+            headers={"User-Agent": "MangaApp/1.0"},
+            timeout=15,
+            use_tor_proxies=True,
+            use_default_headers=False
+        )
+        
+        rating_val = 8.0  # fallback
+        if stats_response and stats_response.status_code == 200:
+            stats_data = stats_response.json().get("statistics", {}).get(manga_id, {})
+            rating_info = stats_data.get("rating", {})
+            bayesian = rating_info.get("bayesian")
+            if bayesian is not None:
+                rating_val = float(bayesian)
+
+        # Fetch English chapters sorted in ascending order with strict filters
         feed_url = f"https://api.mangadex.org/manga/{manga_id}/feed"
         params = {
             "translatedLanguage[]": ["en"],
             "order[chapter]": "asc",
-            "limit": 500
+            "limit": 500,
+            "includeExternalUrl": 0,      
+            "includeEmptyPages": 0,       
+            "includeFuturePublishAt": 0   
         }
         
-        # Disabled default headers to prevent 400s and passed a simple, honest User-Agent
         response = better_get(
             feed_url, 
             params=params, 
@@ -127,7 +148,8 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
         for ch in chapters_data:
             ch_num = ch["attributes"]["chapter"]
             if ch_num:
-                chapters_url_list.append(f"https://api.mangadex.org/at-home/server/{ch['id']}")
+                # SPOOF THE URL: Append the chapter number so your UI/downloader parses it beautifully
+                chapters_url_list.append(f"https://api.mangadex.org/at-home/server/{ch['id']}/chapter-{ch_num}")
                 try:
                     last_chapter_num = max(last_chapter_num, int(float(ch_num)))
                 except ValueError:
@@ -138,7 +160,7 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
             "chapters_amount": last_chapter_num if last_chapter_num > 0 else len(chapters_url_list),
             "status": "Ongoing", 
             "type": "Manga",
-            "rating": 8.0,
+            "rating": round(rating_val, 2),
             "website": website,
             "image": cover_url,
             "chapter_downloaded": [],
@@ -216,6 +238,27 @@ def search_titles_mangadex(title: str) -> dict | None:
 
     try:
         data = response.json().get("data", [])
+        if not data:
+            return None
+            
+        # Fetch manga statistics (ratings) in bulk for the search results
+        manga_ids = [manga["id"] for manga in data]
+        stats_url = "https://api.mangadex.org/statistics/composite/manga"
+        stats_params = {"entityIds[]": manga_ids}
+        
+        stats_response = better_get(
+            stats_url,
+            params=stats_params,
+            headers={"User-Agent": "MangaApp/1.0"},
+            timeout=15,
+            use_tor_proxies=True,
+            use_default_headers=False
+        )
+        
+        stats_data = {}
+        if stats_response and stats_response.status_code == 200:
+            stats_data = stats_response.json().get("statistics", {})
+
         results = {}
         for manga in data:
             manga_id = manga["id"]
@@ -231,8 +274,18 @@ def search_titles_mangadex(title: str) -> dict | None:
                     cover_file = rel["attributes"].get("fileName", "")
                     break
             
-            cover_url = f"https://uploads.mangadex.org/covers/{manga_id}/{cover_file}" if cover_file else ""
-            results[f"😺 {manga_title}"] = f"https://mangadex.org/title/{manga_id}||{cover_url}"
+            # Using the 512px thumbnail size for optimized loading in the UI
+            cover_url = f"https://uploads.mangadex.org/covers/{manga_id}/{cover_file}.512.jpg" if cover_file else ""
+            
+            # Append rating to title if available
+            rating_str = ""
+            if manga_id in stats_data:
+                rating_info = stats_data[manga_id].get("rating", {})
+                bayesian = rating_info.get("bayesian")
+                if bayesian:
+                    rating_str = f" (⭐ {bayesian:.1f})"
+
+            results[f"😺 {manga_title}{rating_str}"] = f"https://mangadex.org/title/{manga_id}||{cover_url}"
             
         return results if results else None
     except Exception as e:
@@ -246,17 +299,53 @@ def read_cache() -> dict:
 
 
 def download_single_image(args: tuple) -> bool:
-    """Downloads a single image. Designed to be called from a thread pool."""
+    """Downloads a single image and reports telemetry if using a MangaDex@Home node."""
     url, image_path = args
-    image_data = better_get(url, timeout=15)
-    if image_data:
-        try:
+    
+    start_time = time.time()
+    success = False
+    cached = False
+    bytes_downloaded = 0
+    
+    try:
+        response = better_get(url, timeout=15)
+        duration = int((time.time() - start_time) * 1000)
+        
+        if response is not None and response.status_code == 200:
+            bytes_downloaded = len(response.content)
             with open(image_path, "wb") as handler:
-                handler.write(image_data.content)
-            return True
-        except Exception:
-            pass
-    return False
+                handler.write(response.content)
+            success = True
+            
+            # Check for cache hit
+            x_cache = response.headers.get("X-Cache", "")
+            if x_cache.startswith("HIT"):
+                cached = True
+    except Exception:
+        duration = int((time.time() - start_time) * 1000)
+        success = False
+        
+    # MangaDex@Home Telemetry Report
+    if "mangadex.org" not in url:
+        report_payload = {
+            "url": url,
+            "success": success,
+            "cached": cached,
+            "bytes": bytes_downloaded,
+            "duration": duration
+        }
+        
+        # Fire-and-forget telemetry using your custom better_post utility
+        better_post(
+            url="https://api.mangadex.network/report",
+            json=report_payload,
+            timeout=3,
+            retries=1,
+            use_default_headers=False,
+            use_tor_proxies=True
+        )
+
+    return success
 
 
 def change_chapter_read(title: str, chapter_read: int) -> None:
@@ -303,11 +392,17 @@ async def get_asura_images(url: str) -> list:
         return []
 
 
-def get_mangadex_images(api_url: str) -> list:
-    """Fetches high-quality direct page paths using the MangaDex At-Home server API via Tor Proxy."""
+def get_mangadex_images(api_url: str, use_data_saver: bool = False) -> list:
+    """Fetches direct page paths using the MangaDex At-Home server API via Tor Proxy."""
+    
+    # Clean our custom spoofed '/chapter-X' suffix to get the real MangaDex API endpoint
+    if "/chapter-" in api_url:
+        api_url = api_url.split("/chapter-")[0]
+        
+    # Ensure NO authentication headers are sent, strictly passing a basic User-Agent
     response = better_get(
         api_url, 
-        headers={"User-Agent": "MangaApp/1.0"},
+        headers={"User-Agent": "MangaApp/1.0"}, 
         timeout=30, 
         use_tor_proxies=True,
         use_default_headers=False
@@ -315,13 +410,20 @@ def get_mangadex_images(api_url: str) -> list:
     
     if response is None or response.status_code != 200:
         return []
+        
     try:
         data = response.json()
         base_url = data.get("baseUrl")
         ch_hash = data.get("chapter", {}).get("hash")
-        files = data.get("chapter", {}).get("data", [])
         
-        return [f"{base_url}/data/{ch_hash}/{filename}" for filename in files]
+        # Determine quality mode
+        quality_key = "dataSaver" if use_data_saver else "data"
+        url_path = "data-saver" if use_data_saver else "data"
+        
+        files = data.get("chapter", {}).get(quality_key, [])
+        
+        # URL format: $.baseUrl / $QUALITY / $.chapter.hash / $.chapter.$QUALITY[*]
+        return [f"{base_url}/{url_path}/{ch_hash}/{filename}" for filename in files]
     except Exception:
         return []
 
@@ -404,13 +506,18 @@ def sync_and_save(new_layout: list):
     Called by streamlit-elements onLayoutChange.
     Re-orders manga_cache according to the dragged layout and persists.
     """
-    sorted_layout = sorted(new_layout, key=lambda x: x['y'])
+    sorted_layout = sorted(new_layout, key=lambda item: (item['y'], item['x']))
+    
     new_order_indices = [int(item['i']) for item in sorted_layout]
 
     current_cache = st.session_state.get('temp_manga_cache', {})
     keys = list(current_cache.keys())
+    
+    # Rebuild the dictionary mapping in the new dragged order
     reordered = {keys[i]: current_cache[keys[i]] for i in new_order_indices if i < len(keys)}
 
     st.session_state.temp_manga_cache = reordered
     st.session_state.manga_cache = reordered
+    
+    # save_config handles writing st.session_state.manga_cache to disk
     save_config(replace_data=True)
