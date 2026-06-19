@@ -1,6 +1,5 @@
 import streamlit as st
 from utilities.util_quick import read_cache, write_cache
-from utilities.util_persistent import apply_footer
 from utilities.util_network import get_image_cache
 
 WIDGET_OPTIONS = ["link button", "image", "clickable image", "text", "caption", "internal page"]
@@ -38,30 +37,6 @@ def build_internal_pages() -> dict:
             pages[label] = (key_name, nav_key)
     return pages
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-.add-panel-label {
-    font-size: 0.7rem;
-    font-family: monospace;
-    color: #9ca3af;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-}
-.preview-badge {
-    display: inline-block;
-    background: #1e1030;
-    border: 1px solid #7c3aed44;
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    font-family: monospace;
-    color: #a78bfa;
-    margin-top: 4px;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ── Session State ─────────────────────────────────────────────────────────────
 if "quick_cache" not in st.session_state:
@@ -322,5 +297,3 @@ for i in range(0, total_cards, column_amount):
                                 st.switch_page(page_path)
                         else:
                             st.caption(f"⚠️ Page not found: {widget_input}")
-
-apply_footer()

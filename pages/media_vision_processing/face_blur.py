@@ -9,7 +9,7 @@ from utilities.util_face_blur import (
     get_available_encoders,
     TEMP_DIR
 )
-from utilities.util_persistent import apply_footer
+
 
 try:
     from streamlit_image_comparison import image_comparison
@@ -390,4 +390,4 @@ with tab_dl:
                     progress_bar.empty()
                     status_text.error(result_path)
 
-apply_footer()
+

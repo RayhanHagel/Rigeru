@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_services import get_registry_startup, get_all_services
-from utilities.util_persistent import apply_footer
+
 import os
 
 # --- Data Fetching ---
@@ -100,4 +100,3 @@ with tab3:
                 if svc.get('Dependencies'):
                     st.caption(f"**Relies On:** {svc.get('Dependencies')}")
 
-apply_footer()

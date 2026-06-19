@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_twitch import check_live_status, read_cache, save_config
-from utilities.util_persistent import apply_footer
+
 from streamlit_autorefresh import st_autorefresh
 
 # --- State Initialization ---
@@ -107,4 +107,3 @@ with tab_watch:
                 chat_url = f"https://www.twitch.tv/embed/{selected_channel}/chat?parent={embed_parent}"
                 st.iframe(chat_url, height=650)
 
-apply_footer()

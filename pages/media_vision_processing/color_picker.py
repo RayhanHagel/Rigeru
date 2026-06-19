@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 from utilities.util_color_picker import get_color_from_coords
-from utilities.util_persistent import apply_footer
+
 
 # Import the third-party click component
 try:
@@ -66,4 +66,3 @@ else:
                 else:
                     st.error(result)
 
-apply_footer()

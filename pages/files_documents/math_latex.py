@@ -7,7 +7,7 @@ except ImportError:
     st_cropper = None
 
 from utilities.util_math_latex import process_math_image, get_model_labels
-from utilities.util_persistent import apply_footer
+
 
 st.header(":material/function: Math Screenshot to LaTeX")
 st.markdown("Upload a screenshot of a mathematical equation, crop it, and convert it to copyable LaTeX code.")
@@ -78,4 +78,3 @@ with tab_upload:
                 else:
                     st.error(result)
 
-apply_footer()

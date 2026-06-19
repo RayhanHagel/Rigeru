@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_subtitles import search_opensubtitles, download_subtitle
-from utilities.util_persistent import apply_footer
+
 
 st.header("🔤 Local Subtitle Fetcher")
 st.markdown("Find the *exact* subtitle for your video. This tool analyzes your local video to generate a tiny digital fingerprint, keeping your media completely private.")
@@ -96,4 +96,3 @@ if "subtitle_results" in st.session_state and st.session_state.subtitle_results:
                         else:
                             st.error(sub_bytes)
 
-apply_footer()

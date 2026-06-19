@@ -1,22 +1,10 @@
 import streamlit as st
 import os
-
 from utilities.util_manga import read_cache as manga_rc
 from utilities.util_quick import read_cache as quick_rc
 from utilities.util_twitch import read_cache as twitch_rc
-from utilities.util_persistent import apply_logo, apply_theme, render_theme_selector
+from utilities.util_persistent import apply_logo, apply_theme, render_theme_selector, apply_footer
 
-
-# -- If Logging is Needed --
-logging_state = False
-if logging_state:
-    import time
-    import logging
-    logging.basicConfig(
-        filename="app.log",
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s"
-    )
 
 # --- Session State Initialization ---
 if "quick_cache" not in st.session_state:
@@ -29,180 +17,159 @@ if "twitch_cache" not in st.session_state:
     st.session_state.twitch_cache = twitch_rc()
 
 
-# --- Page Routing Definitions (Updated to match new folder structure) ---
+# --- Page Routing Definitions (Categorized to match UI) ---
 
-st.session_state.nav_home = {
+st.session_state.nav_dashboard = {
     "quick_home":  os.path.join("pages", "home", "home.py"),
     "quick_sort":  os.path.join("pages", "home", "sort.py"),
 }
 
-st.session_state.nav_manga = { 
-    "manga_search":  os.path.join("pages", "media_entertainment", "manga_search.py"),
-    "manga_library": os.path.join("pages", "media_entertainment", "manga_library.py"),
-    "manga_read":    os.path.join("pages", "manga", "manga_read.py"),
-    "manga_sort":    os.path.join("pages", "manga", "manga_sort.py"),
-    "manga_pdf":    os.path.join("pages", "manga", "manga_pdf.py")
-}
-
-st.session_state.nav_media_feeds = { 
+st.session_state.nav_media_entertainment = { 
+    "manga_search":      os.path.join("pages", "media_entertainment", "manga_search.py"),
+    "manga_library":     os.path.join("pages", "media_entertainment", "manga_library.py"),
     "twitch_player":     os.path.join("pages", "media_entertainment", "twitch_watch.py"),
     "spotify_scrobbler": os.path.join("pages", "media_entertainment", "spotify_listen.py"),
+    "malsync":           os.path.join("pages", "media_entertainment", "malsync.py"),
+}
+
+st.session_state.nav_web_downloads = { 
     "youtube":           os.path.join("pages", "web_downloads", "youtube_download.py"),
     "spotify":           os.path.join("pages", "web_downloads", "spotify_download.py"),
     "rss":               os.path.join("pages", "web_downloads", "rss_manager.py"),
+    "yt_rss":            os.path.join("pages", "web_downloads", "youtube_rss.py"),
+    "web_scraper":       os.path.join("pages", "web_downloads", "web_scraper.py"),
+    "price_monitor":     os.path.join("pages", "web_downloads", "price_monitor.py"),
+    "currency":          os.path.join("pages", "web_downloads", "currency_view.py"),
 }
 
-st.session_state.nav_file_mgmt = { 
-    "file_mover":   os.path.join("pages", "files_documents", "file_organizer.py"),
-    "hash":         os.path.join("pages", "files_documents", "hash_integrity.py"),
-    "mega_cleaner": os.path.join("pages", "files_documents", "mega_cleaner.py"),
-    "doc_search":   os.path.join("pages", "files_documents", "document_search.py"),
+st.session_state.nav_media_vision_processing = { 
+    "media":             os.path.join("pages", "media_vision_processing", "media_compressor.py"),
+    "upscaler":          os.path.join("pages", "media_vision_processing", "image_upscaler.py"),
+    "bg_remove":         os.path.join("pages", "media_vision_processing", "background_remove.py"),
+    "color_picker":      os.path.join("pages", "media_vision_processing", "color_picker.py"),
+    "depth_estimate":    os.path.join("pages", "media_vision_processing", "depth_estimation.py"),
+    "object_detect":     os.path.join("pages", "media_vision_processing", "object_detect.py"),
+    "face_blur":         os.path.join("pages", "media_vision_processing", "face_blur.py"),
+    "nsfw_censor":       os.path.join("pages", "media_vision_processing", "vision_censor.py"),
 }
 
-st.session_state.nav_metadata = { 
-    "media_tags": os.path.join("pages", "subtitles_metadata", "media_tags.py"),
-    "timestamps": os.path.join("pages", "subtitles_metadata", "file_timestamps.py"),
+st.session_state.nav_subtitles_metadata = { 
+    "audio":             os.path.join("pages", "subtitles_metadata", "subtitle_studio.py"),
+    "sub_fetcher":       os.path.join("pages", "subtitles_metadata", "subtitle_fetcher.py"),
+    "sub_merger":        os.path.join("pages", "subtitles_metadata", "subtitle_merger.py"),
+    "media_tags":        os.path.join("pages", "subtitles_metadata", "media_tags.py"),
+    "timestamps":        os.path.join("pages", "subtitles_metadata", "file_timestamps.py"),
+    "exif":              os.path.join("pages", "subtitles_metadata", "exif_remover.py"),
 }
 
-st.session_state.nav_media_proc = { 
-    "media":        os.path.join("pages", "media_vision_processing", "media_compressor.py"),
-    "upscaler":     os.path.join("pages", "media_vision_processing", "image_upscaler.py"),
-    "color_picker": os.path.join("pages", "media_vision_processing", "color_picker.py"),
-    "bg_remove":    os.path.join("pages", "media_vision_processing", "background_remove.py"),
-    "face_blur":    os.path.join("pages", "media_vision_processing", "face_blur.py"),
-    "depth_estimate": os.path.join("pages", "media_vision_processing", "depth_estimation.py"),
-    "audio":        os.path.join("pages", "subtitles_metadata", "subtitle_studio.py"),
-    "exif":         os.path.join("pages", "subtitles_metadata", "exif_remover.py"),
-    "sub_fetcher":  os.path.join("pages", "subtitles_metadata", "subtitle_fetcher.py"),
-    "sub_merger":   os.path.join("pages", "subtitles_metadata", "subtitle_merger.py"),
+st.session_state.nav_files_documents = { 
+    "pdf_studio":        os.path.join("pages", "files_documents", "pdf_studio.py"),
+    "file_mover":        os.path.join("pages", "files_documents", "file_organizer.py"),
+    "excel_cleaner":     os.path.join("pages", "files_documents", "excel_cleaner.py"),
+    "expense":           os.path.join("pages", "files_documents", "expense_tracker.py"),
+    "math_latex":        os.path.join("pages", "files_documents", "math_latex.py"),
+    "hash":              os.path.join("pages", "files_documents", "hash_integrity.py"),
+    "mega_cleaner":      os.path.join("pages", "files_documents", "mega_cleaner.py"),
 }
 
-st.session_state.nav_system = {
-    "package":    os.path.join("pages", "system_network", "package_manager.py"),
-    "env":      os.path.join("pages", "system_network", "environment_variable_manager.py"),
-    "services": os.path.join("pages", "system_network", "services.py"),
-    "network":  os.path.join("pages", "system_network", "network_monitor.py"),
-    "ping":     os.path.join("pages", "system_network", "ping_test.py"),
-    "monitor":  os.path.join("pages", "system_network", "system_monitor.py"),
-    "docker":   os.path.join("pages", "system_network", "docker_manager.py"),
+st.session_state.nav_system_network = {
+    "package":           os.path.join("pages", "system_network", "package_manager.py"),
+    "docker":            os.path.join("pages", "system_network", "docker_manager.py"),
+    "env":               os.path.join("pages", "system_network", "environment_variable_manager.py"),
+    "services":          os.path.join("pages", "system_network", "services.py"),
+    "monitor":           os.path.join("pages", "system_network", "system_monitor.py"),
+    "network":           os.path.join("pages", "system_network", "network_monitor.py"),
+    "ping":              os.path.join("pages", "system_network", "ping_test.py"),
 }
 
-st.session_state.nav_vision = { 
-    "math_latex":    os.path.join("pages", "files_documents", "math_latex.py"),
-    "expense":       os.path.join("pages", "files_documents", "expense_tracker.py"),
-    "object_detect": os.path.join("pages", "media_vision_processing", "object_detect.py"),
-    "nsfw_censor":   os.path.join("pages", "media_vision_processing", "vision_censor.py"),
-}
-
-st.session_state.nav_data_mgmt = { 
-    "excel_cleaner": os.path.join("pages", "files_documents", "excel_cleaner.py"),
-    "diff_checker":  os.path.join("pages", "files_documents", "data_diff.py"),
-    "pdf_redact":    os.path.join("pages", "files_documents", "pdf_redact.py"),
-}
-
-st.session_state.nav_web_feeds = { 
-    "malsync":       os.path.join("pages", "media_entertainment", "malsync.py"),
-    "currency":      os.path.join("pages", "web_downloads", "currency_view.py"),
-    "web_scraper":   os.path.join("pages", "web_downloads", "web_scraper.py"),
-    "price_monitor": os.path.join("pages", "web_downloads", "price_monitor.py"),
-    "yt_rss":        os.path.join("pages", "web_downloads", "youtube_rss.py"),
+st.session_state.nav_hidden = {
+    "manga_read":        os.path.join("pages", "media_entertainment", "manga_read.py"),
+    "manga_sort":        os.path.join("pages", "media_entertainment", "manga_sort.py"),
+    "manga_pdf":         os.path.join("pages", "media_entertainment", "manga_pdf.py")
 }
 
 # --- UI Configuration ---
 apply_logo()
-render_theme_selector()
 apply_theme()
 
 
 # --- Streamlit Navigation Structure (Workflow Optimized) ---
 pages = {
-    "🏠 Dashboard": [
-        st.Page(st.session_state.nav_home["quick_home"], title="Quick Navigation", icon=":material/bolt:"),
-        st.Page(st.session_state.nav_home["quick_sort"], title="Quick Sort",       icon=":material/drag_pan:"),
+    ":material/home: Dashboard": [
+        st.Page(st.session_state.nav_dashboard["quick_home"], title="Quick Navigation", icon=":material/bolt:"),
+        st.Page(st.session_state.nav_dashboard["quick_sort"], title="Quick Sort",       icon=":material/drag_pan:"),
     ],
 
-    "📺 Media & Entertainment": [
-        st.Page(st.session_state.nav_manga["manga_search"],        title="Manga Search",       icon=":material/search:"),
-        st.Page(st.session_state.nav_manga["manga_library"],       title="Manga Library",      icon=":material/menu_book:"),
-        st.Page(st.session_state.nav_media_feeds["twitch_player"], title="Twitch Watch",       icon=":material/live_tv:"),
-        st.Page(st.session_state.nav_media_feeds["spotify_scrobbler"], title="Spotify Scrobbler", icon=":material/graphic_eq:"),
-        st.Page(st.session_state.nav_web_feeds["malsync"],         title="MAL Local Tracker",  icon=":material/collections_bookmark:"),
+    ":material/tv: Media & Entertainment": [
+        st.Page(st.session_state.nav_media_entertainment["manga_search"],        title="Manga Search",       icon=":material/search:"),
+        st.Page(st.session_state.nav_media_entertainment["manga_library"],       title="Manga Library",      icon=":material/menu_book:"),
+        st.Page(st.session_state.nav_media_entertainment["twitch_player"],       title="Twitch Watch",       icon=":material/live_tv:"),
+        st.Page(st.session_state.nav_media_entertainment["spotify_scrobbler"],   title="Spotify Scrobbler",  icon=":material/graphic_eq:"),
+        st.Page(st.session_state.nav_media_entertainment["malsync"],             title="MAL Local Tracker",  icon=":material/collections_bookmark:"),
     ],
 
-    "📥 Web & Downloads": [
-        st.Page(st.session_state.nav_media_feeds["youtube"], title="YouTube Downloader", icon=":material/smart_display:"),
-        st.Page(st.session_state.nav_media_feeds["spotify"], title="Spotify Downloader", icon=":material/music_note:"),
-        st.Page(st.session_state.nav_media_feeds["rss"],     title="RSS Feed Manager",   icon=":material/rss_feed:"),
-        st.Page(st.session_state.nav_web_feeds["yt_rss"],    title="YouTube RSS Feed",   icon=":material/subscriptions:"),
-        st.Page(st.session_state.nav_web_feeds["web_scraper"], title="Visual Scraper",   icon=":material/travel_explore:"),
-        st.Page(st.session_state.nav_web_feeds["price_monitor"], title="Price Drop Monitor", icon=":material/trending_down:"),
-        st.Page(st.session_state.nav_web_feeds["currency"],  title="Currency Tracker",   icon=":material/currency_exchange:"),
+    ":material/download: Web & Downloads": [
+        st.Page(st.session_state.nav_web_downloads["youtube"],       title="YouTube Downloader", icon=":material/smart_display:"),
+        st.Page(st.session_state.nav_web_downloads["spotify"],       title="Spotify Downloader", icon=":material/music_note:"),
+        st.Page(st.session_state.nav_web_downloads["rss"],           title="RSS Feed Manager",   icon=":material/rss_feed:"),
+        st.Page(st.session_state.nav_web_downloads["yt_rss"],        title="YouTube RSS Feed",   icon=":material/subscriptions:"),
+        st.Page(st.session_state.nav_web_downloads["web_scraper"],   title="Visual Scraper",     icon=":material/travel_explore:"),
+        st.Page(st.session_state.nav_web_downloads["price_monitor"], title="Price Drop Monitor", icon=":material/trending_down:"),
+        st.Page(st.session_state.nav_web_downloads["currency"],      title="Currency Tracker",   icon=":material/currency_exchange:"),
     ],
 
-    "🎨 Media & Vision Processing": [
-        st.Page(st.session_state.nav_media_proc["media"],        title="Image/Video Compressor", icon=":material/photo_library:"),
-        st.Page(st.session_state.nav_media_proc["upscaler"],     title="AI Image Upscaler",      icon=":material/high_quality:"),
-        st.Page(st.session_state.nav_media_proc["bg_remove"],    title="BG Remover",             icon=":material/layers_clear:"),
-        st.Page(st.session_state.nav_media_proc["color_picker"], title="Color Picker",           icon=":material/colorize:"),
-        st.Page(st.session_state.nav_media_proc["depth_estimate"], title="Depth Estimator",      icon=":material/lens_blur:"),
-        st.Page(st.session_state.nav_vision["object_detect"],    title="Object Detection",       icon=":material/center_focus_strong:"),
-        st.Page(st.session_state.nav_media_proc["face_blur"],    title="Face Blurring",          icon=":material/face_retouching_off:"),
-        st.Page(st.session_state.nav_vision["nsfw_censor"],      title="Video Censor",           icon=":material/security:"),
+    ":material/palette: Media & Vision Processing": [
+        st.Page(st.session_state.nav_media_vision_processing["media"],          title="Image/Video Compressor", icon=":material/photo_library:"),
+        st.Page(st.session_state.nav_media_vision_processing["upscaler"],       title="AI Image Upscaler",      icon=":material/high_quality:"),
+        st.Page(st.session_state.nav_media_vision_processing["bg_remove"],      title="BG Remover",             icon=":material/layers_clear:"),
+        st.Page(st.session_state.nav_media_vision_processing["color_picker"],   title="Color Picker",           icon=":material/colorize:"),
+        st.Page(st.session_state.nav_media_vision_processing["depth_estimate"], title="Depth Estimator",      icon=":material/lens_blur:"),
+        st.Page(st.session_state.nav_media_vision_processing["object_detect"],  title="Object Detection",       icon=":material/center_focus_strong:"),
+        st.Page(st.session_state.nav_media_vision_processing["face_blur"],      title="Face Blurring",          icon=":material/face_retouching_off:"),
+        st.Page(st.session_state.nav_media_vision_processing["nsfw_censor"],    title="Video Censor",           icon=":material/security:"),
     ],
     
-    "📝 Subtitles & Metadata": [
-        st.Page(st.session_state.nav_media_proc["audio"],       title="Subtitle Studio",      icon=":material/subtitles:"),
-        st.Page(st.session_state.nav_media_proc["sub_fetcher"], title="Sub Fetcher",          icon=":material/closed_caption:"),
-        st.Page(st.session_state.nav_media_proc["sub_merger"],  title="ASS Subtitle Merger",  icon=":material/merge:"),
-        st.Page(st.session_state.nav_metadata["media_tags"],    title="Media Tags Editor",    icon=":material/audiotrack:"),
-        st.Page(st.session_state.nav_metadata["timestamps"],    title="Timestamp Modifier",   icon=":material/update:"),
-        st.Page(st.session_state.nav_media_proc["exif"],        title="EXIF Stripper",        icon=":material/visibility_off:"),
+    ":material/description: Subtitles & Metadata": [
+        st.Page(st.session_state.nav_subtitles_metadata["audio"],       title="Subtitle Studio",      icon=":material/subtitles:"),
+        st.Page(st.session_state.nav_subtitles_metadata["sub_fetcher"], title="Sub Fetcher",          icon=":material/closed_caption:"),
+        st.Page(st.session_state.nav_subtitles_metadata["sub_merger"],  title="ASS Subtitle Merger",  icon=":material/merge:"),
+        st.Page(st.session_state.nav_subtitles_metadata["media_tags"],  title="Media Tags Editor",    icon=":material/audiotrack:"),
+        st.Page(st.session_state.nav_subtitles_metadata["timestamps"],  title="Timestamp Modifier",   icon=":material/update:"),
+        st.Page(st.session_state.nav_subtitles_metadata["exif"],        title="EXIF Stripper",        icon=":material/visibility_off:"),
     ],
 
-    "🗂️ Files & Documents": [
-        st.Page(st.session_state.nav_file_mgmt["file_mover"],   title="File Mover",             icon=":material/drive_file_move:"),
-        st.Page(st.session_state.nav_file_mgmt["doc_search"],   title="Document Search",        icon=":material/search:"),
-        st.Page(st.session_state.nav_data_mgmt["pdf_redact"],   title="PDF Redactor",           icon=":material/ink_eraser:"),
-        st.Page(st.session_state.nav_data_mgmt["excel_cleaner"], title="Excel Cleaner",         icon=":material/table_chart:"),
-        st.Page(st.session_state.nav_data_mgmt["diff_checker"], title="Diff Checker",           icon=":material/difference:"),
-        st.Page(st.session_state.nav_vision["expense"],         title="Receipt Scanner",        icon=":material/receipt_long:"),
-        st.Page(st.session_state.nav_vision["math_latex"],      title="Math to LaTeX",          icon=":material/calculate:"),
-        st.Page(st.session_state.nav_file_mgmt["hash"],         title="File Integrity Checker", icon=":material/security:"),
-        st.Page(st.session_state.nav_file_mgmt["mega_cleaner"], title="Mega Link Cleaner",      icon=":material/folder_delete:"),
+    ":material/folder: Files & Documents": [
+        st.Page(st.session_state.nav_files_documents["pdf_studio"],     title="Document Studio",        icon=":material/edit_document:"),
+        st.Page(st.session_state.nav_files_documents["file_mover"],     title="File Mover",             icon=":material/drive_file_move:"),
+        st.Page(st.session_state.nav_files_documents["excel_cleaner"],  title="Excel Cleaner",         icon=":material/table_chart:"),
+        st.Page(st.session_state.nav_files_documents["expense"],        title="Receipt Scanner",        icon=":material/receipt_long:"),
+        st.Page(st.session_state.nav_files_documents["math_latex"],     title="Math to LaTeX",          icon=":material/calculate:"),
+        st.Page(st.session_state.nav_files_documents["hash"],           title="File Integrity Checker", icon=":material/security:"),
+        st.Page(st.session_state.nav_files_documents["mega_cleaner"],   title="Mega Link Cleaner",      icon=":material/folder_delete:"),
     ],
 
-    "⚙️ System & Network": [
-        st.Page(st.session_state.nav_system["package"],    title="Package Manager",         icon=":material/widgets:"),
-        st.Page(st.session_state.nav_system["docker"],   title="Docker Manager",        icon=":material/terminal:"),
-        st.Page(st.session_state.nav_system["env"],      title="Environment Variables", icon=":material/account_tree:"),
-        st.Page(st.session_state.nav_system["services"], title="Startup & Services",    icon=":material/speed:"),
-        st.Page(st.session_state.nav_system["monitor"],  title="System Monitor",        icon=":material/memory:"),
-        st.Page(st.session_state.nav_system["network"],  title="Network Monitor",       icon=":material/radar:"),
-        st.Page(st.session_state.nav_system["ping"],     title="Ping Test",             icon=":material/network_ping:"),
+    ":material/settings: System & Network": [
+        st.Page(st.session_state.nav_system_network["package"],  title="Package Manager",       icon=":material/widgets:"),
+        st.Page(st.session_state.nav_system_network["docker"],   title="Docker Manager",        icon=":material/terminal:"),
+        st.Page(st.session_state.nav_system_network["env"],      title="Environment Variables", icon=":material/account_tree:"),
+        st.Page(st.session_state.nav_system_network["services"], title="Startup & Services",    icon=":material/speed:"),
+        st.Page(st.session_state.nav_system_network["monitor"],  title="System Monitor",        icon=":material/memory:"),
+        st.Page(st.session_state.nav_system_network["network"],  title="Network Monitor",       icon=":material/radar:"),
+        st.Page(st.session_state.nav_system_network["ping"],     title="Ping Test",             icon=":material/network_ping:"),
     ],
     
     "Hidden" : [
-        st.Page(st.session_state.nav_manga["manga_read"], title="Manga Reader", icon=":material/book:", visibility="hidden"),
-        st.Page(st.session_state.nav_manga["manga_sort"], title="Manga Sort", icon=":material/book:", visibility="hidden"),
-        st.Page(st.session_state.nav_manga["manga_pdf"], title="Manga PDF", icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_read"], title="Manga Reader", icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_sort"], title="Manga Sort",   icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_pdf"],  title="Manga PDF",    icon=":material/book:", visibility="hidden"),
     ]
 }
 
 # --- Initialization & Rendering ---
 pg = st.navigation(pages=pages, expanded=False)
-
-if logging_state:
-    start_time = time.time()
-
 pg.run()
 
-if logging_state:
-    end_time = time.time()
-    load_duration = end_time - start_time
-    with st.sidebar:
-        st.divider()
-        if load_duration > 1.5:
-            st.error(f"🐢 Slow Load Detected: {load_duration:.3f}s")
-        else:
-            st.caption(f"⚡ Page Load Time: **{load_duration:.3f}s**")
-    logging.info(f"Page execution cycle completed in {load_duration:.3f} seconds.")
+
+# --- UI Configuration ---
+render_theme_selector()
+apply_footer()

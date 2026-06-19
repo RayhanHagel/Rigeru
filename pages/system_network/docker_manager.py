@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_docker import list_containers, container_action, start_docker_daemon
-from utilities.util_persistent import apply_footer
+
 
 # Modern Header with Material Icon
 st.header(":material/deployed_code: Local Docker Manager", divider="gray")
@@ -89,4 +89,3 @@ with st.spinner("Connecting to Docker daemon..."):
                                 st.error(act_msg, icon=":material/error:")
                             st.rerun()
 
-apply_footer()

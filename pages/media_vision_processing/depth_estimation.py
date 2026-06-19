@@ -6,7 +6,7 @@ from utilities.util_depth_estimation import (
     get_available_encoders,
     TEMP_DIR
 )
-from utilities.util_persistent import apply_footer
+
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 import threading
 
@@ -302,6 +302,6 @@ with tab_video:
                     )
 
 try:
-    apply_footer()
+    
 except NameError:
     pass

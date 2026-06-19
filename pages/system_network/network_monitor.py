@@ -3,7 +3,7 @@ import re
 from streamlit_agraph import agraph, Node, Edge, Config
 
 from utilities.util_network_monitor import get_active_connections
-from utilities.util_persistent import apply_footer, THEMES
+from utilities.util_persistent import THEMES
 
 # --- Theme & Color Integration ---
 current_theme_name = st.session_state.get("selected_theme", "Nebula (Default)")
@@ -145,4 +145,3 @@ def live_dashboard_fragment():
 # Calling the function renders the dashboard and starts the background loop (if toggled on)
 live_dashboard_fragment()
 
-apply_footer()

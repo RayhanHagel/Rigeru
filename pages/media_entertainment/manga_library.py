@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_clickable_images import clickable_images
 from utilities.util_manga import refresh_library
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 st.session_state.open_chapter = False
@@ -77,4 +77,3 @@ for i in range(0, len(manga_library), column_amount):
                         st.session_state.selected_title = key
                         st.switch_page(st.session_state.nav_manga["manga_read"])
 
-apply_footer()

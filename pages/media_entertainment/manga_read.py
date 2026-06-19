@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit_extras.specialized_inputs as stsi
 from utilities.util_manga import change_chapter_read, download_chapter, refresh_library
-from utilities.util_persistent import apply_footer
+
 from utilities.util_network import get_image_cache
 
 # --- State Initialization & Routing ---
@@ -112,4 +112,4 @@ with column_outside[1]:
                     width="stretch"
                 )
 
-apply_footer()
+

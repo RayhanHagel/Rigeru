@@ -2,7 +2,7 @@ import streamlit as st
 import time
 import pandas as pd
 from utilities.util_sys_monitor import get_system_stats, get_top_processes
-from utilities.util_persistent import apply_footer
+
 
 st.header(":material/monitor: System Monitor")
 st.markdown("View real-time CPU, Memory, GPU, Disk usage, and running processes.")
@@ -110,4 +110,3 @@ if live_monitor:
 else:
     render_dashboard()
 
-apply_footer()

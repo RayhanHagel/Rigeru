@@ -10,7 +10,7 @@ from utilities.util_object_detect import (
     get_available_encoders,
     TEMP_DIR
 )
-from utilities.util_persistent import apply_footer
+
 
 st.header("🕵️ Local Object Detection")
 st.markdown("Run fast object detection using YOLO on Images, Videos, or Webcams.")
@@ -256,6 +256,6 @@ with tab_webcam:
             )
 
 try:
-    apply_footer()
+    
 except NameError:
     pass
