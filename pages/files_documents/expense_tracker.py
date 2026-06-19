@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_expense import extract_receipt_data
-from utilities.util_persistent import apply_footer
+
 
 st.header("🧾 AI Expense Tracker (Donut Scanner)")
 st.markdown("Upload a receipt or invoice image. The Hugging Face **Donut VLM** will scan and parse the document locally into structured JSON.")
@@ -49,4 +49,3 @@ with st.container(border=True):
                     else:
                         st.error(result)
 
-apply_footer()

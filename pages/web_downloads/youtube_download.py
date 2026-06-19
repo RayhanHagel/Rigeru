@@ -5,7 +5,7 @@ from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 from utilities.util_yt import search_youtube, download_youtube, open_file_in_os
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "yt_dest_folder" not in st.session_state:
@@ -225,4 +225,3 @@ if st.session_state.yt_last_download and os.path.exists(st.session_state.yt_last
     if st.button("📂 Open File Location", icon=":material/folder_open:", key="yt_open_file"):
         open_file_in_os(st.session_state.yt_last_download)
 
-apply_footer()

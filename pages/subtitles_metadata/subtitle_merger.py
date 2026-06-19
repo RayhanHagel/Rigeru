@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_ass_merger import merge_ass_files, TEMP_DIR
-from utilities.util_persistent import apply_footer
+
 
 st.header("🎞️ ASS Subtitle Merger")
 st.markdown("Combine two `.ass` subtitle files together. Perfect for merging AI censor boxes with your existing translated subtitles. Automatically handles coordinate/resolution scaling.")
@@ -41,4 +41,3 @@ with st.container(border=True):
                 else:
                     st.error(result)
 
-apply_footer()

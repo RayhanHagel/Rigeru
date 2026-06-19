@@ -23,7 +23,7 @@ from utilities.util_choco import (
     update_package as update_choco_pkg, upgrade_all as upgrade_all_choco,
     list_installed as list_choco_installed
 )
-from utilities.util_persistent import apply_footer
+
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Universal Package Manager", page_icon=":material/package:", layout="wide")
@@ -569,4 +569,3 @@ with tab_choco:
                         )
                     st.session_state.choco_installed_list = []
 
-apply_footer()

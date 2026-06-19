@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_exif import get_exif_data, strip_exif
-from utilities.util_persistent import apply_footer
+
 
 st.header("🕵️‍♂️ EXIF Metadata Stripper")
 st.markdown("Upload a photo to view hidden metadata (like GPS coordinates or camera info) and strip it out for privacy.")
@@ -56,4 +56,3 @@ with st.container(border=True):
                         else:
                             st.error(clean_bytes)
 
-apply_footer()

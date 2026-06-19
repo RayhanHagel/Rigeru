@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utilities.util_currency import get_available_currencies, convert_currency, get_historical_trend
-from utilities.util_persistent import apply_footer
+
 
 st.header("💱 Currency Converter & Tracker")
 st.markdown("Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast.")
@@ -117,4 +117,3 @@ def render_historical_tracker(base_code, target_code):
 # Call the lazy-loaded fragment
 render_historical_tracker(base_code, target_code)
 
-apply_footer()

@@ -1,16 +1,23 @@
 import streamlit as st
 from streamlit_searchbox import st_searchbox
 from utilities.util_manga import save_config, search_titles, asura_get_chapter, mangadex_get_chapter
-from utilities.util_persistent import apply_footer
+
 from utilities.util_network import get_image_cache
+from utilities.util_persistent import THEMES
+
+
+# --- Fetch Current Theme ---
+current_theme_name = st.session_state.get("selected_theme", "Nebula (Default)")
+theme = THEMES.get(current_theme_name, THEMES["Nebula (Default)"])
+
 
 # --- State Initialization ---
 if "search_lookup" not in st.session_state:
     st.session_state.search_lookup = {}
 
-st.header("☄️ Manga and Manhwa")
 
 # --- Source Selection ---
+st.header("☄️ Manga and Manhwa")
 st.subheader("Select Source")
 st.caption("Choosing multiple sources could lead to longer search results.")
 
@@ -27,6 +34,57 @@ selected_website_options = st.pills(
 )
 
 # --- Search Interface ---
+custom_searchbox_theme = {
+    "dropdown": {
+        "fill": theme['TEXT']
+    },
+    "clear": {
+        "strokeHover": theme['HEADING'],
+        "fillHover": theme['HEADING']
+    },
+    "searchbox": {
+        "control": {
+            "backgroundColor": theme['UI_BG'],
+            "border": f"1px solid {theme['UI_BORDER']}", 
+            "boxShadow": "none",
+            
+            # THE FIX: Add breathing room so the iframe doesn't clip the bottom edge
+            "marginBottom": "2px", 
+            
+            "&:hover": {
+                "border": f"1px solid {theme['HEADING']}"
+            },
+            "&:focus-within": {
+                "border": f"1px solid {theme['HEADING']}",
+                
+                # THE FIX: Draw the focus glow INWARD so it stays inside the boundary
+                "boxShadow": f"inset 0 0 0 1px {theme['HEADING']}" 
+            }
+        },
+        # We MUST style menuList instead of menu because styling.tsx ignores 'menu'
+        "menuList": {
+            "backgroundColor": theme['BG'],
+            "border": f"1px solid {theme['UI_BORDER']}",
+            "borderRadius": "6px",
+            "padding": "0px"
+        },
+        "option": {
+            "color": theme['TEXT'],
+            "backgroundColor": "transparent",
+            "highlightColor": theme['HEADING'] 
+        },
+        "singleValue": {
+            "color": theme['TEXT'],
+        },
+        "input": {
+            "color": theme['TEXT'],
+        },
+        "placeholder": {
+            "color": theme['TEXT'],
+        }
+    }
+}
+
 if selected_website_options:
     st.subheader("Search Title")
     chapter_title = st_searchbox(
@@ -36,7 +94,8 @@ if selected_website_options:
         ),
         placeholder="Type manga title here...",
         key="file_search",
-        debounce=300
+        debounce=300,
+        style_overrides=custom_searchbox_theme
     )
 
     # --- Results Rendering ---
@@ -98,4 +157,3 @@ if selected_website_options:
                         save_config(key=clean_title, value=chapter_json)
                         st.toast(f":green[Successfully saved {clean_title} to library!]", duration="short", icon=":material/bookmark_add:")
 
-apply_footer()

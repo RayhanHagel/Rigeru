@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 from utilities.util_ping import run_ping, check_all_dns_speeds, set_windows_dns, get_network_interfaces, DNS_PRESETS
-from utilities.util_persistent import apply_footer
+
 
 # --- Header ---
 st.title(":material/network_check: Network Ping Test")
@@ -199,4 +199,3 @@ with tab_dns:
             else:
                 st.warning("Please provide at least a primary DNS IP address.", icon=":material/warning:")
 
-apply_footer()

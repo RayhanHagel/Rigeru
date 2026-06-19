@@ -3,7 +3,7 @@ import tempfile
 import datetime
 import streamlit as st
 from utilities.util_metadata import get_file_timestamps, set_file_timestamps
-from utilities.util_persistent import apply_footer
+
 
 st.header("🕒 Timestamp Modifier")
 st.markdown("Forcefully rewrite OS-level file creation, modification, and access timestamps for any file.")
@@ -68,4 +68,4 @@ if uploaded_file:
 else:
     st.info("Upload any file to view and modify its timestamps.")
 
-apply_footer()
+

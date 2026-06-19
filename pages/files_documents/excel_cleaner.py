@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_excel import load_data, process_dataframe, export_data
-from utilities.util_persistent import apply_footer
+
 
 st.header("🧹 Excel & CSV Cleaner")
 st.markdown("Upload a dataset, clean up rows, apply logic filters, and export the result.")
@@ -90,4 +90,3 @@ if uploaded_file:
             except ModuleNotFoundError:
                 col_dl2.error("Install `openpyxl` to enable Excel exports.")
 
-apply_footer()

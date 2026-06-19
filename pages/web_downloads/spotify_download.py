@@ -2,7 +2,7 @@ import os
 import json
 import streamlit as st
 from utilities.util_spotify_dl import get_playlist_tracks, download_track_audio
-from utilities.util_persistent import apply_footer
+
 import concurrent.futures
 
 
@@ -123,4 +123,4 @@ if st.session_state.sp_tracks:
 
             st.success(f"🎉 Playlist download complete! Saved to: {final_dest}")
 
-apply_footer()
+

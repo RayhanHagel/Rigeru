@@ -10,7 +10,7 @@ from utilities.util_audio import (
     export_txt, export_srt, export_ass_multistyle,
     extract_audio_snippet
 )
-from utilities.util_persistent import apply_footer
+
 
 _defaults = {
     "segments":        [],
@@ -509,4 +509,4 @@ with tab_export:
             ".SRT works universally. .TXT is ideal for reading or feeding into other tools."
         )
 
-apply_footer()
+

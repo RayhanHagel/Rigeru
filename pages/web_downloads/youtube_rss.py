@@ -7,7 +7,7 @@ from utilities.util_yt_rss import (
     load_tracked_channels, add_channel, delete_channel, fetch_latest_videos, 
     search_youtube_channel, bulk_add_channels, load_feed_cache, save_feed_cache
 )
-from utilities.util_persistent import apply_footer
+
 
 st.header("🔔 YouTube RSS Feed")
 st.markdown("Track your favorite YouTube channels locally without logging into an account.")
@@ -260,4 +260,3 @@ else:
                                     st.caption(f"📅 {vid['published'].split('T')[0]}")
                                 st.divider()
 
-apply_footer()

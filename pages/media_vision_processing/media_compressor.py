@@ -2,7 +2,7 @@ import os
 import tempfile
 import streamlit as st
 from utilities.util_media import process_video, batch_compress_images
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "media_vid_out" not in st.session_state:
@@ -145,4 +145,3 @@ with tab2:
             else:
                 st.error(msg)
 
-apply_footer()
