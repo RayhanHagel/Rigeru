@@ -4,7 +4,7 @@ from PIL import Image
 import streamlit as st
 from streamlit_image_comparison import image_comparison
 from utilities.util_upscale import upscale_image, check_model_downloaded, get_compute_device
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "upscale_result" not in st.session_state: 
@@ -135,4 +135,3 @@ if st.session_state.upscale_result and st.session_state.original_image_bytes:
         width="stretch"
     )
 
-apply_footer()

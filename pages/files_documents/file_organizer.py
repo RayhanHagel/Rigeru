@@ -4,7 +4,7 @@ from utilities.util_file_mover import (
     get_target_files, perform_move,
     perform_delete, perform_undo, open_file_in_os, open_folder_dialog
 )
-from utilities.util_persistent import apply_footer
+
 
 MAX_DEPTH = 5
 
@@ -145,4 +145,4 @@ if st.session_state.fm_state["history"]:
             st.session_state.fm_state["history"].append(last_action)
         st.rerun()
 
-apply_footer()
+

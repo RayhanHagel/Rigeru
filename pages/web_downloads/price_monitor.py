@@ -4,7 +4,7 @@ import threading
 import os
 import time
 from utilities.util_price_monitor import load_tracked_items, add_item, delete_item, refresh_all_prices
-from utilities.util_persistent import apply_footer
+
 
 # --- Background Task Flag & State Toggles ---
 FLAG_FILE = "cache/refresh_done.flag"
@@ -255,4 +255,3 @@ else:
                     df.set_index('date', inplace=True)
                     st.line_chart(df['price'])
 
-apply_footer()

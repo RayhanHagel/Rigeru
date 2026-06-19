@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_elements import elements, mui, dashboard
 from utilities.util_manga import sync_and_save, save_config
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "temp_manga_cache" not in st.session_state:
@@ -128,4 +128,3 @@ else:
                             sx={"color": "gray"}
                         )
 
-apply_footer()

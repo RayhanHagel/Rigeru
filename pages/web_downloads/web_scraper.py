@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_scraper import run_headless_scraper, export_scraper_data, get_page_preview_image, TEMP_DIR
-from utilities.util_persistent import apply_footer
+
 
 st.header("🕸️ Visual Web Scraper")
 st.markdown("Use a local headless browser to extract specific elements from a list of websites.")
@@ -79,4 +79,3 @@ with st.container(border=True):
                 else:
                     st.error(result_df)
 
-apply_footer()

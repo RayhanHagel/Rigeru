@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_hash import create_snapshot, verify_integrity
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "hash_target_dir" not in st.session_state:
@@ -129,4 +129,4 @@ with tab2:
                 st.write("These files were added after the snapshot was taken:")
                 st.code("\n".join(res['new']), language="text")
 
-apply_footer()
+

@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from utilities.util_censor import TEMP_DIR, get_available_encoders
-from utilities.util_persistent import apply_footer
+
 
 try:
     from streamlit_image_comparison import image_comparison
@@ -217,4 +217,3 @@ with st.container(border=True):
                 progress_bar.empty()
                 status_text.error(result_path)
 
-apply_footer()

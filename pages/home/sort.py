@@ -1,12 +1,37 @@
 import streamlit as st
-from streamlit_elements import elements, mui, dashboard
-from utilities.util_persistent import apply_footer, THEMES
+from streamlit_elements import elements, mui, dashboard, html
+from utilities.util_persistent import THEMES
 from utilities.util_network import get_image_cache
 from utilities.util_quick import write_cache, sync_and_save
 
 # --- Fetch Current Theme ---
 current_theme_name = st.session_state.get("selected_theme", "Nebula (Default)")
 theme = THEMES.get(current_theme_name, THEMES["Nebula (Default)"])
+
+# Determine if it's a dark mode theme to set the core MUI palette correctly
+is_dark_mode = theme['BG'].lower().startswith('#0') or theme['BG'].lower().startswith('#1') or theme['BG'] == "#000000"
+
+# Build the custom MUI theme to match your global Streamlit CSS variables
+custom_mui_theme = {
+    "palette": {
+        "mode": "dark" if is_dark_mode else "light",
+        "background": {
+            "default": theme['BG'],     # This breaks the iframe wall for the main background
+            "paper": theme['UI_BG']     
+        },
+        "text": {
+            "primary": theme['TEXT'],
+            "secondary": theme['HEADING']
+        },
+        "primary": {
+            "main": theme['HEADING']
+        },
+        "divider": theme['UI_BORDER']
+    },
+    "typography": {
+        "fontFamily": "'DM Mono', monospace"
+    }
+}
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -37,10 +62,8 @@ if not cache:
     st.info("No cards to sort. Add some from the home page first.", icon="📋")
 else:
     # ── Native Deletion Manager ───────────────────────────────────────────────
-    # A sleek, native way to delete cards without relying on React callbacks
     del_cols = st.columns([0.8, 0.2], gap="small", vertical_alignment="bottom")
     
-    # Build readable labels for the dropdown so you know exactly what you are deleting
     card_labels = []
     for i, item_group in enumerate(cache):
         first_item = item_group[0] if item_group else {}
@@ -67,6 +90,25 @@ else:
 
     # ── Drag-and-drop reorder grid ────────────────────────────────────────────
     with elements("dashboard"):
+        
+        # THE FIX: Transparent background with a themed border
+        html.style(f"""
+            body, html {{
+                background-color: transparent !important;
+                background: transparent !important;
+                margin: 0 !important; /* Removes default browser margins so the border sits flush */
+            }}
+            #root {{
+                background-color: transparent !important;
+                background: transparent !important;
+                border: 1px solid {theme['UI_BORDER']} !important;
+                border-radius: 8px !important;
+                box-sizing: border-box !important; /* Prevents the border from causing scrollbars */
+                min-height: 100vh !important; /* Stretches the border to fill the iframe height */
+                padding: 0.5rem !important; /* Gives the cards some breathing room away from the border */
+            }}
+        """)
+        
         layout = [
             dashboard.Item(str(i), 0, i, 12, 2, isDraggable=True, isResizable=False)
             for i in range(len(cache))
@@ -85,66 +127,66 @@ else:
                         "borderColor": theme['UI_BORDER'],
                     }
                 ):
-                    # ── Card Header (Drag Zone Only) ──
-                    with mui.Box(
-                        className="drag-header",
-                        sx={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "background": theme['HEADER_BG'],
-                            "padding": "8px 12px",
-                            "borderBottom": f"1px solid {theme['UI_BORDER']}"
-                        }
-                    ):
-                        mui.Typography(
-                            f"⠿  Card {index + 1}",
-                            variant="subtitle2",
-                            sx={"fontFamily": "monospace", "color": theme['HEADING'], "letterSpacing": "0.05em"}
-                        )
-
-                    # ── Card Content ──────────────────────────────────────────
-                    with mui.CardContent(sx={"overflow": "auto", "flex": 1, "padding": "8px 12px"}):
-                        for sub_item in item_group:
-                            widget  = sub_item.get("widget", "")
-                            content = sub_item.get("input", "")
-
-                            mui.Box(
-                                mui.Typography(widget.upper(), variant="caption",
-                                               sx={"color": theme['HEADING'], "fontFamily": "monospace",
-                                                   "fontSize": "0.65rem", "letterSpacing": "0.1em"}),
-                                sx={"display": "inline-block", "background": theme['BG'],
-                                    "border": f"1px solid {theme['UI_BORDER']}",
-                                    "borderRadius": "4px", "padding": "1px 6px", "marginBottom": "2px"}
-                            )
-
+                    # ... (Your existing header and card content code stays exactly the same here) ...
+                        # ── Card Header (Drag Zone Only) ──
+                        with mui.Box(
+                            className="drag-header",
+                            sx={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "background": theme['HEADER_BG'],
+                                "padding": "8px 12px",
+                                "borderBottom": f"1px solid {theme['UI_BORDER']}"
+                            }
+                        ):
                             mui.Typography(
-                                content,
-                                variant="body2",
-                                sx={
-                                    "wordBreak": "break-all",
-                                    "marginBottom": "8px",
-                                    "display": "block",
-                                    "whiteSpace": "pre-wrap",
-                                    "color": theme['TEXT'],
-                                    "fontSize": "0.8rem",
-                                }
+                                f"⠿  Card {index + 1}",
+                                variant="subtitle2",
+                                sx={"fontFamily": "monospace", "color": theme['HEADING'], "letterSpacing": "0.05em"}
                             )
 
-                            if widget in ("clickable image", "image"):
-                                url     = content.split(" | ")[0] if " | " in content else content
-                                encoded = get_image_cache(url)
-                                if encoded:
-                                    mui.Box(
-                                        component="img",
-                                        src=encoded,
-                                        sx={
-                                            "display": "block",
-                                            "width": "120px",
-                                            "borderRadius": "6px",
-                                            "marginTop": "4px",
-                                            "marginBottom": "8px",
-                                            "border": f"1px solid {theme['UI_BORDER']}",
-                                        }
-                                    )
+                        # ── Card Content ──────────────────────────────────────────
+                        with mui.CardContent(sx={"overflow": "auto", "flex": 1, "padding": "8px 12px"}):
+                            for sub_item in item_group:
+                                widget  = sub_item.get("widget", "")
+                                content = sub_item.get("input", "")
 
-apply_footer()
+                                mui.Box(
+                                    mui.Typography(widget.upper(), variant="caption",
+                                                   sx={"color": theme['HEADING'], "fontFamily": "monospace",
+                                                       "fontSize": "0.65rem", "letterSpacing": "0.1em"}),
+                                    sx={"display": "inline-block", "background": theme['BG'],
+                                        "border": f"1px solid {theme['UI_BORDER']}",
+                                        "borderRadius": "4px", "padding": "1px 6px", "marginBottom": "2px"}
+                                )
+
+                                mui.Typography(
+                                    content,
+                                    variant="body2",
+                                    sx={
+                                        "wordBreak": "break-all",
+                                        "marginBottom": "8px",
+                                        "display": "block",
+                                        "whiteSpace": "pre-wrap",
+                                        "color": theme['TEXT'],
+                                        "fontSize": "0.8rem",
+                                    }
+                                )
+
+                                if widget in ("clickable image", "image"):
+                                    url     = content.split(" | ")[0] if " | " in content else content
+                                    encoded = get_image_cache(url)
+                                    if encoded:
+                                        mui.Box(
+                                            component="img",
+                                            src=encoded,
+                                            sx={
+                                                "display": "block",
+                                                "width": "120px",
+                                                "borderRadius": "6px",
+                                                "marginTop": "4px",
+                                                "marginBottom": "8px",
+                                                "border": f"1px solid {theme['UI_BORDER']}",
+                                            }
+                                        )
+

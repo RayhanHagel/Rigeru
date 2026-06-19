@@ -4,7 +4,7 @@ import base64
 import streamlit as st
 from utilities.util_spotify import check_lastfm, read_cache
 from utilities.util_network import get_image_cache
-from utilities.util_persistent import apply_footer
+
 
 # --- Constants ---
 FONT_SERIF = "'Libre Baskerville', Georgia, serif"
@@ -165,4 +165,3 @@ if username:
 
     lastfm_feed()
 
-apply_footer()

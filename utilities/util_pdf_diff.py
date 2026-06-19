@@ -1,15 +1,4 @@
-import difflib
 import io
-
-try:
-    import fitz  # PyMuPDF
-except ImportError:
-    fitz = None
-
-try:
-    import docx
-except ImportError:
-    docx = None
 
 def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
     ext = filename.lower().split('.')[-1]
@@ -17,16 +6,22 @@ def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
         if ext == 'txt':
             return True, file_bytes.decode('utf-8', errors='ignore')
         elif ext == 'pdf':
-            if not fitz:
+            try:
+                import fitz  # Lazy Load PyMuPDF
+            except ImportError:
                 return False, "PyMuPDF not installed. Please install `pymupdf` to read PDFs."
+            
             text = ""
             doc = fitz.open(stream=file_bytes, filetype="pdf")
             for page in doc:
                 text += page.get_text() + "\n"
             return True, text
         elif ext == 'docx':
-            if not docx:
+            try:
+                import docx  # Lazy Load python-docx
+            except ImportError:
                 return False, "python-docx not installed. Please install `python-docx` to read Word files."
+            
             doc_file = docx.Document(io.BytesIO(file_bytes))
             text = "\n".join([para.text for para in doc_file.paragraphs])
             return True, text
@@ -36,6 +31,8 @@ def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
         return False, f"Failed to extract text: {str(e)}"
 
 def generate_diff_html(text1: str, text2: str) -> str:
+    import difflib  # Lazy Load difflib
+    
     differ = difflib.HtmlDiff(wrapcolumn=60)
     lines1 = text1.splitlines()
     lines2 = text2.splitlines()
@@ -48,7 +45,6 @@ def generate_diff_html(text1: str, text2: str) -> str:
         context=False 
     )
     
-    # FIX: Overhauled CSS to guarantee readability. Forced opaque backgrounds with high-contrast text colors.
     custom_css = """
     <style>
         body { 
@@ -71,7 +67,6 @@ def generate_diff_html(text1: str, text2: str) -> str:
         td.diff_next { display: none; }
         td { padding: 4px 8px; vertical-align: top;}
         
-        /* High-Contrast Colors suitable for both Dark & Light themes */
         .diff_add { background-color: #d4edda !important; color: #155724 !important; font-weight: 500; }
         .diff_chg { background-color: #fff3cd !important; color: #856404 !important; font-weight: 500; }
         .diff_sub { background-color: #f8d7da !important; color: #721c24 !important; font-weight: 500; text-decoration: line-through; }

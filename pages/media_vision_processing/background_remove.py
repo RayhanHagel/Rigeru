@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_bg_remove import remove_image_background
-from utilities.util_persistent import apply_footer
+
 
 st.header("🪄 AI Background Remover")
 st.markdown("Upload an image featuring a clear subject (person, animal, or object) to instantly remove its background locally.")
@@ -55,4 +55,3 @@ with st.container(border=True):
                     del st.session_state[state_key]
                     st.rerun()
 
-apply_footer()

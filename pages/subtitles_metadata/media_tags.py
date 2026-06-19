@@ -2,7 +2,7 @@ import os
 import tempfile
 import streamlit as st
 from utilities.util_metadata import get_media_metadata, save_media_metadata
-from utilities.util_persistent import apply_footer
+
 
 st.header("🏷️ Media Tags Editor")
 st.markdown("Modify internal media tags (ID3/MP4) for your audio and video files.")
@@ -60,4 +60,4 @@ if uploaded_file:
 else:
     st.info("Upload a media file (MP3, MP4, etc.) to view and edit its metadata.")
 
-apply_footer()
+

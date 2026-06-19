@@ -3,7 +3,7 @@ import base64
 import streamlit as st
 import fitz  # PyMuPDF
 from streamlit_extras.eval_javascript import eval_javascript
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization & Routing ---
 if "selected_title" not in st.session_state or not st.session_state.get("open_chapter"):
@@ -111,4 +111,3 @@ if (height_status != "running" and not height_error and height_value is not None
             height=height_px        
         )
 
-apply_footer()

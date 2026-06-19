@@ -1,7 +1,7 @@
 import streamlit as st
 import re
 from utilities.util_rss import load_subscriptions, save_subscriptions, fetch_all_feeds, preview_rss_feed
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "rss_urls" not in st.session_state:
@@ -250,4 +250,3 @@ with tab_feed:
                     clean_summary = re.sub('<[^<]+>', '', article['summary']) 
                     st.write(clean_summary[:400] + ("..." if len(clean_summary) > 400 else ""))
 
-apply_footer()

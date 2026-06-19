@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_malsync import load_anime_list, search_mal, add_to_library, update_progress, remove_from_library, import_user_list
-from utilities.util_persistent import apply_footer
+
 
 st.header("⛩️ Local MAL Tracker")
 st.markdown("Search MyAnimeList and track your watching progress locally.")
@@ -117,4 +117,3 @@ with tab_import:
         else:
             st.warning("Please enter a username.")
 
-apply_footer()

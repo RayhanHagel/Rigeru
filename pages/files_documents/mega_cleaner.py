@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_mega import process_mega_link
-from utilities.util_persistent import apply_footer
+
 
 # --- State Initialization ---
 if "mega_raw" not in st.session_state:
@@ -66,4 +66,3 @@ if st.session_state.mega_raw:
 else:
     st.info("Enter a MEGA folder link above and click Analyze to generate links.")
 
-apply_footer()

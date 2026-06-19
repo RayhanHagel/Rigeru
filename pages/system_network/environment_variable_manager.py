@@ -1,6 +1,6 @@
 import streamlit as st
 from utilities.util_env import get_all_paths, export_env_backup
-from utilities.util_persistent import apply_footer
+
 
 # --- Data Fetching ---
 with st.spinner("Scanning Registry and matching applications..."):
@@ -71,4 +71,3 @@ if paths_data:
 else:
     st.info("No PATH variables found.", icon=":material/info:")
 
-apply_footer()
