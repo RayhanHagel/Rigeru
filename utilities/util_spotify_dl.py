@@ -1,26 +1,8 @@
 import os
-import tkinter as tk
-from tkinter import filedialog
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import yt_dlp
 
-def _init_tkinter():
-    """Helper to initialize a hidden, top-most tkinter root window."""
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    return root
-
-def open_folder_dialog(current_path: str = "") -> str:
-    """Opens a native OS folder selection dialog."""
-    root = _init_tkinter()
-    selected = filedialog.askdirectory(
-        initialdir=current_path if os.path.exists(current_path) else os.path.expanduser('~'),
-        title="Select Download Folder"
-    )
-    root.destroy()
-    return selected if selected else current_path
 
 def get_playlist_tracks(playlist_url: str, client_id: str, client_secret: str) -> tuple[bool, str | None, str | list]:
     """Authenticates with Spotify and returns a list of 'Artist - Track Name' strings."""

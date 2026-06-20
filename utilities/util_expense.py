@@ -75,13 +75,15 @@ def load_qwen_receipt_model(optimization: str = "PyTorch"):
 
 
 def extract_receipt_data(image_bytes: bytes, optimization: str = "PyTorch") -> tuple[bool, dict | str]:
-    """
-    Extracts structured data from a receipt image using Qwen2-VL.
-    """
     try:
         img = Image.open(io.BytesIO(image_bytes))
         if img.mode != "RGB":
             img = img.convert("RGB")
+            
+        # Optimization: Downscale to prevent O(N^2) VRAM explosion
+        max_dim = 1024
+        if max(img.size) > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
             
         processor, model, device = load_qwen_receipt_model(optimization)
         
