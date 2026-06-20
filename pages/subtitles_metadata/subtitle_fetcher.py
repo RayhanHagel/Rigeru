@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 from utilities.util_subtitles import search_opensubtitles, download_subtitle
 

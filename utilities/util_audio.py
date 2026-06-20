@@ -181,8 +181,10 @@ def run_transcription_pipeline(
     compute_type = "float16" if device == "cuda" else "int8"
 
     def _status(msg: str, pct: int) -> None:
-        if status_text:  status_text.text(msg)
-        if progress_bar: progress_bar.progress(pct)
+        if status_text:
+            status_text.text(msg)
+        if progress_bar:
+            progress_bar.progress(pct)
 
     _status("Loading Whisper model weights…", 10)
     model = whisperx.load_model(model_name, device, compute_type=compute_type)

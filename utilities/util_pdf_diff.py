@@ -11,11 +11,9 @@ def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
             except ImportError:
                 return False, "PyMuPDF not installed. Please install `pymupdf` to read PDFs."
             
-            text = ""
             doc = fitz.open(stream=file_bytes, filetype="pdf")
-            for page in doc:
-                text += page.get_text() + "\n"
-            return True, text
+            text_parts = [page.get_text() for page in doc]
+            return True, "\n".join(text_parts)
         elif ext == 'docx':
             try:
                 import docx  # Lazy Load python-docx
@@ -23,8 +21,8 @@ def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
                 return False, "python-docx not installed. Please install `python-docx` to read Word files."
             
             doc_file = docx.Document(io.BytesIO(file_bytes))
-            text = "\n".join([para.text for para in doc_file.paragraphs])
-            return True, text
+            text_parts = [para.text for para in doc_file.paragraphs]
+            return True, "\n".join(text_parts)
         else:
             return False, f"Unsupported file type: {ext}"
     except Exception as e:

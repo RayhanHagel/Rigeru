@@ -5,10 +5,8 @@ from utilities.util_file_mover import (
     perform_delete, perform_undo, open_file_in_os, open_folder_dialog
 )
 
-
 MAX_DEPTH = 5
 
-# --- State Initialization ---
 if "fm_state" not in st.session_state:
     st.session_state.fm_state = {
         "files_list": [],
@@ -23,17 +21,29 @@ if "fm_state" not in st.session_state:
 st.header("🗂️ Rapid File Organizer")
 st.markdown("Browse your folders, scan, then **Open**, **Move**, **Rename**, **Skip**, **Delete**, or **Undo**.")
 
-
-# --- Helper Functions ---
 def update_status(msg):
     st.session_state.fm_state["status"] = msg
-
 
 def next_file(msg, record_history=None):
     if record_history:
         st.session_state.fm_state["history"].append(record_history)
+        # O(1) Memory bound restriction
+        if len(st.session_state.fm_state["history"]) > 50:
+            st.session_state.fm_state["history"].pop(0)
+            
     st.session_state.fm_state["current_idx"] += 1
     update_status(msg)
+
+# Isolated Callbacks
+def do_skip(current_file):
+    next_file(f":material/skip_next: Skipped: {current_file}", {"action": "skip", "orig_file": current_file, "dest_file": current_file, "target": None})
+
+def do_delete(src_file_path, current_file):
+    success, err = perform_delete(src_file_path)
+    if success:
+        next_file(f":material/delete: Trashed: {current_file}", {"action": "delete", "orig_file": current_file, "dest_file": None, "target": None})
+    else:
+        update_status(f":material/error: Delete Error: {err}")
 
 
 # --- 1. Configuration & Scanning ---
@@ -89,24 +99,15 @@ else:
     st.markdown(f"### File {current_idx + 1} of {len(files_list)}")
     st.markdown(f"**`{current_file}`**")
 
-    # Quick Actions (No Destination Needed)
     st.markdown("#### Quick Actions")
     col_open, col_skip, col_del = st.columns(3)
 
     if col_open.button("Open File", width="stretch", icon=":material/file_open:"):
         open_file_in_os(src_file_path)
 
-    if col_skip.button("Skip", width="stretch", icon=":material/skip_next:"):
-        next_file(f":material/skip_next: Skipped: {current_file}", {"action": "skip", "orig_file": current_file, "dest_file": current_file, "target": None})
-        st.rerun()
-
-    if col_del.button("Send to Trash", type="primary", width="stretch", icon=":material/delete:"):
-        success, err = perform_delete(src_file_path)
-        if success:
-            next_file(f":material/delete: Trashed: {current_file}", {"action": "delete", "orig_file": current_file, "dest_file": None, "target": None})
-        else:
-            update_status(f":material/error: Delete Error: {err}")
-        st.rerun()
+    # Replaced procedural st.rerun checks with direct Callback Hooks
+    col_skip.button("Skip", width="stretch", icon=":material/skip_next:", on_click=do_skip, args=(current_file,))
+    col_del.button("Send to Trash", type="primary", width="stretch", icon=":material/delete:", on_click=do_delete, args=(src_file_path, current_file))
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Move & Rename")

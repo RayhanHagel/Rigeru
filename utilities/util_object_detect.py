@@ -11,7 +11,7 @@ import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 # Import shared utilities
-from utilities.util_subtitles import format_ass_time
+from utilities.util_audio import format_ass_time
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", module="ultralytics")

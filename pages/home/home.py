@@ -4,8 +4,6 @@ from utilities.util_network import get_image_cache
 
 WIDGET_OPTIONS = ["link button", "image", "clickable image", "text", "caption", "internal page"]
 
-# ── Build INTERNAL_PAGES dynamically from session state nav dicts ─────────────
-# Maps nav_dict_key -> display prefix (used to label pages in the picker)
 NAV_SOURCES = [
     ("nav_home",        "🏠"),
     ("nav_manga",       "📺"),
@@ -20,34 +18,26 @@ NAV_SOURCES = [
 ]
 
 def build_internal_pages() -> dict:
-    """
-    Returns {display_label: (key_name, nav_dict_key)} by reading
-    the nav dicts that main.py stores in session_state.
-    Skips home pages (quick_home, quick_sort) to avoid recursion.
-    """
     SKIP_KEYS = {"quick_home", "quick_sort"}
     pages = {}
     for nav_key, _ in NAV_SOURCES:
         nav_dict = st.session_state.get(nav_key, {})
         for key_name, path in nav_dict.items():
-            if key_name in SKIP_KEYS:
+            if key_name in SKIP_KEYS: 
                 continue
-            # Build a readable label from the key_name
             label = key_name.replace("_", " ").title()
             pages[label] = (key_name, nav_key)
     return pages
 
+# EXECUTED ONCE GLOBALLY to prevent UI bloat/delays
+INTERNAL_PAGES = build_internal_pages()
 
-# ── Session State ─────────────────────────────────────────────────────────────
 if "quick_cache" not in st.session_state:
     st.session_state.quick_cache = read_cache()
-
 if "temp_data" not in st.session_state:
     st.session_state.temp_data = []
-
 if "show_add_panel" not in st.session_state:
     st.session_state.show_add_panel = False
-
 if "new_card_widgets" not in st.session_state:
     st.session_state.new_card_widgets = []
 
@@ -233,24 +223,32 @@ if st.session_state.show_add_panel:
 
     st.divider()
 
-# ── Grid Rendering ────────────────────────────────────────────────────────────
+# ── Grid Rendering with Limits ────────────────────────────────────────────────
 total_cards = len(st.session_state.quick_cache)
+CARDS_PER_PAGE = 12
+total_pages = max(1, (total_cards + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE)
 
-# Build INTERNAL_PAGES once for the grid render (needed for internal page widget)
-INTERNAL_PAGES = build_internal_pages()
+# UI Paginator Block
+page_col, _ = st.columns([1, 4])
+current_page = page_col.number_input("Page", min_value=1, max_value=total_pages, value=1)
 
-for i in range(0, total_cards, column_amount):
+start_idx = (current_page - 1) * CARDS_PER_PAGE
+end_idx = min(start_idx + CARDS_PER_PAGE, total_cards)
+slice_cards = st.session_state.quick_cache[start_idx:end_idx]
+
+# Bounded Pagination Loop
+for i in range(0, len(slice_cards), column_amount):
     grid_cols = st.columns(spec=column_amount, gap="small", vertical_alignment="top")
 
     for j in range(column_amount):
-        idx = i + j
-        if idx >= total_cards:
+        if i + j >= len(slice_cards):
             break
 
-        card_data = st.session_state.quick_cache[idx]
+        card_data = slice_cards[i + j]
+        idx = start_idx + i + j 
+        
         with grid_cols[j]:
             with st.container(border=True, height=card_height):
-                # Use enumerate to grab a sub_idx to prevent key collisions!
                 for sub_idx, item in enumerate(card_data):
                     widget_type  = item.get("widget")
                     widget_input = item.get("input", "")
@@ -292,7 +290,6 @@ for i in range(0, total_cards, column_amount):
                             key_name, nav_key = INTERNAL_PAGES[widget_input]
                             nav_dict  = st.session_state.get(nav_key, {})
                             page_path = nav_dict.get(key_name)
-                            # Incorporate sub_idx into the key to allow duplicate identical widgets
                             if page_path and st.button(widget_input, width="stretch", key=f"nav_{idx}_{sub_idx}_{key_name}"):
                                 st.switch_page(page_path)
                         else:

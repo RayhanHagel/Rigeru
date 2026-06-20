@@ -3,9 +3,9 @@ import streamlit as st
 from utilities.util_depth_estimation import (
     process_image_depth,
     process_video_depth,
-    get_available_encoders,
     TEMP_DIR
 )
+from utilities.util_media import get_available_encoders
 
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 import threading
@@ -300,8 +300,3 @@ with tab_video:
                         width="stretch",
                         icon=":material/download:"
                     )
-
-try:
-    
-except NameError:
-    pass
