@@ -14,7 +14,7 @@ from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 # Import shared utilities
 from utilities.util_huggingface import download_hf_file, quantize_onnx_model
-from utilities.util_subtitles import format_ass_time
+from utilities.util_audio import format_ass_time
 from utilities.util_image_fx import make_blur_fn, apply_blur_fn
 
 # Silence underlying library warnings and ONNX GPU fallback warnings

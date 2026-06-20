@@ -9,9 +9,11 @@ st.markdown("Combine two `.ass` subtitle files together. Perfect for merging AI 
 with st.container(border=True):
     col1, col2 = st.columns(2)
     with col1:
-        base_file = st.file_uploader("1️⃣ Upload Base Subtitle (.ass)", type=['ass'], help="Your main text subtitle. Its resolution will be kept.")
+        base_file = st.file_uploader("1️⃣ Upload Base Subtitle (.ass)", type=[
+                                     'ass'], help="Your main text subtitle. Its resolution will be kept.")
     with col2:
-        overlay_file = st.file_uploader("2️⃣ Upload Overlay (.ass)", type=['ass'], help="The subtitle you want to paste on top (e.g. Censor Boxes).")
+        overlay_file = st.file_uploader("2️⃣ Upload Overlay (.ass)", type=[
+                                        'ass'], help="The subtitle you want to paste on top (e.g. Censor Boxes).")
 
     if st.button("🔄 Merge Subtitles", type="primary", width='stretch'):
         if not base_file or not overlay_file:
@@ -19,14 +21,17 @@ with st.container(border=True):
         else:
             os.makedirs(TEMP_DIR, exist_ok=True)
             base_path = os.path.join(TEMP_DIR, "base_" + base_file.name)
-            overlay_path = os.path.join(TEMP_DIR, "overlay_" + overlay_file.name)
-            
-            with open(base_path, "wb") as f: f.write(base_file.getbuffer())
-            with open(overlay_path, "wb") as f: f.write(overlay_file.getbuffer())
-            
+            overlay_path = os.path.join(
+                TEMP_DIR, "overlay_" + overlay_file.name)
+
+            with open(base_path, "wb") as f:
+                f.write(base_file.getbuffer())
+            with open(overlay_path, "wb") as f:
+                f.write(overlay_file.getbuffer())
+
             with st.spinner("Calculating coordinate scaling and merging files..."):
                 success, result = merge_ass_files(base_path, overlay_path)
-                
+
                 if success:
                     st.success("Successfully merged subtitles!")
                     with open(result, "rb") as f:
@@ -40,4 +45,3 @@ with st.container(border=True):
                         )
                 else:
                     st.error(result)
-

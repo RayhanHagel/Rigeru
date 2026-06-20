@@ -11,24 +11,36 @@ class MarkdownFormatter(Formatter):
         return f"**:violet[{text[token.startchar:token.endchar]}]**"
 
 def extract_text(file_path: str) -> str:
-    """Safely extracts raw text from PDF, DOCX, or TXT files."""
+    """Safely extracts raw text from PDF, DOCX, or TXT files using O(N) list aggregation."""
     ext = os.path.splitext(file_path)[1].lower()
-    text = ""
+    text_parts = []
+    
     try:
         if ext == '.pdf':
             with fitz.open(file_path) as doc:
-                for page in doc:
-                    text += page.get_text() + "\n"
+                text_parts = [page.get_text() for page in doc]
         elif ext == '.docx':
             doc = docx.Document(file_path)
-            for para in doc.paragraphs:
-                text += para.text + "\n"
+            text_parts = [para.text for para in doc.paragraphs]
         elif ext in ['.txt', '.md', '.csv']:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                text = f.read()
+                return f.read().strip()
     except Exception:
         pass 
-    return text.strip()
+        
+    return "\n".join(text_parts).strip()
+
+def _scan_files(path: str):
+    """Recursive generator yielding DirEntry objects to prevent double stat() system calls."""
+    try:
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_dir(follow_symlinks=False):
+                    yield from _scan_files(entry.path)
+                else:
+                    yield entry
+    except PermissionError:
+        pass
 
 def build_index(target_dir: str, index_dir: str = "./cache/doc_index") -> tuple[int, int]:
     """Crawls the target directory and builds/updates a Whoosh text index."""
@@ -41,25 +53,29 @@ def build_index(target_dir: str, index_dir: str = "./cache/doc_index") -> tuple[
     files_indexed, files_skipped = 0, 0
     
     with ix.searcher() as searcher:
-        for root, _, files in os.walk(target_dir):
-            for file in files:
-                ext = os.path.splitext(file)[1].lower()
-                if ext in valid_exts:
-                    file_path = os.path.join(root, file)
-                    try:
-                        current_mtime = str(os.path.getmtime(file_path))
-                    except Exception:
-                        continue 
+        for entry in _scan_files(target_dir):
+            ext = os.path.splitext(entry.name)[1].lower()
+            if ext in valid_exts:
+                try:
+                    # Native dirent stat bypasses secondary disk I/O requests
+                    current_mtime = str(entry.stat().st_mtime)
+                except Exception:
+                    continue 
+                
+                document = searcher.document(path=entry.path)
+                if document and document.get("mtime") == current_mtime:
+                    files_skipped += 1
+                    continue 
+                
+                content = extract_text(entry.path)
+                if content:
+                    writer.update_document(path=entry.path, mtime=current_mtime, title=entry.name, content=content)
+                    files_indexed += 1
                     
-                    document = searcher.document(path=file_path)
-                    if document and document.get("mtime") == current_mtime:
-                        files_skipped += 1
-                        continue 
-                    
-                    content = extract_text(file_path)
-                    if content:
-                        writer.update_document(path=file_path, mtime=current_mtime, title=file, content=content)
-                        files_indexed += 1
+                    # Prevent RAM blowouts by forcing batch commits
+                    if files_indexed > 0 and files_indexed % 500 == 0:
+                        writer.commit()
+                        writer = ix.writer()
                         
     writer.commit()
     return files_indexed, files_skipped

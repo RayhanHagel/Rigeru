@@ -7,9 +7,9 @@ from utilities.util_object_detect import (
     process_video_object_detection,
     run_webcam_stream, 
     get_available_cameras,
-    get_available_encoders,
     TEMP_DIR
 )
+from utilities.util_media import get_available_encoders
 
 
 st.header("🕵️ Local Object Detection")
@@ -82,6 +82,14 @@ with tab_config:
 # ─────────────────────────────────────────────
 # TAB 2 — Image Upload & Selection
 # ─────────────────────────────────────────────
+@st.cache_data(show_spinner=False)
+def get_encoded_image(img_arr):
+    import cv2
+    is_success, buffer = cv2.imencode(".jpg", cv2.cvtColor(img_arr, cv2.COLOR_RGB2BGR))
+    if is_success: 
+        return buffer.tobytes()
+    return None
+
 with tab_image:
     img_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png", "webp"], key="img_uploader")
     
@@ -94,7 +102,6 @@ with tab_image:
         if not st.session_state.od_scanned_img:
             if st.button("🚀 Process Image", type="primary", width="stretch"):
                 model, load_msg = load_yolo_model(selected_model_name, export_format, resolution)
-                
                 if model is None:
                     st.error(load_msg)
                 else:
@@ -124,12 +131,14 @@ with tab_image:
             
             st.markdown("### Final Result")
             final_img = render_image_boxes(st.session_state.od_base_img, st.session_state.od_img_data, selected_ids)
-            st.image(final_img, width="stretch")
             
-            import cv2
-            is_success, buffer = cv2.imencode(".jpg", cv2.cvtColor(final_img, cv2.COLOR_RGB2BGR))
-            if is_success:
-                st.download_button("💾 Download Image", data=buffer.tobytes(), file_name="detected.jpg", mime="image/jpeg", type="primary", width="stretch")
+            # Utilize the Cached pre-encoded binary stream for massive Streamlit performance gains
+            encoded_img_bytes = get_encoded_image(final_img)
+            
+            if encoded_img_bytes:
+                st.image(encoded_img_bytes, width="stretch")
+                st.download_button("💾 Download Image", data=encoded_img_bytes, file_name="detected.jpg", mime="image/jpeg", type="primary", width="stretch")
+
 
 # ─────────────────────────────────────────────
 # TAB 3 — Video Upload
@@ -170,8 +179,11 @@ with tab_video:
                     st.error(load_msg)
                 else:
                     input_path = os.path.join(TEMP_DIR, vid_file.name)
+                    
+                    # File memory chunking logic to prevent RAM blowout
                     with open(input_path, "wb") as f:
-                        f.write(vid_file.getbuffer())
+                        while chunk := vid_file.read(8192 * 1024):
+                            f.write(chunk)
                         
                     prog_bar = st.progress(0.0, text="Preparing video... 0%")
                     
@@ -254,8 +266,3 @@ with tab_webcam:
                 use_extrapolation=use_tracking,
                 ai_fps=inference_fps
             )
-
-try:
-    
-except NameError:
-    pass

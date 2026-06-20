@@ -108,6 +108,7 @@ Simply run this command below in the terminal.
 ```
 
 ## To-do List
+- [ ] Fully remove tkinter.
 - [ ] Fix issue regarding the st.DataFrame theme style.
 - [ ] Save the chosen theme and fonts to the settings cache.
 - [ ] Fix utilities: Math to Latex, Receipt Scanner, MalSync, Spotify Listen, Spotify Download.

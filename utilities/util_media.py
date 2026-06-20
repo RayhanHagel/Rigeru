@@ -3,41 +3,6 @@ import shutil
 import subprocess
 import streamlit as st
 
-def _init_tkinter():
-    """Helper to initialize a hidden, top-most tkinter root window."""
-    import tkinter as tk
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    return root, tk
-
-def open_file_dialog() -> str:
-    """Opens a native OS file dialog to select a single file."""
-    from tkinter import filedialog
-    root, _ = _init_tkinter()
-    file_path = filedialog.askopenfilename(
-        title="Select Media File",
-        filetypes=[("All Files", "*.*")]
-    )
-    root.destroy()
-    return file_path
-
-def open_folder_dialog(initial_dir: str = "") -> str:
-    """Opens a native OS folder dialog to select a directory."""
-    from tkinter import filedialog
-    root, _ = _init_tkinter()
-
-    # Fallback to home directory if the provided initial_dir is invalid
-    if not initial_dir or not os.path.exists(initial_dir):
-        initial_dir = os.path.expanduser('~')
-
-    folder_path = filedialog.askdirectory(
-        title="Select Directory",
-        initialdir=initial_dir
-    )
-    root.destroy()
-    return folder_path
-
 def process_video(
     input_path: str,
     output_dir: str,

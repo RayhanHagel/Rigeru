@@ -5,7 +5,7 @@ import sys
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from pillow_heif import register_heif_opener
 import fitz  # PyMuPDF
 from send2trash import send2trash
@@ -13,13 +13,13 @@ import streamlit as st
 import cv2
 import zipfile
 import xml.etree.ElementTree as ET
+import itertools  # Added for O(1) safe line iteration
 
 # Specialized Dependencies
 import mutagen
 from pygments import highlight
 from pygments.lexers import get_lexer_for_filename, guess_lexer
 from pygments.formatters import ImageFormatter
-from psd_tools import PSDImage
 import trimesh
 import matplotlib.pyplot as plt
 
@@ -93,11 +93,21 @@ def extract_epub_cover(file_path: str, output_path: str) -> bool:
             opf_root = ET.fromstring(z.read(opf_path))
             opf_ns = {'opf': 'http://www.idpf.org/2007/opf'}
 
-            cover_id = next((m.attrib.get('content') for m in opf_root.findall('.//opf:meta', opf_ns) if m.attrib.get('name') == 'cover'), None)
+            cover_id = None
+            for m in opf_root.iterfind('.//opf:meta', opf_ns):
+                if m.attrib.get('name') == 'cover':
+                    cover_id = m.attrib.get('content')
+                    break
+                    
             if not cover_id:
                 return False
 
-            cover_href = next((i.attrib.get('href') for i in opf_root.findall('.//opf:item', opf_ns) if i.attrib.get('id') == cover_id), None)
+            cover_href = None
+            for i in opf_root.iterfind('.//opf:item', opf_ns):
+                if i.attrib.get('id') == cover_id:
+                    cover_href = i.attrib.get('href')
+                    break
+                    
             if not cover_href:
                 return False
 
@@ -135,7 +145,8 @@ def extract_audio_cover(file_path: str, output_path: str) -> bool:
 def extract_text_preview(file_path: str, output_path: str) -> bool:
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            code = "".join([next(f) for _ in range(25)])
+            # Safely slice up to 25 lines without throwing StopIteration on shorter files
+            code = "".join(itertools.islice(f, 25))
         try:
             lexer = get_lexer_for_filename(file_path)
         except Exception:
@@ -198,10 +209,8 @@ def get_image_preview(file_path: str) -> str | None:
                 img.convert('RGB').save(tmp.name, format="JPEG")
                 return tmp.name
             else:
-                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext, dir=tempfile.gettempdir())
-                tmp.close()
-                shutil.copy2(file_path, tmp.name)
-                return tmp.name
+                # O(1) fast path - no temp file duplication for standard image files
+                return file_path
 
         elif ext == '.pdf':
             with fitz.open(file_path) as doc:
@@ -239,16 +248,19 @@ def get_image_preview(file_path: str) -> str | None:
 # --- FILE OPERATIONS ---
 
 def get_target_files(source_path: str) -> list:
-    """Scans the source directory and returns files AND folders."""
+    """Scans the source directory and returns files AND folders via O(1) dirent lookup."""
     if not os.path.isdir(source_path):
         return []
 
     ignored_files = {'desktop.ini', '.ds_store', 'thumbs.db'}
-    files = sorted(
-        f for f in os.listdir(source_path)
-        if f.lower() not in ignored_files
-    )
-    return files
+    files = []
+    
+    with os.scandir(source_path) as entries:
+        for entry in entries:
+            if entry.name.lower() not in ignored_files:
+                files.append(entry.name)
+                
+    return sorted(files)
 
 
 def open_file_in_os(file_path: str) -> tuple[bool, str]:

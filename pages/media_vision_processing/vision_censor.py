@@ -1,6 +1,7 @@
 import os
 import streamlit as st
-from utilities.util_censor import TEMP_DIR, get_available_encoders
+from utilities.util_censor import TEMP_DIR
+from utilities.util_media import get_available_encoders
 
 
 try:
