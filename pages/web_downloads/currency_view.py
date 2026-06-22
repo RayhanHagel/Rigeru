@@ -1,12 +1,10 @@
 import streamlit as st
-import pandas as pd
+# OPTIMIZED: Removed global 'import pandas as pd'
 from utilities.util_currency import get_available_currencies, convert_currency, get_historical_trend
-
 
 st.header("💱 Currency Converter & Tracker")
 st.markdown("Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast.")
 
-# Fetching currencies is cached and threaded, so it's non-blocking
 if "currencies_loaded" not in st.session_state:
     with st.spinner("Loading currency data..."):
         success, currencies = get_available_currencies()
@@ -53,9 +51,6 @@ with st.container(border=True):
 
 st.divider()
 
-# --- Fragment for Lazy Loading ---
-# This runs independently of the main thread UI, meaning the calculator 
-# above paints instantly while this chart loads in the background.
 @st.fragment
 def render_historical_tracker(base_code, target_code):
     st.subheader(f"📈 30-Day Trend & 7-Day Forecast: {base_code} to {target_code}")
@@ -70,6 +65,8 @@ def render_historical_tracker(base_code, target_code):
         if trend_success:
             try:
                 import altair as alt
+                # OPTIMIZED: Lazy-load pandas in fragment context only
+                import pandas as pd 
 
                 # Format DataFrame for Altair
                 df_plot = trend_data.reset_index()
@@ -116,4 +113,3 @@ def render_historical_tracker(base_code, target_code):
 
 # Call the lazy-loaded fragment
 render_historical_tracker(base_code, target_code)
-

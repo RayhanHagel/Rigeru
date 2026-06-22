@@ -1,8 +1,7 @@
 import streamlit as st
 import time
-import pandas as pd
+from collections import deque # OPTIMIZED: Import deque for memory-efficient rolling window
 from utilities.util_sys_monitor import get_system_stats, get_top_processes
-
 
 st.header(":material/monitor: System Monitor")
 st.markdown("View real-time CPU, Memory, GPU, Disk usage, and running processes.")
@@ -14,28 +13,24 @@ with col2:
     if st.button(":material/refresh: Refresh Data", type="primary", width="stretch"):
         st.rerun()
 
-# Placeholders for the real-time loop updates
 metrics_container = st.empty()
 st.divider()
 charts_container = st.empty()
 st.divider()
 procs_container = st.empty()
 
-# Initialize session state for the graphing data (Rolling Window)
+# OPTIMIZED: Replaced pd.DataFrame with collections.deque for efficient rolling memory
 if "sys_history" not in st.session_state:
-    st.session_state.sys_history = pd.DataFrame(columns=["CPU", "RAM", "GPU"])
+    st.session_state.sys_history = deque(maxlen=40)
 
+@st.fragment # OPTIMIZED: Wrapped with st.fragment for non-blocking UI rendering
 def render_dashboard():
     """Fetches and renders the dashboard UI elements."""
     stats = get_system_stats()
     
-    # Update charting history
+    # OPTIMIZED: O(1) dictionary append instead of expensive pd.concat
     new_row = {"CPU": stats['cpu_percent'], "RAM": stats['mem_percent'], "GPU": stats['gpu_percent']}
-    st.session_state.sys_history = pd.concat([st.session_state.sys_history, pd.DataFrame([new_row])], ignore_index=True)
-    
-    # Keep only the last 40 data points in memory
-    if len(st.session_state.sys_history) > 40:
-        st.session_state.sys_history = st.session_state.sys_history.iloc[-40:]
+    st.session_state.sys_history.append(new_row)
 
     # --- 1. Top Metrics View ---
     with metrics_container.container():
@@ -67,17 +62,21 @@ def render_dashboard():
         st.subheader("Performance History")
         col_chart1, col_chart2, col_chart3 = st.columns(3)
         
+        # OPTIMIZED: Lazy-load pandas only when rendering the chart
+        import pandas as pd 
+        df_history = pd.DataFrame(st.session_state.sys_history)
+        
         with col_chart1:
             st.write("**CPU**")
-            st.line_chart(st.session_state.sys_history["CPU"], height=180, color="#ff4b4b")
+            st.line_chart(df_history["CPU"], height=180, color="#ff4b4b")
             
         with col_chart2:
             st.write("**RAM**")
-            st.line_chart(st.session_state.sys_history["RAM"], height=180, color="#0068c9")
+            st.line_chart(df_history["RAM"], height=180, color="#0068c9")
             
         with col_chart3:
             st.write("**GPU**")
-            st.line_chart(st.session_state.sys_history["GPU"], height=180, color="#29b09d")
+            st.line_chart(df_history["GPU"], height=180, color="#29b09d")
         
     # --- 3. Process Table View ---
     with procs_container.container():
@@ -92,10 +91,8 @@ def render_dashboard():
                     col_name.markdown(f"**{proc['Name']}**")
                     col_pid.caption(f"PID: `{proc['PID']}`")
                     
-                    # Add visual progress bars for the hardware usage
                     with col_cpu:
                         st.caption(f"CPU: {proc['CPU (%)']:.2f}%")
-                        # Cap progress at 1.0 to prevent Streamlit errors if CPU spikes over 100%
                         st.progress(min(proc['CPU (%)'] / 100.0, 1.0))
                         
                     with col_mem:
@@ -109,4 +106,3 @@ if live_monitor:
         time.sleep(1.5) 
 else:
     render_dashboard()
-

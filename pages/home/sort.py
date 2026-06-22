@@ -51,7 +51,7 @@ st.header("⚡ Quick Navigation")
 hcols = st.columns([0.78, 0.11, 0.11], gap="small", vertical_alignment="bottom")
 hcols[0].subheader(body="Sort & Manage Cards", width="stretch", divider="violet")
 if hcols[1].button("", icon=":material/home:", width="stretch", help="Back to home"):
-    st.switch_page(st.session_state.nav_home["quick_home"])
+    st.switch_page(st.session_state.nav_dashboard["quick_home"])
 if hcols[2].button("", icon=":material/save:", width="stretch", help="Save current order"):
     write_cache(replace_data=st.session_state.temp_quick_cache)
     st.success("Order saved!", icon="✅")

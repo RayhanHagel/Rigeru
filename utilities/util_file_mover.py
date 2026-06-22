@@ -13,9 +13,8 @@ import streamlit as st
 import cv2
 import zipfile
 import xml.etree.ElementTree as ET
-import itertools  # Added for O(1) safe line iteration
+import itertools 
 
-# Specialized Dependencies
 import mutagen
 from pygments import highlight
 from pygments.lexers import get_lexer_for_filename, guess_lexer
@@ -23,12 +22,10 @@ from pygments.formatters import ImageFormatter
 import trimesh
 import matplotlib.pyplot as plt
 
-# Tell Pillow how to read HEIC files from iPhones
 register_heif_opener()
 
 
 def _init_tkinter():
-    """Helper to initialize a hidden, top-most tkinter root window."""
     root = tk.Tk()
     root.withdraw()
     root.attributes('-topmost', True)
@@ -36,7 +33,6 @@ def _init_tkinter():
 
 
 def open_folder_dialog(current_path: str = "") -> str:
-    """Opens a native OS folder dialog."""
     root = _init_tkinter()
     selected = filedialog.askdirectory(
         initialdir=current_path if os.path.exists(current_path) else os.path.expanduser('~'),
@@ -114,8 +110,12 @@ def extract_epub_cover(file_path: str, output_path: str) -> bool:
             base_path = os.path.dirname(opf_path)
             cover_full_path = f"{base_path}/{cover_href}" if base_path else cover_href
 
-            with z.open(cover_full_path) as f_in, open(output_path, 'wb') as f_out:
-                f_out.write(f_in.read())
+            with z.open(cover_full_path) as f_in:
+                # OPTIMIZED: Safely stream to NamedTemporaryFile and use atomic shutil.move
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg', dir=tempfile.gettempdir()) as tmp:
+                    tmp.write(f_in.read())
+                    tmp_name = tmp.name
+                shutil.move(tmp_name, output_path)
             return True
     except Exception:
         pass
@@ -145,7 +145,6 @@ def extract_audio_cover(file_path: str, output_path: str) -> bool:
 def extract_text_preview(file_path: str, output_path: str) -> bool:
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            # Safely slice up to 25 lines without throwing StopIteration on shorter files
             code = "".join(itertools.islice(f, 25))
         try:
             lexer = get_lexer_for_filename(file_path)
@@ -187,7 +186,6 @@ def extract_3d_preview(file_path: str, output_path: str) -> bool:
 
 @st.cache_data(max_entries=50, show_spinner=False)
 def get_image_preview(file_path: str) -> str | None:
-    """Routes the file to the correct preview generator based on extension."""
     if not file_path or not os.path.exists(file_path):
         return None
 
@@ -209,7 +207,6 @@ def get_image_preview(file_path: str) -> str | None:
                 img.convert('RGB').save(tmp.name, format="JPEG")
                 return tmp.name
             else:
-                # O(1) fast path - no temp file duplication for standard image files
                 return file_path
 
         elif ext == '.pdf':
@@ -248,7 +245,6 @@ def get_image_preview(file_path: str) -> str | None:
 # --- FILE OPERATIONS ---
 
 def get_target_files(source_path: str) -> list:
-    """Scans the source directory and returns files AND folders via O(1) dirent lookup."""
     if not os.path.isdir(source_path):
         return []
 

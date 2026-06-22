@@ -11,24 +11,29 @@ class MarkdownFormatter(Formatter):
         return f"**:violet[{text[token.startchar:token.endchar]}]**"
 
 def extract_text(file_path: str) -> str:
-    """Safely extracts raw text from PDF, DOCX, or TXT files using O(N) list aggregation."""
+    """Safely extracts raw text from PDF, DOCX, or TXT files."""
     ext = os.path.splitext(file_path)[1].lower()
-    text_parts = []
     
+    def yield_pdf_pages(document):
+        for page in document:
+            yield page.get_text()
+            
     try:
         if ext == '.pdf':
             with fitz.open(file_path) as doc:
-                text_parts = [page.get_text() for page in doc]
+                # Streams text directly to the join method
+                return "\n".join(yield_pdf_pages(doc)).strip()
         elif ext == '.docx':
             doc = docx.Document(file_path)
-            text_parts = [para.text for para in doc.paragraphs]
+            # OPTIMIZED: Used generator expression
+            return "\n".join(para.text for para in doc.paragraphs).strip() 
         elif ext in ['.txt', '.md', '.csv']:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 return f.read().strip()
     except Exception:
         pass 
         
-    return "\n".join(text_parts).strip()
+    return ""
 
 def _scan_files(path: str):
     """Recursive generator yielding DirEntry objects to prevent double stat() system calls."""

@@ -6,8 +6,9 @@ def get_color_from_coords(image_bytes: bytes, x: int, y: int) -> tuple[bool, dic
     Extracts the RGB and HEX color of a specific pixel (x, y) from an image.
     """
     try:
-        # Load image and ensure it's in RGB format (handles PNGs with transparency)
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        # OPTIMIZED: Wrapped in context manager to prevent PIL memory leaks
+        with Image.open(io.BytesIO(image_bytes)) as raw_img:
+            img = raw_img.convert("RGB")
         
         # Validate coordinates to prevent out-of-bounds errors
         if not (0 <= x < img.width and 0 <= y < img.height):

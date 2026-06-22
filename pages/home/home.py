@@ -5,7 +5,7 @@ from utilities.util_network import get_image_cache
 WIDGET_OPTIONS = ["link button", "image", "clickable image", "text", "caption", "internal page"]
 
 NAV_SOURCES = [
-    ("nav_home",        "🏠"),
+    ("nav_dashboard",   "🏠"),
     ("nav_manga",       "📺"),
     ("nav_media_feeds", "📺"),
     ("nav_web_feeds",   "🌐"),
@@ -32,6 +32,7 @@ def build_internal_pages() -> dict:
 # EXECUTED ONCE GLOBALLY to prevent UI bloat/delays
 INTERNAL_PAGES = build_internal_pages()
 
+# OPTIMIZED: Deferred cache loading - quick_cache is now loaded directly here instead of blocking main.py
 if "quick_cache" not in st.session_state:
     st.session_state.quick_cache = read_cache()
 if "temp_data" not in st.session_state:
@@ -41,6 +42,7 @@ if "show_add_panel" not in st.session_state:
 if "new_card_widgets" not in st.session_state:
     st.session_state.new_card_widgets = []
 
+
 # ── Header ────────────────────────────────────────────────────────────────────
 st.header("⚡ Quick Navigation")
 
@@ -48,7 +50,7 @@ hcols = st.columns([0.78, 0.11, 0.11], gap="small", vertical_alignment="bottom")
 hcols[0].subheader(body="Home Page", width="stretch", divider="violet")
 if hcols[1].button("", icon=":material/drag_pan:", width="stretch", help="Sort / reorder cards"):
     st.session_state.temp_quick_cache = st.session_state.quick_cache
-    st.switch_page(st.session_state.nav_home["quick_sort"])
+    st.switch_page(st.session_state.nav_hidden["quick_sort"])
 if hcols[2].button("", icon=":material/add_box:", width="stretch", help="Add a new card"):
     st.session_state.show_add_panel = not st.session_state.show_add_panel
     st.session_state.new_card_widgets = []
