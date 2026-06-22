@@ -14,6 +14,7 @@ theme_colors = THEMES[current_theme_name]
 
 
 # --- UI Rendering Functions ---
+@st.fragment
 def _render_redact_ui():
     """Renders the PDF redaction interface."""
     from utilities.util_pdf_redact import redact_pdf_text
@@ -67,6 +68,7 @@ def _render_redact_ui():
                             st.error(result, icon=":material/error:")
 
 
+@st.fragment
 def _render_diff_ui():
     """Renders the document diff interface with lazy backend loading."""
     from utilities.util_pdf_diff import extract_text, generate_diff_html
@@ -137,6 +139,7 @@ def _render_diff_ui():
                     st.html(diff_html)
 
 
+@st.fragment
 def _render_search_ui():
     """Renders the document search interface."""
     from utilities.util_pdf_search import build_index, search_documents
@@ -222,6 +225,7 @@ def _render_search_ui():
                        icon=":material/warning:")
 
 
+@st.fragment
 def _render_compress_ui():
     """Renders the PDF compression interface with lazy backend loading."""
     # Lazy Import the Backend
@@ -277,6 +281,7 @@ def _render_compress_ui():
                         )
 
 
+@st.fragment
 def _render_convert_ui():
     """Renders the PDF Conversion and OCR interface."""
     from utilities.util_pdf_convert import pdf_to_images, images_to_pdf, make_pdf_searchable
@@ -373,6 +378,7 @@ def _render_convert_ui():
                             st.error(result, icon=":material/error:")
 
 
+@st.fragment
 def _render_security_ui():
     """Renders the PDF Security and Watermark interface."""
     from utilities.util_pdf_security import manage_pdf_password, add_pdf_watermark
@@ -467,6 +473,7 @@ def _render_security_ui():
                                 st.error(result, icon=":material/error:")
 
 
+@st.fragment
 def _render_metadata_ui():
     """Renders the PDF Metadata and Authenticity interface."""
     from utilities.util_pdf_metadata import get_pdf_metadata, update_pdf_metadata, check_pdf_authenticity
@@ -592,6 +599,7 @@ def _render_metadata_ui():
                         st.error(report, icon=":material/error:")
 
 
+@st.fragment
 def _render_ops_ui():
     """Renders the Page Operations interface, including MUI Drag & Drop."""
     from utilities.util_pdf_ops import merge_pdfs, split_pdf, remove_specific_pages, remove_blank_pages, resize_pdf_pages
@@ -727,7 +735,7 @@ def _render_ops_ui():
                         pages_list = [int(p.strip()) for p in pages_str.split(
                             ",") if p.strip().isdigit()]
                         if not pages_list:
-                            st.warning("Please enter valid numbers.")
+                            st.warning("Please enter valid numbers.", icon=":material/warning:")
                         else:
                             with st.spinner("Removing..."):
                                 success, result = remove_specific_pages(
@@ -740,7 +748,7 @@ def _render_ops_ui():
                                 else:
                                     st.error(result, icon=":material/error:")
                     except Exception:
-                        st.error("Invalid format. Use comma separated numbers.")
+                        st.error("Invalid format. Use comma separated numbers.", icon=":material/error:")
 
     elif ops_mode == "Clean Blank Pages":
         with st.container(border=True):
@@ -812,5 +820,3 @@ tabs = st.tabs(tab_labels)
 for tab, (name, data) in zip(tabs, tools.items()):
     with tab:
         data["func"]()
-
-

@@ -1,12 +1,7 @@
 import os
 import gc
 import json
-import torch
-import whisperx
-import cv2
 import numpy as np
-import matplotlib.font_manager as fm
-from whisperx.diarize import DiarizationPipeline
 
 # ─────────────────────────────────────────────
 #  Constants
@@ -77,17 +72,21 @@ def save_hf_token(token: str) -> None:
 # ─────────────────────────────────────────────
 def get_vram_recommendation() -> tuple[str, str]:
     """Return (recommended_model_key, human_readable_message) based on detected hardware."""
-    if not torch.cuda.is_available():
-        return "tiny", "⚠️ No GPU detected — CPU mode. tiny / base recommended for speed."
-    vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-    if vram_gb >= 10:
-        return "large-v3", f"✅ {vram_gb:.1f} GB VRAM detected — large-v3 recommended."
-    elif vram_gb >= 6:
-        return "medium",   f"✅ {vram_gb:.1f} GB VRAM detected — medium recommended."
-    elif vram_gb >= 3:
-        return "small",    f"✅ {vram_gb:.1f} GB VRAM detected — small recommended."
-    else:
-        return "base",     f"⚠️ {vram_gb:.1f} GB VRAM detected — base or tiny recommended."
+    try:
+        import torch
+        if not torch.cuda.is_available():
+            return "tiny", ":material/warning: No GPU detected — CPU mode. tiny / base recommended for speed."
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        if vram_gb >= 10:
+            return "large-v3", f":material/check_circle: {vram_gb:.1f} GB VRAM detected — large-v3 recommended."
+        elif vram_gb >= 6:
+            return "medium",   f":material/check_circle: {vram_gb:.1f} GB VRAM detected — medium recommended."
+        elif vram_gb >= 3:
+            return "small",    f":material/check_circle: {vram_gb:.1f} GB VRAM detected — small recommended."
+        else:
+            return "base",     f":material/warning: {vram_gb:.1f} GB VRAM detected — base or tiny recommended."
+    except ImportError:
+         return "tiny", ":material/warning: PyTorch is not installed. Whisper will fail or fall back to CPU."
 
 
 def check_model_downloaded(model_name: str) -> bool:
@@ -125,6 +124,7 @@ def extract_video_frame(file_path: str) -> np.ndarray | None:
     Extract a single BGR frame at ~25 % of the video duration.
     Returns a 1920×1080 ndarray, or None if extraction fails.
     """
+    import cv2
     cap = cv2.VideoCapture(file_path)
     frame_bgr = None
     if cap.isOpened():
@@ -148,6 +148,7 @@ def extract_speaker_thumbnail(video_path: str, start_seconds: float) -> np.ndarr
     Seek to `start_seconds` in a video and return a 320×180 RGB thumbnail.
     Returns None if the seek or read fails.
     """
+    import cv2
     cap = cv2.VideoCapture(video_path)
     thumb = None
     if cap.isOpened():
@@ -177,6 +178,11 @@ def run_transcription_pipeline(
     Returns a list of segment dicts, each with keys:
         start, end, text, (speaker if diarized)
     """
+    # Lazy load massive machine learning libraries only when executed
+    import torch
+    import whisperx
+    from whisperx.diarize import DiarizationPipeline
+
     device       = "cuda" if torch.cuda.is_available() else "cpu"
     compute_type = "float16" if device == "cuda" else "int8"
 
@@ -216,7 +222,7 @@ def run_transcription_pipeline(
             result           = whisperx.assign_word_speakers(diarize_segments, result)
         except Exception as e:
             if status_text:
-                status_text.text(f"⚠️ Diarization failed ({e}) — continuing without speaker labels.")
+                status_text.text(f":material/warning: Diarization failed ({e}) — continuing without speaker labels.")
 
     # Apply any caller-supplied name remapping
     for seg in result.get("segments", []):
@@ -253,6 +259,7 @@ def apply_speaker_renames(segments: list[dict], mapping: dict) -> list[dict]:
 def get_system_fonts() -> list[str]:
     """Return a sorted list of all system font family names."""
     try:
+        import matplotlib.font_manager as fm
         fonts = sorted({f.name for f in fm.fontManager.ttflist})
         return fonts or ["Arial", "Courier New", "Tahoma", "Times New Roman", "Verdana"]
     except Exception:
@@ -272,6 +279,7 @@ def render_subtitle_preview(
     using the supplied style dict.  Returns a 1920×1080 RGB ndarray ready
     for st.image().
     """
+    import cv2
     canvas = base_frame.copy() if base_frame is not None \
              else np.full((1080, 1920, 3), 30, dtype=np.uint8)
 

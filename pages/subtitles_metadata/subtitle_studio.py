@@ -23,16 +23,16 @@ for _k, _v in _defaults.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
 
-st.header("🎬 Subtitle Studio")
+st.header(":material/movie: Subtitle Studio")
 st.markdown(
     "Transcribe audio or video, identify speakers, style subtitles, and export ready-to-use files.")
 
 tab_model, tab_transcribe, tab_speakers, tab_style, tab_export = st.tabs([
-    "⚙️ Model Setup",
-    "📂 Transcribe",
-    "🧑‍🤝‍🧑 Speakers",
-    "🎨 Subtitle Style",
-    "⬇️ Export",
+    ":material/settings: Model Setup",
+    ":material/folder_open: Transcribe",
+    ":material/group: Speakers",
+    ":material/palette: Subtitle Style",
+    ":material/download: Export",
 ])
 
 # ══════════════════════════════════════════════
@@ -47,7 +47,7 @@ with tab_model:
 
     with col_model:
         with st.container(border=True):
-            st.markdown("#### 🤖 Whisper Model")
+            st.markdown("#### :material/smart_toy: Whisper Model")
             rec_model, rec_msg = get_vram_recommendation()
             st.info(rec_msg)
 
@@ -67,12 +67,12 @@ with tab_model:
                 c2.metric("VRAM Needed", meta["vram"])
                 st.caption(
                     f"**Complexity:** {meta['complexity']}  •  {meta['desc']}")
-                st.caption("✅ Cached locally" if is_cached
-                           else "⚠️ Not cached — will download on first run")
+                st.caption(":material/check_circle: Cached locally" if is_cached
+                           else ":material/warning: Not cached — will download on first run")
 
     with col_token:
         with st.container(border=True):
-            st.markdown("#### 🔑 Hugging Face Token")
+            st.markdown("#### :material/vpn_key: Hugging Face Token")
             st.caption("Required only when speaker diarization is enabled.")
 
             hf_token = st.text_input(
@@ -82,14 +82,14 @@ with tab_model:
                 placeholder="hf_xxxxxxxxxxxxxxxxxxxx",
                 key="hf_token",
             )
-            if st.button("💾 Save Token", width="stretch"):
+            if st.button(":material/save: Save Token", width="stretch"):
                 if hf_token.strip():
                     save_hf_token(hf_token.strip())
                     st.success("Token saved to cache.")
                 else:
                     st.warning("Enter a token before saving.")
 
-            with st.expander("❓ How do I get a token?"):
+            with st.expander(":material/help: How do I get a token?"):
                 st.markdown("""
 1. Go to [huggingface.co](https://huggingface.co) and sign in.
 2. Profile picture → **Settings** → **Access Tokens**.
@@ -137,7 +137,7 @@ with tab_transcribe:
 
     with col_opts:
         with st.container(border=True):
-            st.markdown("#### 🎛️ Pipeline Options")
+            st.markdown("#### :material/tune: Pipeline Options")
 
             do_diarize = st.checkbox(
                 "Identify individual speakers",
@@ -147,11 +147,11 @@ with tab_transcribe:
             )
             if do_diarize and not st.session_state.get("hf_token", "").strip():
                 st.warning(
-                    "⚠️ Set your Hugging Face token in **Model Setup** first.")
+                    ":material/warning: Set your Hugging Face token in **Model Setup** first.")
 
             st.divider()
 
-            if st.button("▶️ Run Transcription", type="primary", width="stretch"):
+            if st.button(":material/play_arrow: Run Transcription", type="primary", width="stretch"):
                 if not st.session_state.temp_media_path:
                     st.error("Upload a file first.")
                 elif do_diarize and not st.session_state.get("hf_token", "").strip():
@@ -174,14 +174,14 @@ with tab_transcribe:
                             st.session_state.speaker_names.setdefault(sid, sid)
 
                         st.success(
-                            f"✅ Done — {len(st.session_state.segments)} segments transcribed."
+                            f":material/check_circle: Done — {len(st.session_state.segments)} segments transcribed."
                         )
                     except Exception as e:
                         st.error(f"Pipeline error: {e}")
 
     # Raw transcript preview (collapsed)
     if st.session_state.segments:
-        with st.expander("📝 Raw transcript preview", expanded=False):
+        with st.expander(":material/description: Raw transcript preview", expanded=False):
             lines = []
             for seg in st.session_state.segments[:30]:
                 spk = seg.get("speaker", "")
@@ -193,9 +193,10 @@ with tab_transcribe:
                     f"… and {len(st.session_state.segments) - 30} more segments.")
 
 # ══════════════════════════════════════════════
-#  TAB 3 – Speakers (Modified with Audio Preview)
+#  TAB 3 – Speakers (Fragmented)
 # ══════════════════════════════════════════════
-with tab_speakers:
+@st.fragment
+def render_speakers_tab():
     st.markdown("### Speaker Identification & Renaming")
 
     if not st.session_state.segments:
@@ -222,7 +223,6 @@ with tab_speakers:
                     s for s in st.session_state.segments if s.get("speaker") == sid]
 
                 with st.container(border=True):
-                    # Changed layout to accommodate audio player
                     col_thumb, col_info, col_audio = st.columns(
                         [1, 2, 1], vertical_alignment="center")
 
@@ -239,7 +239,7 @@ with tab_speakers:
                         else:
                             st.markdown(
                                 "<div style='background:#1e1e2e;border-radius:8px;"
-                                "padding:32px;text-align:center;font-size:2.5rem;'>🎙️</div>",
+                                "padding:32px;text-align:center;font-size:2.5rem;'>:material/mic:</div>",
                                 unsafe_allow_html=True,
                             )
 
@@ -249,23 +249,21 @@ with tab_speakers:
                             value=st.session_state.speaker_names.get(sid, sid),
                             key=f"spk_rename_{sid}",
                         )
-                        st.session_state.speaker_names[sid] = new_name.strip(
-                        ) or sid
+                        st.session_state.speaker_names[sid] = new_name.strip() or sid
 
                         snippet = " ".join(s["text"].strip()
                                            for s in spk_segs[:3])
                         if len(snippet) > 220:
                             snippet = snippet[:220] + "…"
-                        st.caption(f"🗣️ *{snippet}*")
+                        st.caption(f":material/record_voice_over: *{snippet}*")
                         st.caption(f"Segments: **{len(spk_segs)}**")
 
                     with col_audio:
-                        # Extract and play audio snippet for the first segment
                         if spk_segs:
                             start_time = spk_segs[0]["start"]
                             end_time = spk_segs[0]["end"]
 
-                            if st.button("🎤 Hear Voice", key=f"hear_{sid}", width="stretch"):
+                            if st.button(":material/mic: Hear Voice", key=f"hear_{sid}", width="stretch"):
                                 with st.spinner("Extracting audio..."):
                                     audio_bytes = extract_audio_snippet(
                                         st.session_state.temp_media_path, start_time, end_time)
@@ -276,7 +274,7 @@ with tab_speakers:
                                         st.error("Could not extract audio.")
 
             st.divider()
-            if st.button("✅ Apply Names to Transcript", type="primary", width="stretch"):
+            if st.button(":material/check_circle: Apply Names to Transcript", type="primary", width="stretch"):
                 mapping = st.session_state.speaker_names
                 st.session_state.segments = apply_speaker_renames(
                     st.session_state.segments, mapping
@@ -287,10 +285,15 @@ with tab_speakers:
                 st.success(
                     "Names applied! Head to **Subtitle Style** to preview.")
 
+with tab_speakers:
+    render_speakers_tab()
+
+
 # ══════════════════════════════════════════════
-#  TAB 4 – Subtitle Style
+#  TAB 4 – Subtitle Style (Fragmented)
 # ══════════════════════════════════════════════
-with tab_style:
+@st.fragment
+def render_style_tab():
     st.markdown("### Subtitle Style Editor")
 
     if not st.session_state.segments:
@@ -308,7 +311,7 @@ with tab_style:
         # ── Plain / SRT preview ───────────────────────────────────────
         if fmt.startswith(".txt"):
             st.markdown("#### Plain / SubRip Dialogue Preview")
-            st.caption("Subtitles appear as  **Speaker: Text**  lines.")
+            st.caption("Subtitles appear as  **Speaker: Text** lines.")
 
             with st.container(border=True):
                 c1, c2, c3 = st.columns(3)
@@ -319,7 +322,7 @@ with tab_style:
                 uppercase_names = c3.checkbox(
                     "UPPERCASE names",     value=False, key="srt_upper")
 
-            st.markdown("#### 👁️ Preview")
+            st.markdown("#### :material/visibility: Preview")
             with st.container(border=True):
                 for seg in st.session_state.segments[:6]:
                     text = seg["text"].strip()
@@ -345,7 +348,7 @@ with tab_style:
                 list(STYLE_PRESETS.keys()),
                 key="ass_preset",
             )
-            apply_preset = col_apply.button("⚡ Apply Preset", width="stretch")
+            apply_preset = col_apply.button(":material/bolt: Apply Preset", width="stretch")
 
             preset_vals = STYLE_PRESETS.get(
                 chosen_preset) or STYLE_PRESETS[DEFAULT_PRESET]
@@ -386,7 +389,7 @@ with tab_style:
             # Per-speaker sub-tabs
             if multi_speaker:
                 spk_tabs = st.tabs(
-                    [f"🎙️ {spk}" for spk in speakers] + ["🌐 Global Defaults"])
+                    [f":material/mic: {spk}" for spk in speakers] + [":material/language: Global Defaults"])
                 for i, spk in enumerate(speakers):
                     with spk_tabs[i]:
                         st.markdown(f"#### Style for **{spk}**")
@@ -397,7 +400,7 @@ with tab_style:
                     st.markdown("#### Apply one style to all speakers at once")
                     global_style = _style_editor(
                         "ass_global", dict(STYLE_PRESETS[DEFAULT_PRESET]))
-                    if st.button("📋 Copy to All Speakers", width="stretch"):
+                    if st.button(":material/content_copy: Copy to All Speakers", width="stretch"):
                         for spk in speakers:
                             st.session_state.ass_styles[spk] = dict(
                                 global_style)
@@ -413,7 +416,7 @@ with tab_style:
 
             # Canvas preview
             st.divider()
-            st.markdown("#### 👁️ Canvas Preview")
+            st.markdown("#### :material/visibility: Canvas Preview")
 
             preview_spk = (
                 st.selectbox("Preview speaker:", speakers,
@@ -429,6 +432,9 @@ with tab_style:
                 st.session_state.video_frame, sample_txt, prev_style
             )
             st.image(preview_rgb, width="stretch")
+
+with tab_style:
+    render_style_tab()
 
 
 # ══════════════════════════════════════════════
@@ -450,7 +456,7 @@ with tab_export:
         # ── .TXT ─────────────────────────────────────────────────────
         with col_txt:
             with st.container(border=True):
-                st.markdown("#### 📄 Plain Text")
+                st.markdown("#### :material/description: Plain Text")
                 st.caption(
                     "Clean transcript. Speaker names prepended as dialogue labels when diarization was used.")
 
@@ -462,7 +468,7 @@ with tab_export:
                     uppercase_names=st.session_state.get("srt_upper", False),
                 )
                 st.download_button(
-                    "⬇️ Download .TXT",
+                    ":material/download: Download .TXT",
                     data=txt_data, file_name="transcript.txt", mime="text/plain",
                     type="primary", width="stretch",
                 )
@@ -470,13 +476,13 @@ with tab_export:
         # ── .SRT ─────────────────────────────────────────────────────
         with col_srt:
             with st.container(border=True):
-                st.markdown("#### 🎞️ SubRip (.SRT)")
+                st.markdown("#### :material/movie: SubRip (.SRT)")
                 st.caption(
                     "Timed subtitles compatible with most players and editors.")
 
                 srt_data = export_srt(st.session_state.segments, identify)
                 st.download_button(
-                    "⬇️ Download .SRT",
+                    ":material/download: Download .SRT",
                     data=srt_data, file_name="transcript.srt", mime="text/plain",
                     type="primary", width="stretch",
                 )
@@ -484,7 +490,7 @@ with tab_export:
         # ── .ASS ─────────────────────────────────────────────────────
         with col_ass:
             with st.container(border=True):
-                st.markdown("#### 🎨 Advanced SubStation Alpha (.ASS)")
+                st.markdown("#### :material/palette: Advanced SubStation Alpha (.ASS)")
                 st.caption(
                     "Fully styled subtitles with per-speaker formatting from the Style tab.")
 
@@ -498,15 +504,13 @@ with tab_export:
                     st.session_state.segments, ass_styles, identify
                 )
                 st.download_button(
-                    "⬇️ Download .ASS",
+                    ":material/download: Download .ASS",
                     data=ass_data, file_name="transcript.ass", mime="text/plain",
                     type="primary", width="stretch",
                 )
 
         st.divider()
         st.caption(
-            "💡 **Tip:** Use .ASS in mpv, VLC, or Aegisub for full styled subtitle support. "
+            ":material/lightbulb: **Tip:** Use .ASS in mpv, VLC, or Aegisub for full styled subtitle support. "
             ".SRT works universally. .TXT is ideal for reading or feeding into other tools."
         )
-
-
