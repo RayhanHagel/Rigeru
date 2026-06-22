@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from collections import deque
 from utilities.util_file_mover import (
     get_target_files, perform_move,
     perform_delete, perform_undo, open_file_in_os, open_folder_dialog
@@ -11,7 +12,7 @@ if "fm_state" not in st.session_state:
     st.session_state.fm_state = {
         "files_list": [],
         "current_idx": 0,
-        "history": [],
+        "history": deque(maxlen=50),
         "sels_list": [None] * MAX_DEPTH,
         "status": "Ready to scan.",
         "source_path": os.path.join(os.path.expanduser('~'), 'Downloads'),
@@ -27,9 +28,6 @@ def update_status(msg):
 def next_file(msg, record_history=None):
     if record_history:
         st.session_state.fm_state["history"].append(record_history)
-        # O(1) Memory bound restriction
-        if len(st.session_state.fm_state["history"]) > 50:
-            st.session_state.fm_state["history"].pop(0)
             
     st.session_state.fm_state["current_idx"] += 1
     update_status(msg)

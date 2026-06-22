@@ -8,7 +8,6 @@ from utilities.util_yt_rss import (
     search_youtube_channel, bulk_add_channels, load_feed_cache, save_feed_cache
 )
 
-
 st.header("🔔 YouTube RSS Feed")
 st.markdown("Track your favorite YouTube channels locally without logging into an account.")
 
@@ -79,23 +78,24 @@ with st.expander("➕ Track New Channel", expanded=False):
 
 st.divider()
 
-# --- Data Loading & Caching Logic ---
 channels = load_tracked_channels()
 cached_data = load_feed_cache()
 
 col_title, col_btn = st.columns([4, 1], vertical_alignment="center")
 
-# Determine if we need to fetch new data
 force_refresh = col_btn.button("🔄 Refresh Feeds", type="secondary", width="stretch")
 cached_tracked_ids = cached_data.get("tracked_ids", [])
 current_tracked_ids = [c['id'] for c in channels]
 
-# Automatically fetch if cache is empty or tracked channels have changed
 needs_fetch = force_refresh or not cached_data or set(cached_tracked_ids) != set(current_tracked_ids)
 
-if not channels:
-    st.info("You aren't tracking any channels yet. Use the 'Track New Channel' button above.")
-else:
+# OPTIMIZED: Abstracted heavy rendering loop into a non-blocking fragment
+@st.fragment
+def render_youtube_dashboard():
+    if not channels:
+        st.info("You aren't tracking any channels yet. Use the 'Track New Channel' button above.")
+        return
+
     all_videos = cached_data.get("all_videos", [])
     channel_data = cached_data.get("channel_data", {})
 
@@ -141,7 +141,6 @@ else:
             fetch_thread.start()
             fetch_thread.join()
 
-        # Sort all videos by publication date descending
         all_videos.sort(key=lambda x: x.get('published', ''), reverse=True)
         
         save_feed_cache({
@@ -150,7 +149,6 @@ else:
             "all_videos": all_videos
         })
 
-    # --- UI Tabs ---
     tab_timeline, tab_channels = st.tabs(["⏱️ Timeline View", "📺 Channel View"])
     
     with tab_timeline:
@@ -166,7 +164,6 @@ else:
                 except ValueError:
                     ym_labels.append(ym)
 
-            # Native Streamlit Horizontal Scrubber
             st.markdown("### 🗂️ Jump to Date")
             selected_label = st.select_slider(
                 "Timeline",
@@ -176,7 +173,6 @@ else:
             )
             selected_ym = unique_ym[ym_labels.index(selected_label)] if selected_label else None
 
-            # Filtered Feed
             filtered_videos = [v for v in all_videos if selected_ym and v['published'].startswith(selected_ym)]
             
             for vid in filtered_videos:
@@ -191,10 +187,7 @@ else:
                         st.caption(f"📅 Uploaded: {vid['published']}")
 
     with tab_channels:
-        # Collect IDs for any currently checked boxes via session state
         selected_to_delete = [c['id'] for c in channels if st.session_state.get(f"chk_{c['id']}", False)]
-        
-        # 1. UI Controls Row (Search, Sort, and Unsubscribe)
         col_search, col_sort, col_del_btn = st.columns([2, 1, 1.5], vertical_alignment="bottom")
 
         with col_search:
@@ -211,14 +204,12 @@ else:
             if st.button(f"🗑️ Unsubscribe ({len(selected_to_delete)})", disabled=len(selected_to_delete) == 0, type="primary", width="stretch"):
                 for c_id in selected_to_delete:
                     delete_channel(c_id)
-                    # Clear session state for deleted items so they don't cause errors
                     if f"chk_{c_id}" in st.session_state:
                         del st.session_state[f"chk_{c_id}"]
                 st.rerun()
                 
         st.divider()
 
-        # Apply Filtering and Sorting Logic
         display_channels = channels.copy()
         
         if search_query:
@@ -229,7 +220,6 @@ else:
         elif sort_option == "Z-A":
             display_channels.sort(key=lambda x: x['name'].lower(), reverse=True)
 
-        # Render the checklist and expandable channel sections
         if not display_channels:
             st.info("No channels match your search.")
         else:
@@ -239,11 +229,9 @@ else:
                 c_name = c_data["name"]
                 vids = c_data["videos"]
                 
-                # Tighter column ratio (0.5 to 10) so the checkbox hugs the expander box
                 col_chk, col_exp = st.columns([0.5, 10])
                 
                 with col_chk:
-                    # Removed the manual margin so it stays pinned to the top of the row
                     st.checkbox("Select", key=f"chk_{c_id}", label_visibility="collapsed")
                     
                 with col_exp:
@@ -260,3 +248,5 @@ else:
                                     st.caption(f"📅 {vid['published'].split('T')[0]}")
                                 st.divider()
 
+# Call the fragment
+render_youtube_dashboard()

@@ -1,20 +1,28 @@
 import streamlit as st
 from streamlit_clickable_images import clickable_images
-from utilities.util_manga import refresh_library
+from utilities.util_manga import refresh_library, read_cache
 from utilities.util_network import get_image_cache
 
 
 # --- State Initialization ---
 st.session_state.open_chapter = False
 
+# OPTIMIZED: Deferred cache loading for manga library
+if "manga_cache" not in st.session_state:
+    st.session_state.manga_cache = read_cache()
+
 st.header("☄️ Manga and Manhwa")
 
 # --- Top Action Bar ---
-cols = st.columns(spec=[0.84, 0.08, 0.08], gap="small", vertical_alignment="bottom")
+cols = st.columns(spec=[0.76, 0.08, 0.08, 0.08], gap="small", vertical_alignment="bottom")
 cols[0].subheader(body="Reading Library", width="stretch", divider="violet")
 
+# Search Button
+if cols[1].button("", icon=":material/content_paste_search:", width="stretch", help="Search for Titles"):
+    st.switch_page(st.session_state.nav_hidden["manga_search"])
+
 # Refresh Button
-cols[1].button(
+cols[2].button(
     label="", 
     icon=":material/refresh:", 
     on_click=refresh_library, 
@@ -23,7 +31,7 @@ cols[1].button(
 )
 
 # Sort Button (Updated routing to nav_manga)
-if cols[2].button(label="", icon=":material/drag_pan:", width="stretch", help="Sort the library"):
+if cols[3].button(label="", icon=":material/drag_pan:", width="stretch", help="Sort the library"):
     st.session_state.temp_manga_cache = st.session_state.manga_cache
     st.switch_page(st.session_state.nav_manga["manga_sort"])
 

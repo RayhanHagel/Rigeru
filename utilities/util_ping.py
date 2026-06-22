@@ -10,6 +10,11 @@ DNS_PRESETS = {
     "OpenDNS": {"primary": "208.67.222.222", "secondary": "208.67.220.220", "ipv6_primary": "2620:119:35::35"}
 }
 
+# OPTIMIZED: Moved regex compilations to global scope to prevent recompilation in loops
+RE_WIN_AVG = re.compile(r'(?:Average|Rata-rata)[^\d]*(\d+)', re.IGNORECASE)
+RE_WIN_TIME = re.compile(r'time[=<](\d+)', re.IGNORECASE)
+RE_NIX_AVG = re.compile(r'min/avg/max/mdev = [\d.]+/(.+?)/')
+
 def get_network_interfaces() -> list:
     """Returns a list of active network interface names."""
     try:
@@ -52,14 +57,14 @@ def get_ping_latency(host: str, ipv6: bool = False) -> float:
     
     try:
         if platform.system().lower() == 'windows':
-            match = re.search(r'(?:Average|Rata-rata)[^\d]*(\d+)', stdout, re.IGNORECASE)
+            match = RE_WIN_AVG.search(stdout)
             if match:
                 return float(match.group(1))
-            matches = re.findall(r'time[=<](\d+)', stdout, re.IGNORECASE)
+            matches = RE_WIN_TIME.findall(stdout)
             if matches:
                 return sum(float(m) for m in matches) / len(matches)
         else:
-            match = re.search(r'min/avg/max/mdev = [\d.]+/(.+?)/', stdout)
+            match = RE_NIX_AVG.search(stdout)
             if match: 
                 return float(match.group(1))
     except Exception:
