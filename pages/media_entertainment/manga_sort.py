@@ -16,7 +16,7 @@ hcols = st.columns([0.78, 0.11, 0.11], gap="small", vertical_alignment="bottom")
 hcols[0].subheader(body="Sort Library", width="stretch", divider="violet")
 
 if hcols[1].button("", icon=":material/arrow_back:", width="stretch", help="Back to Library"):
-    st.switch_page(st.session_state.nav_manga["manga_library"])
+    st.switch_page(st.session_state.nav_media_entertainment["manga_library"])
     
 if hcols[2].button("", icon=":material/save:", width="stretch", help="Save changes"):
     # Ensure the main cache is up-to-date with any deletions, then write to disk

@@ -84,9 +84,10 @@ tab_winget, tab_scoop, tab_choco = st.tabs([
 ])
 
 # ==========================================
-#               WINGET UI
+#               WINGET UI (Fragmented)
 # ==========================================
-with tab_winget:
+@st.fragment
+def render_winget_ui():
     if not is_winget_installed():
         st.warning("Winget (App Installer) is not detected on this system.", icon=":material/warning:")
         if st.button("Open Microsoft Store (App Installer)", type="primary", icon=":material/store:"):
@@ -240,11 +241,15 @@ with tab_winget:
                             cache_clear_func=list_winget_installed.clear
                         )
 
+with tab_winget:
+    render_winget_ui()
+
 
 # ==========================================
-#               SCOOP UI
+#               SCOOP UI (Fragmented)
 # ==========================================
-with tab_scoop:
+@st.fragment
+def render_scoop_ui():
     if not is_scoop_installed():
         st.warning("Scoop is not installed on this system.", icon=":material/warning:")
         if st.button("Install Scoop Now", type="primary", icon=":material/download:", disabled=st.session_state.is_processing):
@@ -424,11 +429,15 @@ with tab_scoop:
                             cache_clear_func=list_scoop_installed.clear
                         )
 
+with tab_scoop:
+    render_scoop_ui()
+
 
 # ==========================================
-#               CHOCOLATEY UI
+#               CHOCOLATEY UI (Fragmented)
 # ==========================================
-with tab_choco:
+@st.fragment
+def render_choco_ui():
     if not is_choco_installed():
         st.warning("Chocolatey is not installed on this system.", icon=":material/warning:")
         st.info("**Note:** Installing Chocolatey requires an **Administrator** session.", icon=":material/info:")
@@ -588,3 +597,6 @@ with tab_choco:
                             pkg_name,
                             cache_clear_func=list_choco_installed.clear
                         )
+
+with tab_choco:
+    render_choco_ui()

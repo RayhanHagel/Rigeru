@@ -1,12 +1,11 @@
 import streamlit as st
 import streamlit_extras.specialized_inputs as stsi
 from utilities.util_manga import change_chapter_read, download_chapter, refresh_library
-
 from utilities.util_network import get_image_cache
 
 # --- State Initialization & Routing ---
 if "selected_title" not in st.session_state:
-    st.switch_page(st.session_state.nav_manga["manga_library"])
+    st.switch_page(st.session_state.nav_media_entertainment["manga_library"])
 
 if "downloading_all" not in st.session_state:
     st.session_state.downloading_all = False
@@ -18,31 +17,16 @@ if not chapter_json:
     st.error("Error loading manga details. Please return to the library.")
     st.stop()
 
-st.header("☄️ Manga and Manhwa")
+st.header(":material/local_library: Manga and Manhwa")
 
 # --- Top Action Bar ---
 column_subheader = st.columns(spec=[0.92, 0.08], gap="small", vertical_alignment="bottom")
 column_subheader[0].subheader(body=st.session_state.selected_title, width="stretch", divider="violet")
 column_subheader[1].button(label="", icon=":material/refresh:", on_click=refresh_library, args=(st.session_state.selected_title,), width="stretch")
 
-# --- Content Grid ---
-column_outside = st.columns(spec=[0.35, 0.65], gap="small", border=True)
-
-# Left Column: Cover Image
-with column_outside[0]:
-    cached_image = get_image_cache(url=chapter_json["image"], crop=True)
-    st.image(image=cached_image if cached_image else chapter_json["image"], width="stretch")
-
-# Right Column: Details & Actions
-with column_outside[1]:
-    st.write("**Tag Information**")
-    st.markdown(
-        f":violet-badge[:material/edit_document: {chapter_json['status']}] "
-        f":violet-badge[:material/menu_book: {chapter_json['type']}] "
-        f":violet-badge[:material/kid_star: Rating {chapter_json['rating']}] "
-        f":violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]"
-    )
-
+# --- Fragment Definition ---
+@st.fragment
+def render_chapter_controls(chapter_json):
     chapter_read_cols = st.columns(spec=[0.3, 0.3, 0.4], gap="small", vertical_alignment="bottom")
 
     # Chapter Progress Input
@@ -98,7 +82,7 @@ with column_outside[1]:
             if chapter_url in chapter_json.get("chapter_downloaded", []):
                 if col_in[1].button("Read", key=f"read_{current_chapter}", icon=":material/library_books:", width="stretch"):
                     st.session_state.open_chapter = current_chapter
-                    st.switch_page(st.session_state.nav_manga["manga_pdf"])
+                    st.switch_page(st.session_state.nav_hidden["manga_pdf"])
 
                 col_in[2].button("Downloaded", key=f"dl_done_{current_chapter}", icon=":material/download_done:", disabled=True, width="stretch")
             else:
@@ -112,4 +96,23 @@ with column_outside[1]:
                     width="stretch"
                 )
 
+# --- Content Grid ---
+column_outside = st.columns(spec=[0.35, 0.65], gap="small", border=True)
 
+# Left Column: Cover Image
+with column_outside[0]:
+    cached_image = get_image_cache(url=chapter_json["image"], crop=True)
+    st.image(image=cached_image if cached_image else chapter_json["image"], width="stretch")
+
+# Right Column: Details & Actions
+with column_outside[1]:
+    st.write("**Tag Information**")
+    st.markdown(
+        f":violet-badge[:material/edit_document: {chapter_json['status']}] "
+        f":violet-badge[:material/menu_book: {chapter_json['type']}] "
+        f":violet-badge[:material/kid_star: Rating {chapter_json['rating']}] "
+        f":violet-badge[:material/bookmark: Chapter {chapter_json['chapters_amount']}]"
+    )
+    
+    # Call the fragment function directly beneath the standard UI elements
+    render_chapter_controls(chapter_json)
