@@ -7,7 +7,7 @@ from streamlit_extras.eval_javascript import eval_javascript
 
 # --- State Initialization & Routing ---
 if "selected_title" not in st.session_state or not st.session_state.get("open_chapter"):
-    st.switch_page(st.session_state.nav_manga["manga_library"])
+    st.switch_page(st.session_state.nav_hidden["manga_library"])
 
 st.header(f"📖 {st.session_state.selected_title}")
 st.subheader(f"Chapter {st.session_state.open_chapter}", divider="violet")

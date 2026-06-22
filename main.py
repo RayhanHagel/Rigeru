@@ -1,7 +1,8 @@
 import streamlit as st
 import os
+import time
+from datetime import datetime
 from utilities.util_persistent import apply_logo, apply_theme, render_theme_selector, apply_footer
-
 
 # --- Page Routing Definitions (Categorized to match UI) ---
 
@@ -153,8 +154,27 @@ pages = {
 
 # --- Initialization & Rendering ---
 pg = st.navigation(pages=pages, expanded=False)
+
+# Track Start Time
+start_time = time.time()
+
+# Execute Active Page
 pg.run()
 
+# Track End Time and Calculate Duration
+load_time = time.time() - start_time
+
+# Render Widget to Sidebar
+st.sidebar.divider()
+st.sidebar.metric(label="⏱️ Page Load Time", value=f"{load_time:.3f} s")
+
+# Log Results to File
+log_file_path = "page_load_times.log"
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+log_entry = f"[{timestamp}] Page: '{pg.title}' | Load Time: {load_time:.3f}s\n"
+
+with open(log_file_path, "a") as f:
+    f.write(log_entry)
 
 # --- UI Configuration ---
 render_theme_selector()
