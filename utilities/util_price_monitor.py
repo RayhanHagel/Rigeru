@@ -32,8 +32,9 @@ def save_tracked_items(items: list):
 def add_item(name: str, url: str) -> tuple[bool, str]:
     """Adds a new item to the tracking list."""
     items = load_tracked_items()
-
-    if any(item['url'] == url for item in items):
+    
+    tracked_urls = {item['url'] for item in items}
+    if url in tracked_urls:
         return False, "This URL is already being tracked."
 
     items.append({

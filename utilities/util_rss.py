@@ -5,6 +5,7 @@ from datetime import datetime
 import streamlit as st
 import re
 import xml.etree.ElementTree as ET
+import concurrent.futures
 
 # Import shared utilities
 from utilities.util_network import better_get
@@ -46,32 +47,39 @@ def fetch_all_feeds(feed_urls: list) -> list:
     """Fetches and aggregates articles from all subscribed RSS feeds."""
     aggregated_entries = []
     
-    for url in feed_urls:
-        try:
-            parsed = fetch_feed_data(url)
-            source_title = parsed.feed.get('title', url)
-            
-            for entry in parsed.entries:
-                published_time = entry.get('published_parsed') or entry.get('updated_parsed')
-                if published_time:
-                    dt = datetime.fromtimestamp(time.mktime(published_time))
-                    date_str = dt.strftime("%Y-%m-%d %H:%M")
-                    sort_key = time.mktime(published_time)
-                else:
-                    date_str = "Unknown Date"
-                    sort_key = 0.0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_url = {executor.submit(fetch_feed_data, url): url for url in feed_urls}
+        
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                parsed = future.result()
+                if not parsed:
+                    continue
+                    
+                source_title = parsed.feed.get('title', url)
                 
-                aggregated_entries.append({
-                    "source": source_title,
-                    "title": entry.get('title', 'No Title'),
-                    "link": entry.get('link', ''),
-                    "summary": entry.get('summary', 'No summary available.'),
-                    "date": date_str,
-                    "sort_key": sort_key
-                })
-        except Exception as e:
-            print(f"Failed to fetch {url}: {e}")
-            
+                for entry in parsed.entries:
+                    published_time = entry.get('published_parsed') or entry.get('updated_parsed')
+                    if published_time:
+                        dt = datetime.fromtimestamp(time.mktime(published_time))
+                        date_str = dt.strftime("%Y-%m-%d %H:%M")
+                        sort_key = time.mktime(published_time)
+                    else:
+                        date_str = "Unknown Date"
+                        sort_key = 0.0
+                    
+                    aggregated_entries.append({
+                        "source": source_title,
+                        "title": entry.get('title', 'No Title'),
+                        "link": entry.get('link', ''),
+                        "summary": entry.get('summary', 'No summary available.'),
+                        "date": date_str,
+                        "sort_key": sort_key
+                    })
+            except Exception as e:
+                print(f"Failed to fetch {url}: {e}")
+                
     aggregated_entries.sort(key=lambda x: x['sort_key'], reverse=True)
     return aggregated_entries
 

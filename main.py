@@ -1,31 +1,15 @@
 import streamlit as st
 import os
-from utilities.util_manga import read_cache as manga_rc
-from utilities.util_quick import read_cache as quick_rc
-from utilities.util_twitch import read_cache as twitch_rc
 from utilities.util_persistent import apply_logo, apply_theme, render_theme_selector, apply_footer
-
-
-# --- Session State Initialization ---
-if "quick_cache" not in st.session_state:
-    st.session_state.quick_cache = quick_rc()
-
-if "manga_cache" not in st.session_state:
-    st.session_state.manga_cache = manga_rc()
-
-if "twitch_cache" not in st.session_state:
-    st.session_state.twitch_cache = twitch_rc()
 
 
 # --- Page Routing Definitions (Categorized to match UI) ---
 
 st.session_state.nav_dashboard = {
     "quick_home":  os.path.join("pages", "home", "home.py"),
-    "quick_sort":  os.path.join("pages", "home", "sort.py"),
 }
 
 st.session_state.nav_media_entertainment = { 
-    "manga_search":      os.path.join("pages", "media_entertainment", "manga_search.py"),
     "manga_library":     os.path.join("pages", "media_entertainment", "manga_library.py"),
     "twitch_player":     os.path.join("pages", "media_entertainment", "twitch_watch.py"),
     "spotify_scrobbler": os.path.join("pages", "media_entertainment", "spotify_listen.py"),
@@ -83,6 +67,8 @@ st.session_state.nav_system_network = {
 }
 
 st.session_state.nav_hidden = {
+    "quick_sort":        os.path.join("pages", "home", "sort.py"),
+    "manga_search":      os.path.join("pages", "media_entertainment", "manga_search.py"),
     "manga_read":        os.path.join("pages", "media_entertainment", "manga_read.py"),
     "manga_sort":        os.path.join("pages", "media_entertainment", "manga_sort.py"),
     "manga_pdf":         os.path.join("pages", "media_entertainment", "manga_pdf.py")
@@ -96,12 +82,10 @@ apply_theme()
 # --- Streamlit Navigation Structure (Workflow Optimized) ---
 pages = {
     ":material/home: Dashboard": [
-        st.Page(st.session_state.nav_dashboard["quick_home"], title="Quick Navigation", icon=":material/bolt:"),
-        st.Page(st.session_state.nav_dashboard["quick_sort"], title="Quick Sort",       icon=":material/drag_pan:"),
+        st.Page(st.session_state.nav_dashboard["quick_home"], title="Quick Navigation", icon=":material/bolt:")
     ],
 
     ":material/tv: Media & Entertainment": [
-        st.Page(st.session_state.nav_media_entertainment["manga_search"],        title="Manga Search",       icon=":material/search:"),
         st.Page(st.session_state.nav_media_entertainment["manga_library"],       title="Manga Library",      icon=":material/menu_book:"),
         st.Page(st.session_state.nav_media_entertainment["twitch_player"],       title="Twitch Watch",       icon=":material/live_tv:"),
         st.Page(st.session_state.nav_media_entertainment["spotify_scrobbler"],   title="Spotify Scrobbler",  icon=":material/graphic_eq:"),
@@ -159,9 +143,11 @@ pages = {
     ],
     
     "Hidden" : [
-        st.Page(st.session_state.nav_hidden["manga_read"], title="Manga Reader", icon=":material/book:", visibility="hidden"),
-        st.Page(st.session_state.nav_hidden["manga_sort"], title="Manga Sort",   icon=":material/book:", visibility="hidden"),
-        st.Page(st.session_state.nav_hidden["manga_pdf"],  title="Manga PDF",    icon=":material/book:", visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["quick_sort"],      title="Quick Sort",     icon=":material/drag_pan:",     visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_search"],    title="Manga Search",   icon=":material/search:",       visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_read"],      title="Manga Reader",   icon=":material/book:",         visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_sort"],      title="Manga Sort",     icon=":material/book:",         visibility="hidden"),
+        st.Page(st.session_state.nav_hidden["manga_pdf"],       title="Manga PDF",      icon=":material/book:",         visibility="hidden"),
     ]
 }
 

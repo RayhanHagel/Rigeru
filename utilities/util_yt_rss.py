@@ -64,8 +64,9 @@ def search_youtube_channel(query: str) -> tuple[str | None, str | None]:
 def add_channel(name: str, channel_id: str) -> tuple[bool, str]:
     channels = load_tracked_channels()
     clean_id = channel_id.split("channel/")[-1].split("?")[0].strip()
-
-    if any(c['id'] == clean_id for c in channels):
+    
+    tracked_ids = {c['id'] for c in channels}
+    if clean_id in tracked_ids:
         return False, "This channel is already being tracked."
 
     # Verify the feed exists using pure standard library

@@ -3,6 +3,7 @@ import platform
 import subprocess
 import os
 
+
 def get_docker_client() -> tuple[bool, docker.DockerClient | str]:
     """Attempts to connect to the local Docker environment."""
     try:
@@ -20,13 +21,16 @@ def start_docker_daemon() -> tuple[bool, str]:
     try:
         current_os = platform.system()
         if current_os == "Windows":
-            # Default installation path for Docker Desktop on Windows
-            docker_path = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
-            if os.path.exists(docker_path):
-                subprocess.Popen([docker_path])
+            # Fix: Target the Docker Desktop app directly, not the CLI
+            docker_desktop_path = r"C:\Program Files\Docker\Docker\Docker Desktop.exe"
+            
+            if os.path.exists(docker_desktop_path):
+                # We use shell=False and pass the executable path to launch the UI/Daemon
+                subprocess.Popen([docker_desktop_path])
                 return True, "Launching Docker Desktop..."
             else:
-                return False, "Docker Desktop executable not found at standard path."
+                return False, "Docker Desktop executable not found at default location."
+                
         elif current_os == "Darwin":
             subprocess.Popen(["open", "-a", "Docker"])
             return True, "Launching Docker Desktop..."
@@ -49,7 +53,6 @@ def list_containers() -> tuple[bool, list | str]:
         
         container_data = []
         for c in containers:
-            # Safely extract all image tags to support multi-image containers like Immich
             if c.image.tags:
                 image_display = ", ".join(c.image.tags)
             else:
@@ -58,10 +61,10 @@ def list_containers() -> tuple[bool, list | str]:
             container_data.append({
                 "id": c.short_id,
                 "name": c.name,
-                "status": c.status, # e.g., 'running', 'exited'
+                "status": c.status, 
                 "image": image_display,
                 "ports": c.ports,
-                "raw_obj": c # Keep reference to the actual object for actions
+                "raw_obj": c
             })
             
         return True, container_data

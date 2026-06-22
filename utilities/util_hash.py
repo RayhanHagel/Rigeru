@@ -4,6 +4,17 @@ import hashlib
 from datetime import datetime
 import concurrent.futures
 
+# OPTIMIZED: Helper to recursively scan directories natively via scandir
+def _scan_files_fast(path: str):
+    try:
+        with os.scandir(path) as it:
+            for entry in it:
+                if entry.is_dir(follow_symlinks=False):
+                    yield from _scan_files_fast(entry.path)
+                else:
+                    yield entry.path
+    except PermissionError:
+        pass
 
 def calculate_hash(file_path: str) -> str:
     """Calculates the SHA-256 hash natively via C engine bypassing python loop overhead."""
@@ -18,10 +29,8 @@ def create_snapshot(target_dir: str, save_path: str) -> tuple[bool, str]:
     if not os.path.isdir(target_dir):
         return False, "Target directory does not exist."
         
-    paths_to_hash = []
-    for root, _, files in os.walk(target_dir):
-        for file in files:
-            paths_to_hash.append(os.path.join(root, file))
+    # OPTIMIZED: Replaced os.walk with os.scandir generator
+    paths_to_hash = list(_scan_files_fast(target_dir))
             
     # Utilize O(N/Cores) multi-processing
     with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -60,11 +69,11 @@ def verify_integrity(target_dir: str, snapshot_path: str) -> tuple[bool, dict | 
         return False, None, f"Failed to read snapshot: {e}"
 
     current_files = {}
-    for root, _, files in os.walk(target_dir):
-        for file in files:
-            path = os.path.join(root, file)
-            rel_path = os.path.relpath(path, target_dir)
-            current_files[rel_path] = calculate_hash(path)
+    
+    # OPTIMIZED: Replaced os.walk with os.scandir generator
+    for path in _scan_files_fast(target_dir):
+        rel_path = os.path.relpath(path, target_dir)
+        current_files[rel_path] = calculate_hash(path)
 
     baseline_keys = set(baseline.keys())
     current_keys = set(current_files.keys())

@@ -1,23 +1,20 @@
 import time
-import threading
-from streamlit.runtime.scriptrunner import add_script_run_ctx
-
 import streamlit as st
 
 # --- Aliased Imports to prevent collisions ---
-from utilities.util_scoop import (
+from utilities.util_package_scoop import (
     is_scoop_installed, install_scoop, search_scoop,
     install_packages as install_scoop_pkgs, uninstall_package as uninstall_scoop_pkg,
     update_package as update_scoop_pkg, update_all as update_all_scoop,
     update_scoop, cleanup_scoop, list_installed as list_scoop_installed
 )
-from utilities.util_winget import (
+from utilities.util_package_winget import (
     is_winget_installed, install_winget, search_winget,
     install_packages as install_winget_pkgs, uninstall_package as uninstall_winget_pkg,
     update_package as update_winget_pkg, upgrade_all as upgrade_all_winget,
     list_installed as list_winget_installed
 )
-from utilities.util_choco import (
+from utilities.util_package_choco import (
     is_choco_installed, install_choco, search_choco,
     install_packages as install_choco_pkgs, uninstall_package as uninstall_choco_pkg,
     update_package as update_choco_pkg, upgrade_all as upgrade_all_choco,
@@ -38,7 +35,6 @@ for pfx in prefixes:
     if f"{pfx}_installed_list" not in st.session_state:
         st.session_state[f"{pfx}_installed_list"] = []
 
-# Thread Lock State
 if "is_processing" not in st.session_state:
     st.session_state.is_processing = False
 
@@ -47,32 +43,38 @@ st.title(":material/package_2: Universal Package Manager")
 st.markdown("Search, install, and manage your Windows software from a single interface.")
 st.write("")
 
-# --- Unified Thread Dispatcher ---
-def dispatch_task(task_name, func, success_msg, error_msg, placeholder, *args):
-    """Safely dispatches a background thread and targets a specific progress placeholder."""
+# --- Unified Task Execution (Synchronous & Reliable) ---
+def execute_task(task_name, func, success_msg, error_msg, placeholder, *args, cache_clear_func=None):
+    """Executes a task synchronously, updates the progress bar, clears cache, and reruns UI."""
     st.session_state.is_processing = True
-    
-    def _worker():
-        try:
-            placeholder.progress(10, text=f":material/hourglass_empty: **{task_name}**: Initializing...")
-            time.sleep(0.5) 
-            
-            placeholder.progress(50, text=f":material/hourglass_empty: **{task_name}**: Executing command (this may take a moment)...")
-            success, log = func(*args)
-            
-            if success:
-                placeholder.progress(100, text=f":material/check_circle: **{task_name}**: Complete! (Click anywhere to refresh UI)")
-                st.toast(success_msg, icon=":material/check_circle:")
-            else:
-                placeholder.progress(100, text=f":material/cancel: **{task_name}**: Failed. Check logs.")
-                st.toast(error_msg, icon=":material/cancel:")
-        finally:
-            # Unlock the UI
-            st.session_state.is_processing = False
 
-    t = threading.Thread(target=_worker)
-    add_script_run_ctx(t)
-    t.start()
+    try:
+        placeholder.progress(10, text=f":material/hourglass_empty: **{task_name}**: Initializing...")
+        time.sleep(0.5) 
+        
+        placeholder.progress(50, text=f":material/hourglass_empty: **{task_name}**: Executing command (this may take a moment)...")
+        
+        # Execute the actual utility function
+        success, log = func(*args)
+        
+        if success:
+            if cache_clear_func:
+                cache_clear_func() # Purge the outdated cache
+            placeholder.progress(100, text=f":material/check_circle: **{task_name}**: Complete!")
+            st.toast(success_msg, icon=":material/check_circle:")
+            time.sleep(1.5) # Let the user see the 100% success state
+        else:
+            placeholder.progress(100, text=f":material/cancel: **{task_name}**: Failed.")
+            st.toast(error_msg, icon=":material/cancel:")
+            if log:
+                placeholder.error(f"**Error Details:**\n{log}")
+            time.sleep(4) # Let the user read the error
+            
+    finally:
+        # Unlock the UI, clear the progress bar, and force a refresh
+        st.session_state.is_processing = False
+        placeholder.empty()
+        st.rerun()
 
 # --- Top Level Tabs for Package Managers ---
 tab_winget, tab_scoop, tab_choco = st.tabs([
@@ -91,7 +93,6 @@ with tab_winget:
             ok, msg = install_winget()
             st.info(msg, icon=":material/info:")
     else:
-        # --- SECTION 1: SEARCH & INSTALL ---
         st.subheader(":material/search: Search & Install")
         with st.container(border=True):
             col_s, col_b = st.columns([4, 1], vertical_alignment="bottom")
@@ -135,41 +136,46 @@ with tab_winget:
                 btn_w_inst = st.button(f"Install {len(selected)} Package(s)", type="primary", key="w_inst_btn", icon=":material/download:", disabled=st.session_state.is_processing)
                 if btn_w_inst:
                     ph = st.empty() 
-                    dispatch_task(
+                    st.session_state.winget_installed_list = []
+                    st.session_state.winget_selected_pkgs = set()
+                    st.session_state.winget_search_results = []
+                    execute_task(
                         "Winget Installation", 
                         install_winget_pkgs, 
                         "Winget installation complete!", 
                         "Winget installation encountered errors.", 
                         ph,
-                        selected
+                        selected,
+                        cache_clear_func=list_winget_installed.clear
                     )
-                    st.session_state.winget_installed_list = []
-                    st.session_state.winget_selected_pkgs = set()
-                    st.session_state.winget_search_results = []
 
         st.divider()
 
-        # --- SECTION 2: BATCH UPGRADES ---
         st.subheader(":material/rocket_launch: Batch Upgrades")
-        
         btn_w_upd_all = st.button("Upgrade All Outdated Packages", type="primary", key="w_upd_all", icon=":material/rocket_launch:", disabled=st.session_state.is_processing)
         if btn_w_upd_all:
             ph = st.empty()
-            dispatch_task(
+            st.session_state.winget_installed_list = []
+            execute_task(
                 "Winget Batch Upgrade",
                 upgrade_all_winget,
                 "All Winget packages upgraded!",
                 "Winget upgrades finished (errors or none available).",
-                ph
+                ph,
+                cache_clear_func=list_winget_installed.clear
             )
-            st.session_state.winget_installed_list = []
 
         st.divider()
 
-        # --- SECTION 3: MANAGE INSTALLED ---
         st.subheader(":material/inventory_2: Manage Installed")
         col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
-        if col_ref.button("Refresh List", key="w_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing) or not st.session_state.winget_installed_list:
+        
+        # Explicit refresh logic
+        if col_ref.button("Refresh List", key="w_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing):
+            list_winget_installed.clear()
+            st.session_state.winget_installed_list = []
+            
+        if not st.session_state.winget_installed_list:
             with st.spinner("Fetching installed packages..."):
                 success, apps = list_winget_installed()
                 if success:
@@ -212,25 +218,27 @@ with tab_winget:
 
                 if btn_w_update or btn_w_uninst:
                     ph = st.empty()
+                    st.session_state.winget_installed_list = []
                     if btn_w_update:
-                        dispatch_task(
+                        execute_task(
                             f"Updating {target_id}",
                             update_winget_pkg,
                             f"{target_id} updated successfully!",
                             f"Failed to update {target_id}.",
                             ph,
-                            target_id
+                            target_id,
+                            cache_clear_func=list_winget_installed.clear
                         )
                     elif btn_w_uninst:
-                        dispatch_task(
+                        execute_task(
                             f"Uninstalling {target_id}",
                             uninstall_winget_pkg,
                             f"{target_id} uninstalled successfully!",
                             f"Failed to uninstall {target_id}.",
                             ph,
-                            target_id
+                            target_id,
+                            cache_clear_func=list_winget_installed.clear
                         )
-                    st.session_state.winget_installed_list = []
 
 
 # ==========================================
@@ -248,7 +256,6 @@ with tab_scoop:
                     st.error("Installation failed.", icon=":material/error:")
                     st.code(log)
     else:
-        # --- SECTION 1: SEARCH & INSTALL ---
         st.subheader(":material/search: Search & Install")
         with st.container(border=True):
             col_s, col_b = st.columns([4, 1], vertical_alignment="bottom")
@@ -292,21 +299,21 @@ with tab_scoop:
                 btn_s_inst = st.button(f"Install {len(selected)} Package(s)", type="primary", key="s_inst_btn", icon=":material/download:", disabled=st.session_state.is_processing)
                 if btn_s_inst:
                     ph = st.empty()
-                    dispatch_task(
+                    st.session_state.scoop_installed_list = []
+                    st.session_state.scoop_selected_pkgs = set()
+                    st.session_state.scoop_search_results = []
+                    execute_task(
                         "Scoop Installation",
                         install_scoop_pkgs,
                         "Scoop installation complete!",
                         "Scoop installation failed.",
                         ph,
-                        selected
+                        selected,
+                        cache_clear_func=list_scoop_installed.clear
                     )
-                    st.session_state.scoop_installed_list = []
-                    st.session_state.scoop_selected_pkgs = set()
-                    st.session_state.scoop_search_results = []
 
         st.divider()
 
-        # --- SECTION 2: SYSTEM MAINTENANCE ---
         st.subheader(":material/build: System Maintenance")
         c_a, c_b, c_c = st.columns(3)
         
@@ -318,7 +325,7 @@ with tab_scoop:
             ph = st.empty()
             
             if btn_s_manifest:
-                dispatch_task(
+                execute_task(
                     "Scoop Manifest Update",
                     update_scoop,
                     "Scoop manifests updated successfully!",
@@ -326,16 +333,17 @@ with tab_scoop:
                     ph
                 )
             elif btn_s_upd_all:
-                dispatch_task(
+                st.session_state.scoop_installed_list = []
+                execute_task(
                     "Scoop Batch Upgrade",
                     update_all_scoop,
                     "All Scoop packages updated!",
                     "Scoop update finished (errors or none available).",
-                    ph
+                    ph,
+                    cache_clear_func=list_scoop_installed.clear
                 )
-                st.session_state.scoop_installed_list = []
             elif btn_s_cleanup:
-                dispatch_task(
+                execute_task(
                     "Scoop Cleanup",
                     cleanup_scoop,
                     "Scoop cleanup complete! Reclaimed disk space.",
@@ -345,10 +353,14 @@ with tab_scoop:
 
         st.divider()
 
-        # --- SECTION 3: MANAGE INSTALLED ---
         st.subheader(":material/inventory_2: Manage Installed")
         col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
-        if col_ref.button("Refresh List", key="s_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing) or not st.session_state.scoop_installed_list:
+        
+        if col_ref.button("Refresh List", key="s_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing):
+            list_scoop_installed.clear()
+            st.session_state.scoop_installed_list = []
+            
+        if not st.session_state.scoop_installed_list:
             with st.spinner("Fetching installed packages..."):
                 success, apps = list_scoop_installed()
                 if success:
@@ -390,25 +402,27 @@ with tab_scoop:
 
                 if btn_s_update or btn_s_uninst:
                     ph = st.empty()
+                    st.session_state.scoop_installed_list = []
                     if btn_s_update:
-                        dispatch_task(
+                        execute_task(
                             f"Updating {pkg['name']}",
                             update_scoop_pkg,
                             f"{pkg['name']} updated successfully!",
                             f"Failed to update {pkg['name']}.",
                             ph,
-                            pkg['name']
+                            pkg['name'],
+                            cache_clear_func=list_scoop_installed.clear
                         )
                     elif btn_s_uninst:
-                        dispatch_task(
+                        execute_task(
                             f"Uninstalling {pkg['name']}",
                             uninstall_scoop_pkg,
                             f"{pkg['name']} uninstalled successfully!",
                             f"Failed to uninstall {pkg['name']}.",
                             ph,
-                            pkg['name']
+                            pkg['name'],
+                            cache_clear_func=list_scoop_installed.clear
                         )
-                    st.session_state.scoop_installed_list = []
 
 
 # ==========================================
@@ -427,7 +441,6 @@ with tab_choco:
                     st.error("Installation failed. Make sure you're running as Administrator.", icon=":material/error:")
                     st.code(log)
     else:
-        # --- SECTION 1: SEARCH & INSTALL ---
         st.subheader(":material/search: Search & Install")
         with st.container(border=True):
             col_s, col_b = st.columns([4, 1], vertical_alignment="bottom")
@@ -471,42 +484,47 @@ with tab_choco:
                 btn_c_inst = st.button(f"Install {len(selected)} Package(s)", type="primary", key="c_inst_btn", icon=":material/download:", disabled=st.session_state.is_processing)
                 if btn_c_inst:
                     ph = st.empty()
-                    dispatch_task(
+                    st.session_state.choco_installed_list = []
+                    st.session_state.choco_selected_pkgs = set()
+                    st.session_state.choco_search_results = []
+                    execute_task(
                         "Chocolatey Installation",
                         install_choco_pkgs,
                         "Chocolatey installation complete!",
                         "Chocolatey installation failed.",
                         ph,
-                        selected
+                        selected,
+                        cache_clear_func=list_choco_installed.clear
                     )
-                    st.session_state.choco_installed_list = []
-                    st.session_state.choco_selected_pkgs = set()
-                    st.session_state.choco_search_results = []
 
         st.divider()
 
-        # --- SECTION 2: BATCH UPGRADES ---
         st.subheader(":material/rocket_launch: Batch Upgrades")
         st.info("Scan your system for outdated software and upgrade them all.", icon=":material/info:")
         
         btn_c_upd_all = st.button("Upgrade All Packages", type="primary", key="c_upd_all", icon=":material/rocket_launch:", disabled=st.session_state.is_processing)
         if btn_c_upd_all:
             ph = st.empty()
-            dispatch_task(
+            st.session_state.choco_installed_list = []
+            execute_task(
                 "Chocolatey Batch Upgrade",
                 upgrade_all_choco,
                 "All Chocolatey packages upgraded!",
                 "Chocolatey upgrades finished (errors or none available).",
-                ph
+                ph,
+                cache_clear_func=list_choco_installed.clear
             )
-            st.session_state.choco_installed_list = []
 
         st.divider()
 
-        # --- SECTION 3: MANAGE INSTALLED ---
         st.subheader(":material/inventory_2: Manage Installed")
         col_hdr, col_ref = st.columns([4, 1], vertical_alignment="center")
-        if col_ref.button("Refresh List", key="c_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing) or not st.session_state.choco_installed_list:
+        
+        if col_ref.button("Refresh List", key="c_ref", use_container_width=True, icon=":material/refresh:", disabled=st.session_state.is_processing):
+            list_choco_installed.clear()
+            st.session_state.choco_installed_list = []
+            
+        if not st.session_state.choco_installed_list:
             with st.spinner("Fetching installed packages..."):
                 success, apps = list_choco_installed()
                 if success:
@@ -549,23 +567,24 @@ with tab_choco:
 
                 if btn_c_update or btn_c_uninst:
                     ph = st.empty()
+                    st.session_state.choco_installed_list = []
                     if btn_c_update:
-                        dispatch_task(
+                        execute_task(
                             f"Updating {pkg_name}",
                             update_choco_pkg,
                             f"{pkg_name} updated successfully!",
                             f"Failed to update {pkg_name}.",
                             ph,
-                            pkg_name
+                            pkg_name,
+                            cache_clear_func=list_choco_installed.clear
                         )
                     elif btn_c_uninst:
-                        dispatch_task(
+                        execute_task(
                             f"Uninstalling {pkg_name}",
                             uninstall_choco_pkg,
                             f"{pkg_name} uninstalled successfully!",
                             f"Failed to uninstall {pkg_name}.",
                             ph,
-                            pkg_name
+                            pkg_name,
+                            cache_clear_func=list_choco_installed.clear
                         )
-                    st.session_state.choco_installed_list = []
-
