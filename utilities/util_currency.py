@@ -1,81 +1,142 @@
-import pandas as pd
-import numpy as np
+import os
+import json
 from datetime import datetime, timedelta
 import streamlit as st
 from concurrent.futures import ThreadPoolExecutor
 from utilities.util_network import better_get
+from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+
+# UPDATED: New cache directory paths
+CACHE_DIR = "./cache/currency/"
+CACHE_FILE_CURRENCIES = os.path.join(CACHE_DIR, "currency_feed.json")
+
+_executor = ThreadPoolExecutor(max_workers=4)
 
 def fetch_url(url: str) -> dict:
-    """Helper function to fetch URL data to be run in a thread."""
     response = better_get(url)
     if response and response.status_code == 200:
         return response.json()
     raise Exception(f"Failed to fetch data from {url}")
 
-@st.cache_data(ttl=3600, show_spinner=False) 
-def get_available_currencies() -> tuple[bool, dict | str]:
-    """Fetches the list of supported currencies using a background thread."""
+def _revalidate_currencies():
     try:
-        with ThreadPoolExecutor() as executor:
-            future = executor.submit(fetch_url, "https://api.frankfurter.app/currencies")
-            data = future.result()
+        data = fetch_url("https://api.frankfurter.app/currencies")
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CACHE_FILE_CURRENCIES, 'w') as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"Currency SWR background revalidation failed: {e}")
+
+def get_available_currencies() -> tuple[bool, dict | str]:
+    data = None
+    if os.path.exists(CACHE_FILE_CURRENCIES):
+        try:
+            with open(CACHE_FILE_CURRENCIES, 'r') as f:
+                data = json.load(f)
+        except Exception:
+            pass 
+            
+    _executor.submit(_revalidate_currencies)
+
+    if data:
+        return True, data
+        
+    try:
+        data = fetch_url("https://api.frankfurter.app/currencies")
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CACHE_FILE_CURRENCIES, 'w') as f:
+            json.dump(data, f)
         return True, data
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
 def convert_currency(amount: float, base: str, target: str) -> tuple[bool, float | str]:
-    """Converts an amount using a background thread to prevent UI lock."""
     if base == target:
         return True, amount
-        
     try:
         url = f"https://api.frankfurter.app/latest?amount={amount}&from={base}&to={target}"
-        with ThreadPoolExecutor() as executor:
-            future = executor.submit(fetch_url, url)
-            data = future.result()
+        future = _executor.submit(fetch_url, url)
+        data = future.result()
         return True, data['rates'][target]
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_historical_trend(base: str, target: str, days: int = 30, forecast_days: int = 7) -> tuple[bool, pd.DataFrame | str]:
-    """Fetches historical rates and extrapolates a future trend using Linear Regression."""
-    if base == target:
-        return False, "Same currency selected."
-        
+def _revalidate_trend(url: str, cache_file: str, ctx):
+    """Background task: fetches data and automatically forces the UI to refresh."""
     try:
-        start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-        url = f"https://api.frankfurter.app/{start_date}..?from={base}&to={target}"
-        
-        with ThreadPoolExecutor() as executor:
-            future = executor.submit(fetch_url, url)
-            data = future.result()
+        if ctx:
+            add_script_run_ctx(ctx=ctx)
             
-        rates = data.get('rates', {})
+        data = fetch_url(url)
+        data['_cached_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(cache_file, 'w') as f:
+            json.dump(data, f)
+            
+        st.rerun()
+        
+    except Exception as e:
+        print(f"Trend SWR background revalidation failed: {e}")
+
+def get_historical_trend(base: str, target: str, days: int = 30, forecast_days: int = 7) -> tuple[bool, any, str]:
+    if base == target:
+        return False, "Same currency selected.", ""
+        
+    import pandas as pd
+    import numpy as np
+    
+    start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+    url = f"https://api.frankfurter.app/{start_date}..?from={base}&to={target}"
+    # The cache_file will now automatically build into ./cache/currency/trend_BASE_TARGET.json
+    cache_file = os.path.join(CACHE_DIR, f"trend_{base}_{target}.json")
+    
+    api_data = None
+    cached_time = None
+    
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r') as f:
+                api_data = json.load(f)
+                cached_time = api_data.get('_cached_at', 'Unknown Time')
+        except Exception:
+            pass 
+            
+    ctx = get_script_run_ctx()
+    _executor.submit(_revalidate_trend, url, cache_file, ctx)
+    
+    if not api_data:
+        try:
+            api_data = fetch_url(url)
+            api_data['_cached_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            os.makedirs(CACHE_DIR, exist_ok=True)
+            with open(cache_file, 'w') as f:
+                json.dump(api_data, f)
+            cached_time = "Just now"
+        except Exception as e:
+            return False, f"Network error: {str(e)}", ""
+
+    try:
+        rates = api_data.get('rates', {})
         df = pd.DataFrame.from_dict(rates, orient='index')
         df.index = pd.to_datetime(df.index)
         df.columns = ['rate']
-        df['type'] = 'Historical' # Tag data for the chart
+        df['type'] = 'Historical'
         
-        # --- Extrapolation Logic ---
         if len(df) > 1:
             y = df['rate'].values
             x = np.arange(len(y))
             
-            # Fit a simple 1st-degree polynomial (linear regression)
             z = np.polyfit(x, y, 1)
             p = np.poly1d(z)
             
-            # Generate future dates
             last_date = df.index[-1]
             future_dates = [last_date + timedelta(days=i) for i in range(1, forecast_days + 1)]
             future_x = np.arange(len(y), len(y) + forecast_days)
             future_y = p(future_x)
             
-            # Create forecast dataframe and append
             df_future = pd.DataFrame({'rate': future_y, 'type': 'Extrapolation'}, index=future_dates)
             df = pd.concat([df, df_future])
             
-        return True, df
+        return True, df, cached_time
     except Exception as e:
-        return False, f"Network error: {str(e)}"
+        return False, f"Data processing error: {str(e)}", ""

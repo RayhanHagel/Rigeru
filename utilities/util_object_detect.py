@@ -6,6 +6,7 @@ import warnings
 import shutil
 import subprocess
 import random as _random
+import json
 
 import streamlit as st
 from streamlit.runtime.scriptrunner import add_script_run_ctx
@@ -19,10 +20,32 @@ os.environ['YOLO_VERBOSE'] = 'False'
 
 CACHE_DIR = os.path.join(".", "cache", "models")
 TEMP_DIR = os.path.join(".", "cache", "temp")
+SETTINGS_FILE = os.path.join(".", "cache", "object_detection", "settings.json")
+
 os.makedirs(CACHE_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 _color_cache: dict[int, tuple] = {}
+
+
+def load_cached_settings():
+    """Lazily load hardware settings so we don't freeze the page."""
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_cached_settings(key, value):
+    """Save hardware findings so future visits load instantly."""
+    os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
+    settings = load_cached_settings()
+    settings[key] = value
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(settings, f)
 
 
 def get_class_color(cls_id: int) -> tuple:

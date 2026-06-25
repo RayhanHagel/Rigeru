@@ -1,36 +1,45 @@
-import psutil
-import pandas as pd
+import json
+from pathlib import Path
 
-try:
-    import GPUtil
-except ImportError:
-    GPUtil = None
+CACHE_FILE = Path("./cache/system_monitor/settings.json")
+
+def load_settings():
+    if CACHE_FILE.exists():
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    return {"history_len": 40, "proc_limit": 15}
+
+def save_settings(settings):
+    CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(CACHE_FILE, "w") as f:
+        json.dump(settings, f)
 
 def get_system_stats() -> dict:
-    """Fetches current CPU, RAM, GPU, and Disk usage."""
-    # CPU usage
-    cpu_percent = psutil.cpu_percent(interval=0.1)
+    import psutil
+    try:
+        import GPUtil
+    except ImportError:
+        GPUtil = None
+
+    cpu_percent = psutil.cpu_percent(interval=None)
     
-    # Memory usage
     mem = psutil.virtual_memory()
     mem_percent = mem.percent
     mem_used_gb = mem.used / (1024 ** 3)
     mem_total_gb = mem.total / (1024 ** 3)
     
-    # Disk usage (Root/C: drive)
     disk = psutil.disk_usage('/')
     disk_percent = disk.percent
     disk_free_gb = disk.free / (1024 ** 3)
     disk_total_gb = disk.total / (1024 ** 3)
 
-    # GPU usage
     gpu_percent = 0.0
     gpu_text = "No GPU / GPUtil not installed"
     
     if GPUtil:
         gpus = GPUtil.getGPUs()
         if gpus:
-            gpu = gpus[0] # Grab the primary GPU
+            gpu = gpus[0] 
             gpu_percent = round(gpu.load * 100, 1)
             gpu_text = f"{gpu.memoryUsed} MB / {gpu.memoryTotal} MB | Temp: {gpu.temperature}°C"
     
@@ -44,8 +53,10 @@ def get_system_stats() -> dict:
         "gpu_text": gpu_text
     }
 
-def get_top_processes(limit: int = 20) -> pd.DataFrame:
-    """Fetches the top running processes sorted by memory usage."""
+def get_top_processes(limit: int = 20):
+    import psutil
+    import pandas as pd
+    
     processes = []
     
     for proc in psutil.process_iter(['pid', 'name', 'memory_percent', 'cpu_percent']):
@@ -60,11 +71,9 @@ def get_top_processes(limit: int = 20) -> pd.DataFrame:
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
             
-    # Convert to DataFrame and sort by memory usage
     df = pd.DataFrame(processes)
     if not df.empty:
         df = df.sort_values(by="Memory (%)", ascending=False).head(limit)
-        # Reset index for cleaner display
         df = df.reset_index(drop=True)
         
     return df

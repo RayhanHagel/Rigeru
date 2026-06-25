@@ -1,5 +1,4 @@
 import streamlit as st
-# OPTIMIZED: Removed global 'import pandas as pd'
 import threading
 import os
 import time
@@ -15,10 +14,10 @@ def run_background_refresh():
 def toggle_state(key):
     st.session_state[key] = not st.session_state.get(key, False)
 
-st.header("📉 Price Drop Monitor")
-st.markdown("Track product prices locally from Amazon, eBay, Shopee, and Tokopedia.")
+st.header(":material/monitoring: Price Drop Monitor")
+st.markdown("Track product prices locally from Amazon, eBay, Shopee, Tokopedia, and Steam.")
 
-with st.expander("➕ Add New Product to Track", expanded=False):
+with st.expander(":material/add: Add New Product to Track", expanded=False):
     with st.form("add_product_form", clear_on_submit=True):
         col_name, col_url = st.columns([1, 2])
         prod_name = col_name.text_input("Product Name", placeholder="e.g., Sony WH-1000XM5")
@@ -42,7 +41,7 @@ col_title.subheader("Your Tracked Items")
 if "is_refreshing" not in st.session_state:
     st.session_state.is_refreshing = False
 
-if col_btn.button("🔄 Refresh All Prices", type="primary", width="stretch", disabled=st.session_state.is_refreshing):
+if col_btn.button(":material/sync: Refresh All Prices", type="primary", width="stretch", disabled=st.session_state.is_refreshing):
     st.session_state.is_refreshing = True
     if os.path.exists(FLAG_FILE):
         os.remove(FLAG_FILE)
@@ -55,12 +54,12 @@ if getattr(st.session_state, 'is_refreshing', False):
     if os.path.exists(FLAG_FILE):
         st.session_state.is_refreshing = False
         os.remove(FLAG_FILE)
-        st.success("✅ Refresh complete! Displaying updated prices.")
+        st.success(":material/check_circle: Refresh complete! Displaying updated prices.")
         time.sleep(2)
         st.rerun()
     else:
-        st.info("🔄 Launching local stealth browser to check prices in the background... You can continue using the app.")
-        if st.button("↻ Update View"):
+        st.info(":material/sync: Launching local stealth browser to check prices in the background... You can continue using the app.")
+        if st.button(":material/refresh: Update View"):
             st.rerun()
 
 items = load_tracked_items()
@@ -95,13 +94,13 @@ else:
         
         processed_items.append(item)
 
-    search_query = st.text_input("🔍 Search Tracked Products", placeholder="Type a product name...")
+    search_query = st.text_input(":material/search: Search Tracked Products", placeholder="Type a product name...")
     
     col_filter, col_sort = st.columns(2)
     with col_filter:
         filter_option = st.selectbox(
             "Filter Category", 
-            ["All Items", "Best Value Items 🔥", "No Price Change ➖", "Other Items"]
+            ["All Items", "Best Value Items :material/local_fire_department:", "No Price Change :material/remove:", "Other Items"]
         )
     with col_sort:
         sort_option = st.selectbox(
@@ -112,9 +111,9 @@ else:
     if search_query:
         processed_items = [i for i in processed_items if search_query.lower() in i['name'].lower()]
         
-    if filter_option == "Best Value Items 🔥":
+    if filter_option == "Best Value Items :material/local_fire_department:":
         processed_items = [i for i in processed_items if i['_is_cheapest']]
-    elif filter_option == "No Price Change ➖":
+    elif filter_option == "No Price Change :material/remove:":
         processed_items = [i for i in processed_items if i['_price_never_changed']]
     elif filter_option == "Other Items":
         processed_items = [i for i in processed_items if not i['_is_cheapest'] and not i['_price_never_changed'] and i['_current_price'] is not None]
@@ -150,15 +149,15 @@ else:
             with st.container(border=True):
                 
                 if is_cheapest:
-                    st.success("🔥 **Great News!** This item is currently at its lowest tracked price!")
+                    st.success(":material/local_fire_department: **Great News!** This item is currently at its lowest tracked price!")
 
                 col_info, col_price, col_low, col_graph, col_del = st.columns([2, 1.5, 1.5, 1, 0.5], vertical_alignment="center")
                 
                 with col_info:
                     if is_cheapest:
-                        title_icon = "🔥 "
+                        title_icon = ":material/local_fire_department: "
                     elif price_never_changed and len(history) > 1:
-                        title_icon = "➖ "
+                        title_icon = ":material/remove: "
                     else:
                         title_icon = ""
                         
@@ -208,7 +207,7 @@ else:
                 
                 with col_graph:
                     if history and len(history) > 1:
-                        btn_label = "📉 Hide Graph" if st.session_state[graph_key] else "📈 View Graph"
+                        btn_label = ":material/trending_down: Hide Graph" if st.session_state[graph_key] else ":material/trending_up: View Graph"
                         st.button(
                             btn_label, 
                             key=f"btn_{item['id']}", 
@@ -218,13 +217,12 @@ else:
                         )
                              
                 with col_del:
-                    if st.button("🗑️", key=f"del_{item['id']}", help="Stop tracking", width="stretch"):
+                    if st.button(":material/delete:", key=f"del_{item['id']}", help="Stop tracking", width="stretch"):
                         delete_item(item['id'])
                         st.rerun()
 
                 if history and len(history) > 1 and st.session_state[graph_key]:
                     st.divider()
-                    # OPTIMIZED: Lazy loading pandas only when the user toggles a graph open
                     import pandas as pd
                     df = pd.DataFrame(history)
                     df['date'] = pd.to_datetime(df['date'])

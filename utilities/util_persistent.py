@@ -1115,7 +1115,133 @@ def apply_theme() -> None:
             button[kind="elementToolbar"]:hover svg {{
                 opacity: 1 !important;
             }}
+            
+            /* --- TERTIARY BUTTONS (Text-only, borderless, left-aligned) --- */
+            .stButton > button[kind="tertiary"] {{
+                background-color: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding-left: 0px !important; 
+                justify-content: flex-start !important; /* Pushes the inner div to the left */
+            }}
+
+            /* FORCE all inner wrappers (divs, spans) to snap left */
+            .stButton > button[kind="tertiary"] div,
+            .stButton > button[kind="tertiary"] span {{
+                justify-content: flex-start !important;
+                text-align: left !important;
+                width: 100% !important;
+            }}
+
+            /* Target the actual text block */
+            .stButton > button[kind="tertiary"] p {{
+                color: {theme['TEXT']} !important;
+                transition: color 0.2s ease;
+                text-align: left !important; /* Forces the text left */
+                width: 100% !important; /* Ensures the text block fills the button */
+                margin: 0 !important; /* Removes any weird spacing Streamlit adds */
+            }}
+
+            /* Hover states */
+            .stButton > button[kind="tertiary"]:hover {{
+                background-color: transparent !important;
+                border: none !important;
+            }}
+
+            .stButton > button[kind="tertiary"]:hover p,
+            .stButton > button[kind="tertiary"]:hover strong {{
+                color: {theme['HEADING']} !important;
+            }}
             </style>
         """,
         unsafe_allow_html=True,
     )
+
+
+def get_sortables_style() -> str:
+    """Generates dynamic CSS for streamlit-sortables based on the active theme and font."""
+    
+    current_theme = st.session_state.get("selected_theme", "Nebula (Default)")
+    current_font = st.session_state.get("selected_font", "Serif Mono (Default)")
+    
+    theme = THEMES[current_theme]
+    font_mono = FONTS[current_font]["MONO"]
+    
+    return f"""
+    .sortable-component {{
+        border: 1px solid {theme['UI_BORDER']};
+        border-radius: 8px;
+        padding: 12px;
+        background-color: {theme['UI_BG']};
+    }}
+    .sortable-container {{
+        background-color: transparent;
+        counter-reset: item;
+    }}
+    .sortable-container-header {{
+        background-color: transparent;
+        color: {theme['HEADING']};
+        padding-bottom: 8px;
+        font-weight: bold;
+    }}
+    .sortable-container-body {{
+        background-color: transparent;
+    }}
+
+    /* 1. THE HITBOX: Stays 100% static to prevent the hover glitch */
+    .sortable-item {{
+        position: relative;
+        z-index: 0; /* Creates a secure layering context for the background */
+        background-color: transparent !important; 
+        border: 1px solid transparent; /* Invisible structure to hold the physical space */
+        color: {theme['TEXT']};
+        font-family: {font_mono};
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 6px;
+        transition: color 0.2s ease;
+    }}
+
+    /* 2. THE VISUAL BACKGROUND: Sits behind the text, this is what shrinks! */
+    .sortable-item::after {{
+        content: "";
+        position: absolute;
+        top: -1px; left: -1px; right: -1px; bottom: -1px; /* Cover the parent's transparent border */
+        z-index: -1; /* Slide it behind the text */
+        background-color: {theme['BG']};
+        border: 1px solid {theme['UI_BORDER']};
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        transform-origin: center center;
+    }}
+
+    /* 3. Text & Cursor Hover Changes */
+    .sortable-item:hover {{
+        color: {theme['HEADING']};
+        cursor: grab;
+    }}
+
+    /* 4. Shrink the Background (The Hitbox stays safe!) */
+    .sortable-item:hover::after {{
+        transform: scale(0.98); 
+        background-color: {theme['GLOW_1']};
+        border-color: {theme['HEADING']};
+    }}
+
+    .sortable-item:active {{
+        cursor: grabbing;
+    }}
+
+    .sortable-item:active::after {{
+        transform: scale(0.96);
+    }}
+
+    /* 5. The Number Counter */
+    .sortable-item::before {{
+        content: counter(item) ". ";
+        counter-increment: item;
+        color: {theme['HEADING']};
+        font-weight: bold;
+        margin-right: 8px;
+    }}
+    """

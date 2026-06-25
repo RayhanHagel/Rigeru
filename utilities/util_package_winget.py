@@ -1,6 +1,5 @@
 import subprocess
 import os
-import streamlit as st
 
 
 def run_winget_cmd(cmd: str) -> str:
@@ -55,7 +54,6 @@ def _get_winget_updates() -> dict:
     return upgradable
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
 def list_installed() -> tuple[bool, list]:
     """Returns all installed winget packages with outdated status."""
     upgradable = _get_winget_updates()

@@ -1,8 +1,7 @@
 import streamlit as st
-# OPTIMIZED: Removed global 'import pandas as pd'
 from utilities.util_currency import get_available_currencies, convert_currency, get_historical_trend
 
-st.header("💱 Currency Converter & Tracker")
+st.header(":material/currency_exchange: Currency Converter & Tracker")
 st.markdown("Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast.")
 
 if "currencies_loaded" not in st.session_state:
@@ -20,7 +19,7 @@ else:
 
 currency_options = [f"{code} - {name}" for code, name in currencies.items()]
 default_base_idx = next((i for i, c in enumerate(currency_options) if c.startswith('USD')), 0)
-default_target_idx = next((i for i, c in enumerate(currency_options) if c.startswith('EUR')), 1)
+default_target_idx = next((i for i, c in enumerate(currency_options) if c.startswith('IDR')), 1)
 
 with st.container(border=True):
     st.subheader("Conversion Calculator")
@@ -30,10 +29,7 @@ with st.container(border=True):
     amount = col_amt.number_input("Amount", min_value=0.0, value=1.0, step=1.0)
     base_selection = col_from.selectbox("From", currency_options, index=default_base_idx)
 
-    col_swap.markdown(
-        "<div style='text-align: center; font-size: 24px; padding-bottom: 5px;'>➡️</div>",
-        unsafe_allow_html=True
-    )
+    col_swap.write(":material/arrow_forward:")
 
     target_selection = col_to.selectbox("To", currency_options, index=default_target_idx)
 
@@ -53,32 +49,35 @@ st.divider()
 
 @st.fragment
 def render_historical_tracker(base_code, target_code):
-    st.subheader(f"📈 30-Day Trend & 7-Day Forecast: {base_code} to {target_code}")
+    st.subheader(f":material/trending_up: 30-Day Trend & 7-Day Forecast: {base_code} to {target_code}")
 
     if base_code == target_code:
         st.info("Select two different currencies to view a trend chart.")
         return
 
-    with st.spinner("Calculating historical data & projections..."):
-        trend_success, trend_data = get_historical_trend(base_code, target_code, days=30, forecast_days=7)
+    with st.spinner("Loading historical data..."):
+        # Unpack the new cached_time variable
+        trend_success, trend_data, cached_time = get_historical_trend(base_code, target_code, days=30, forecast_days=7)
 
         if trend_success:
+            # Display the cache information
+            if cached_time != "Just now":
+                st.caption(f":material/update: Displaying cached data from **{cached_time}**. Fetching latest data in background...")
+            else:
+                st.caption(":material/cloud_download: Displaying live data fetched just now.")
+
             try:
                 import altair as alt
-                # OPTIMIZED: Lazy-load pandas in fragment context only
                 import pandas as pd 
 
-                # Format DataFrame for Altair
                 df_plot = trend_data.reset_index()
                 df_plot.columns = ["date", "rate", "type"]
                 df_plot["date"] = pd.to_datetime(df_plot["date"])
 
-                # Calculate Y-axis domain
                 v_min, v_max = df_plot['rate'].min(), df_plot['rate'].max()
                 margin = max((v_max - v_min) * 0.5, v_max * 0.02)
                 y_min, y_max = v_min - margin, v_max + margin
 
-                # Plot with conditional formatting for Extrapolation
                 chart = (
                     alt.Chart(df_plot)
                     .mark_line(point=True)
@@ -92,8 +91,8 @@ def render_historical_tracker(base_code, target_code):
                         ),
                         strokeDash=alt.condition(
                             alt.datum.type == 'Extrapolation',
-                            alt.value([5, 5]),  # Dashed line for extrapolation
-                            alt.value([0])      # Solid line for historical
+                            alt.value([5, 5]),
+                            alt.value([0])
                         ),
                         tooltip=[
                             alt.Tooltip("date:T", title="Date"),
@@ -107,9 +106,8 @@ def render_historical_tracker(base_code, target_code):
 
             except Exception as e:
                 st.error(f"Chart rendering failed: {e}")
-                st.dataframe(trend_data) # Fallback
+                st.dataframe(trend_data) 
         else:
             st.warning(f"Could not load trend data: {trend_data}")
 
-# Call the lazy-loaded fragment
 render_historical_tracker(base_code, target_code)

@@ -169,12 +169,44 @@ st.sidebar.divider()
 st.sidebar.metric(label="⏱️ Page Load Time", value=f"{load_time:.3f} s")
 
 # Log Results to File
-log_file_path = "page_load_times.log"
+log_file_path = "./cache/page_load_times.log"
 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 log_entry = f"[{timestamp}] Page: '{pg.title}' | Load Time: {load_time:.3f}s\n"
 
 with open(log_file_path, "a") as f:
     f.write(log_entry)
+
+# --- START OF NEW AUTOMATION CODE ---
+# 1. Flatten your 'pages' dictionary into a single list of st.Page objects
+all_pages = []
+for section, page_list in pages.items():
+    all_pages.extend(page_list)
+
+# 2. Add a button to the sidebar to start the test
+st.sidebar.divider()
+if st.sidebar.button("🚀 Run Auto-Benchmark All Pages"):
+    # Initialize the automated state
+    st.session_state.auto_benchmark = True
+    st.session_state.benchmark_index = 0
+    # Jump to the very first page to start the loop
+    st.switch_page(all_pages[0])
+
+# 3. The Automation Loop: If benchmarking is active, switch to the next page
+if st.session_state.get("auto_benchmark", False):
+    current_idx = st.session_state.benchmark_index
+    next_idx = current_idx + 1
+    
+    if next_idx < len(all_pages):
+        # Update the index for the next run
+        st.session_state.benchmark_index = next_idx
+        # A tiny delay prevents overloading the Streamlit websocket
+        time.sleep(0.2) 
+        st.switch_page(all_pages[next_idx])
+    else:
+        # Reached the end of the pages list
+        st.session_state.auto_benchmark = False
+        st.sidebar.success("✅ Auto-Benchmark Complete! Check page_load_times.log")
+# --- END OF NEW AUTOMATION CODE ---
 
 # --- UI Configuration ---
 render_theme_selector()
