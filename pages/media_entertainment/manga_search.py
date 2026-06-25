@@ -134,7 +134,7 @@ if selected_website_options:
                     if website == "asurascans.com/":
                         image = get_image_cache(url=chapter_json.get("image", ""), crop=True)
                     else:
-                        image = get_image_cache(url=chapter_json.get("image", ""), crop=True, headers={"User-Agent": "MangaApp/1.0"}, use_default_headers=False, use_tor_proxies=True)
+                        image = get_image_cache(url=chapter_json.get("image", ""), crop=True, headers={"User-Agent": "MangaApp/1.0"}, use_default_headers=False)
                     
                     st.image(image=image if image else chapter_json.get("image"), width="stretch")
                 

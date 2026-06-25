@@ -1,11 +1,13 @@
-import winreg
-import psutil
-import streamlit as st
-import win32service
+import os
+import json
+import threading
+
+CACHE_DIR = "./cache/services"
+CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
 
 
 def get_registry_startup() -> list[dict]:
-    """Fetches applications set to run on boot via the Registry."""
+    import winreg
     apps = []
     keys = [
         (winreg.HKEY_CURRENT_USER,
@@ -20,16 +22,16 @@ def get_registry_startup() -> list[dict]:
                 try:
                     name, value, _ = winreg.EnumValue(reg, i)
                     apps.append({"Name": name, "Path": value, "Scope": scope})
-                except EnvironmentError:
+                except OSError:
                     break
             winreg.CloseKey(reg)
-        except WindowsError:
+        except OSError:
             pass
     return apps
 
 
 def get_service_dependencies(service_name: str) -> str:
-    """Safely queries the Windows Service Control Manager for dependencies."""
+    import win32service
     try:
         scm = win32service.OpenSCManager(
             None, None, win32service.SC_MANAGER_CONNECT)
@@ -40,7 +42,6 @@ def get_service_dependencies(service_name: str) -> str:
         win32service.CloseServiceHandle(scm)
 
         deps = config[7]
-        # FIX: Ensure we don't comma-separate a single string like "Tcpip" into "T, c, p, i, p"
         if not deps:
             return "None"
         if isinstance(deps, str):
@@ -52,9 +53,8 @@ def get_service_dependencies(service_name: str) -> str:
         return "Unknown"
 
 
-@st.cache_data(ttl=120, show_spinner=False)
-def get_all_services() -> tuple[list[dict], list[dict]]:
-    """Scans all active/inactive services and groups them with dependency logic."""
+def get_all_services_sync() -> tuple[list[dict], list[dict]]:
+    import psutil
     ms_services = []
     non_ms_services = []
 
@@ -66,14 +66,8 @@ def get_all_services() -> tuple[list[dict], list[dict]]:
             display = str(info.get('display_name', info.get('name')))
             name = info.get('name')
 
-            # Heuristics to determine if it is a core Microsoft Service
-            is_ms = False
-            if "windows" in binpath and "system32" in binpath:
-                is_ms = True
-            if "microsoft" in display.lower() or "microsoft" in desc.lower():
-                is_ms = True
-            if "svchost.exe" in binpath:
-                is_ms = True
+            is_ms = any(x in binpath for x in ["windows\\system32", "svchost.exe"]
+                        ) or "microsoft" in display.lower() or "microsoft" in desc.lower()
 
             data = {
                 "Service Name": name,
@@ -92,8 +86,36 @@ def get_all_services() -> tuple[list[dict], list[dict]]:
         except Exception:
             pass
 
-    # Sort alphabetical by Display Name
     ms_services.sort(key=lambda x: x['Display Name'])
     non_ms_services.sort(key=lambda x: x['Display Name'])
 
     return ms_services, non_ms_services
+
+
+def fetch_and_cache():
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    startup = get_registry_startup()
+    ms, non_ms = get_all_services_sync()
+    data = {"startup": startup, "ms": ms, "non_ms": non_ms}
+    with open(CACHE_FILE, "w") as f:
+        json.dump(data, f)
+
+
+def load_services_data() -> tuple[list[dict], list[dict], list[dict]]:
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            try:
+                data = json.load(f)
+                threading.Thread(target=fetch_and_cache, daemon=True).start()
+                return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
+            except json.JSONDecodeError:
+                pass
+
+    fetch_and_cache()
+    with open(CACHE_FILE, "r") as f:
+        data = json.load(f)
+    return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
+
+
+def force_refresh():
+    fetch_and_cache()

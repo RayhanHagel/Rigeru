@@ -4,14 +4,11 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urljoin
 import streamlit as st
-from bs4 import BeautifulSoup
-from PIL import Image
 import time
 
 # Import shared utilities
 from utilities.util_network import better_get, better_post
 from utilities.util_json import load_json, save_json
-from utilities.util_playwright import get_async_stealth_page, smooth_scroll_to_bottom
 
 
 def save_config(key: str = None, value: dict = None, replace_data: bool = False):
@@ -62,6 +59,9 @@ def refresh_library(title: str = None) -> None:
 
 
 def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
+    from bs4 import BeautifulSoup
+    from utilities.util_network import get_image_cache
+    
     response = better_get(chapter_url, timeout=10)
     if response is None:
         return None
@@ -77,6 +77,12 @@ def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
         title_rating = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-r from-[#FFDA6E] to-[#FFC414] bg-clip-text text-transparent").text.strip()
         title_chapter = title_url_response.find("span", class_="text-xl font-bold bg-gradient-to-b from-[#48C855] to-[#C6FFAB] bg-clip-text text-transparent").text.strip()
         title_image = title_url_response.find("img", id="cover-viewer-img")["data-full-src"]
+        
+        local_image_path = get_image_cache(
+            url=title_image, 
+            crop=True,
+            use_default_headers=True
+        )
 
         return {
             "main_url": chapter_url,
@@ -86,6 +92,7 @@ def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
             "rating": float(title_rating),
             "website": website,
             "image": title_image,
+            "local_image": local_image_path,
             "chapter_downloaded": [],
             "chapters_url": title_chapters_cleaned,
         }
@@ -95,6 +102,8 @@ def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
 
 def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
     """Fetches full manga details and chapter URLs from MangaDex using Tor Proxy."""
+    from utilities.util_network import get_image_cache
+    
     try:
         manga_id = chapter_url.split("/title/")[-1].split("||")[0]
         cover_url = chapter_url.split("||")[-1] if "||" in chapter_url else ""
@@ -105,11 +114,10 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
             stats_url,
             headers={"User-Agent": "MangaApp/1.0"},
             timeout=15,
-            use_tor_proxies=True,
             use_default_headers=False
         )
         
-        rating_val = 8.0  # fallback
+        rating_val = 0.0
         if stats_response and stats_response.status_code == 200:
             stats_data = stats_response.json().get("statistics", {}).get(manga_id, {})
             rating_info = stats_data.get("rating", {})
@@ -133,7 +141,6 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
             params=params, 
             headers={"User-Agent": "MangaApp/1.0"},
             timeout=30, 
-            use_tor_proxies=True,
             use_default_headers=False
         )
         
@@ -148,12 +155,19 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
         for ch in chapters_data:
             ch_num = ch["attributes"]["chapter"]
             if ch_num:
-                # SPOOF THE URL: Append the chapter number so your UI/downloader parses it beautifully
                 chapters_url_list.append(f"https://api.mangadex.org/at-home/server/{ch['id']}/chapter-{ch_num}")
                 try:
                     last_chapter_num = max(last_chapter_num, int(float(ch_num)))
                 except ValueError:
                     pass
+        
+        local_image_path = None
+        if cover_url:
+            local_image_path = get_image_cache(
+                url=cover_url, 
+                crop=True,
+                use_default_headers=False
+            )
 
         return {
             "main_url": chapter_url,
@@ -163,6 +177,7 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
             "rating": round(rating_val, 2),
             "website": website,
             "image": cover_url,
+            "local_image": local_image_path,
             "chapter_downloaded": [],
             "chapters_url": chapters_url_list,
         }
@@ -196,7 +211,6 @@ def search_titles(websites: list, title: str) -> list:
     st.session_state.search_lookup = combined_results
     return search_results
 
-
 def search_titles_asura(title: str) -> dict | None:
     response = better_get(f"https://api.asurascans.com/api/search?q={title}", timeout=8)
     if response is None:
@@ -212,7 +226,6 @@ def search_titles_asura(title: str) -> dict | None:
     except Exception:
         return None
 
-
 def search_titles_mangadex(title: str) -> dict | None:
     """Searches titles on MangaDex using their official API via Tor Proxy."""
     url = "https://api.mangadex.org/manga"
@@ -224,13 +237,11 @@ def search_titles_mangadex(title: str) -> dict | None:
         "order[followedCount]": "desc"
     }
     
-    # Disabled default headers to prevent 400s and passed a simple, honest User-Agent
     response = better_get(
         url, 
         params=params, 
         headers={"User-Agent": "MangaApp/1.0"},
         timeout=30, 
-        use_tor_proxies=True,
         use_default_headers=False
     )
     if response is None or response.status_code != 200:
@@ -241,7 +252,6 @@ def search_titles_mangadex(title: str) -> dict | None:
         if not data:
             return None
             
-        # Fetch manga statistics (ratings) in bulk for the search results
         manga_ids = [manga["id"] for manga in data]
         stats_url = "https://api.mangadex.org/statistics/composite/manga"
         stats_params = {"entityIds[]": manga_ids}
@@ -251,7 +261,6 @@ def search_titles_mangadex(title: str) -> dict | None:
             params=stats_params,
             headers={"User-Agent": "MangaApp/1.0"},
             timeout=15,
-            use_tor_proxies=True,
             use_default_headers=False
         )
         
@@ -263,21 +272,17 @@ def search_titles_mangadex(title: str) -> dict | None:
         for manga in data:
             manga_id = manga["id"]
             
-            # Safely extract the title (usually 'en', fallback to whatever is available)
             title_dict = manga.get("attributes", {}).get("title", {})
             manga_title = title_dict.get("en") or next(iter(title_dict.values()), "Unknown Title")
             
-            # Extract cover file name from the included relationships
             cover_file = ""
             for rel in manga.get("relationships", []):
                 if rel.get("type") == "cover_art" and "attributes" in rel:
                     cover_file = rel["attributes"].get("fileName", "")
                     break
             
-            # Using the 512px thumbnail size for optimized loading in the UI
             cover_url = f"https://uploads.mangadex.org/covers/{manga_id}/{cover_file}.512.jpg" if cover_file else ""
             
-            # Append rating to title if available
             rating_str = ""
             if manga_id in stats_data:
                 rating_info = stats_data[manga_id].get("rating", {})
@@ -292,14 +297,11 @@ def search_titles_mangadex(title: str) -> dict | None:
         print(f"MangaDex Search Error: {e}")
         return None
 
-
 def read_cache() -> dict:
     path = "./cache/reading_library.json"
     return load_json(path, default_factory=dict)
 
-
 def download_single_image(args: tuple) -> bool:
-    """Downloads a single image and reports telemetry if using a MangaDex@Home node."""
     url, image_path = args
     
     start_time = time.time()
@@ -317,7 +319,6 @@ def download_single_image(args: tuple) -> bool:
                 handler.write(response.content)
             success = True
             
-            # Check for cache hit
             x_cache = response.headers.get("X-Cache", "")
             if x_cache.startswith("HIT"):
                 cached = True
@@ -325,7 +326,6 @@ def download_single_image(args: tuple) -> bool:
         duration = int((time.time() - start_time) * 1000)
         success = False
         
-    # MangaDex@Home Telemetry Report
     if "mangadex.org" not in url:
         report_payload = {
             "url": url,
@@ -335,26 +335,25 @@ def download_single_image(args: tuple) -> bool:
             "duration": duration
         }
         
-        # Fire-and-forget telemetry using your custom better_post utility
         better_post(
             url="https://api.mangadex.network/report",
             json=report_payload,
             timeout=3,
             retries=1,
             use_default_headers=False,
-            use_tor_proxies=True
         )
 
     return success
 
-
 def change_chapter_read(title: str, chapter_read: int) -> None:
-    """Updates the chapter_read value for a given title and persists it."""
     save_config(key=title, value={"chapter_read": chapter_read})
 
 
 async def get_asura_images(url: str) -> list:
     """Uses centralized Playwright utility to scroll, then BeautifulSoup to extract image URLs."""
+    from bs4 import BeautifulSoup
+    from utilities.util_playwright import get_async_stealth_page, smooth_scroll_to_bottom
+    
     try:
         async with get_async_stealth_page() as page:
             await page.route(
@@ -366,20 +365,16 @@ async def get_asura_images(url: str) -> list:
             await asyncio.sleep(1.5)
             html_content = await page.content()
 
-        # Parse the HTML with BeautifulSoup
         soup = BeautifulSoup(html_content, "lxml")
         image_urls = []
 
-        # 1. Primary Method: Look for the specific data attribute
         imgs = soup.find_all("img", attrs={"data-page-index": True})
 
-        # 2. Fallback Method: Use the specific container from your CSS path
         if not imgs:
             container = soup.find("div", class_="max-w-full md:max-w-[720px] mx-auto overflow-hidden flex flex-col leading-[0]")
             if container:
                 imgs = container.find_all("img")
 
-        # Extract the source URLs
         for img in imgs:
             src = img.get('src') or img.get('data-src')
             if src and src.startswith('http'):
@@ -393,18 +388,13 @@ async def get_asura_images(url: str) -> list:
 
 
 def get_mangadex_images(api_url: str, use_data_saver: bool = False) -> list:
-    """Fetches direct page paths using the MangaDex At-Home server API via Tor Proxy."""
-    
-    # Clean our custom spoofed '/chapter-X' suffix to get the real MangaDex API endpoint
     if "/chapter-" in api_url:
         api_url = api_url.split("/chapter-")[0]
         
-    # Ensure NO authentication headers are sent, strictly passing a basic User-Agent
     response = better_get(
         api_url, 
         headers={"User-Agent": "MangaApp/1.0"}, 
         timeout=30, 
-        use_tor_proxies=True,
         use_default_headers=False
     )
     
@@ -416,24 +406,19 @@ def get_mangadex_images(api_url: str, use_data_saver: bool = False) -> list:
         base_url = data.get("baseUrl")
         ch_hash = data.get("chapter", {}).get("hash")
         
-        # Determine quality mode
         quality_key = "dataSaver" if use_data_saver else "data"
         url_path = "data-saver" if use_data_saver else "data"
         
         files = data.get("chapter", {}).get(quality_key, [])
         
-        # URL format: $.baseUrl / $QUALITY / $.chapter.hash / $.chapter.$QUALITY[*]
         return [f"{base_url}/{url_path}/{ch_hash}/{filename}" for filename in files]
     except Exception:
         return []
 
 
 def download_chapter(title: str, chapter_key: str, chapter_url: str, website_type: str) -> bool:
-    """
-    Downloads all images for a chapter and converts them to a PDF.
-    Uses an Async Playwright browser to force lazy loaded images to appear.
-    Returns True on success, False on failure.
-    """
+    from PIL import Image
+    
     if website_type not in ["asurascans.com/", "mangadex.org/"]:
         return False
 
@@ -441,7 +426,6 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     pdf_path = os.path.join(".", "cache", "library", title, f"Chapter {str(chapter_key).zfill(2)}.pdf")
     os.makedirs(chapter_dir, exist_ok=True)
 
-    # 1. Fetch the chapter image URLs using headless browser (bypasses lazy loading)
     if website_type == "mangadex.org/":
         image_urls = get_mangadex_images(chapter_url)
     else:
@@ -449,7 +433,6 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     if not image_urls:
         return False
     
-    # 2. Download images concurrently
     download_tasks = [
         (url, os.path.join(chapter_dir, f"{str(idx).zfill(4)}.jpg"))
         for idx, url in enumerate(image_urls)
@@ -458,9 +441,8 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {executor.submit(download_single_image, task): task for task in download_tasks}
         for future in as_completed(futures):
-            future.result()  # surface any exceptions silently
+            future.result()
 
-    # 3. Convert downloaded images to PDF
     image_files = sorted([
         os.path.join(chapter_dir, f)
         for f in os.listdir(chapter_dir)
@@ -488,10 +470,8 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     except Exception:
         return False
     finally:
-        # Clean up temp image directory
         shutil.rmtree(chapter_dir, ignore_errors=True)
 
-    # 4. Record the chapter as downloaded
     cache_entry = st.session_state.get('manga_cache', {}).get(title, {})
     downloaded = cache_entry.get("chapter_downloaded", [])
     if chapter_url not in downloaded:
@@ -502,22 +482,13 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
 
 
 def sync_and_save(new_layout: list):
-    """
-    Called by streamlit-elements onLayoutChange.
-    Re-orders manga_cache according to the dragged layout and persists.
-    """
     sorted_layout = sorted(new_layout, key=lambda item: (item['y'], item['x']))
-    
     new_order_indices = [int(item['i']) for item in sorted_layout]
-
     current_cache = st.session_state.get('temp_manga_cache', {})
     keys = list(current_cache.keys())
     
-    # Rebuild the dictionary mapping in the new dragged order
     reordered = {keys[i]: current_cache[keys[i]] for i in new_order_indices if i < len(keys)}
 
     st.session_state.temp_manga_cache = reordered
     st.session_state.manga_cache = reordered
-    
-    # save_config handles writing st.session_state.manga_cache to disk
     save_config(replace_data=True)

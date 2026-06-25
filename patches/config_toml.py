@@ -6,6 +6,9 @@ gatherUsageStats = false
 
 [theme]
 base = "dark"
+
+[server]
+enableStaticServing = true
 """
 
 def write_streamlit_config():

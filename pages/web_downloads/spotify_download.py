@@ -5,19 +5,21 @@ from utilities.util_spotify_dl import get_playlist_tracks, download_track_audio
 
 import concurrent.futures
 
+CACHE_FOLDER = os.path.join("cache", "spotify")
+CREDS_PATH = os.path.join(CACHE_FOLDER, "spotify_creds.json")
+
 
 # --- Credential Management ---
 def load_creds():
-    path = "./cache/spotify_creds.json"
-    if os.path.exists(path):
-        with open(path, 'r') as f:
+    if os.path.exists(CREDS_PATH):
+        with open(CREDS_PATH, 'r') as f:
             return json.load(f)
     return {"client_id": "", "client_secret": ""}
 
 
 def save_creds(cid, csec):
-    os.makedirs("./cache", exist_ok=True)
-    with open("./cache/spotify_creds.json", 'w') as f:
+    os.makedirs(CACHE_FOLDER, exist_ok=True)
+    with open(CREDS_PATH, 'w') as f:
         json.dump({"client_id": cid, "client_secret": csec}, f)
 
 
