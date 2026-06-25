@@ -5,11 +5,12 @@ import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
 
-DB_FILE = os.path.join("cache", "yt_channels.json")
-CACHE_FILE = os.path.join("cache", "yt_feed_cache.json")
+folder_location = os.path.join("cache", "youtube")
+DB_FILE = os.path.join(folder_location, "yt_channels.json")
+CACHE_FILE = os.path.join(folder_location, "yt_feed_cache.json")
 
 def _ensure_db():
-    os.makedirs("cache", exist_ok=True)
+    os.makedirs(folder_location, exist_ok=True)
 
 def load_tracked_channels() -> list:
     """Loads tracked channels from the local JSON file."""

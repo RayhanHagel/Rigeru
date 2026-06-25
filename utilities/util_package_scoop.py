@@ -1,7 +1,6 @@
 import subprocess
 import os
 import json
-import streamlit as st
 
 
 def run_cmd(cmd: str) -> tuple[str, str]:
@@ -58,7 +57,6 @@ def get_scoop_outdated() -> dict:
     return outdated
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
 def list_installed() -> tuple[bool, list]:
     """Returns installed scoop apps with outdated status."""
     outdated = get_scoop_outdated()

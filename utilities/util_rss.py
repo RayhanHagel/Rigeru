@@ -6,13 +6,39 @@ import streamlit as st
 import re
 import xml.etree.ElementTree as ET
 import concurrent.futures
+import json
 
 # Import shared utilities
 from utilities.util_network import better_get
 from utilities.util_json import load_json, save_json
 
-CACHE_FILE = os.path.join(".", "cache", "rss_subscriptions.json")
+CACHE_FILE = os.path.join(".", "cache", "rss", "rss_subscriptions.json")
+DATA_CACHE_FILE = os.path.join(".", "cache", "rss", "rss_feed.json")
 
+
+def load_disk_cache():
+    """Loads articles from the JSON file and returns the data + modification time."""
+    if os.path.exists(DATA_CACHE_FILE):
+        try:
+            with open(DATA_CACHE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f), os.path.getmtime(DATA_CACHE_FILE)
+        except Exception as e:
+            print(f"Failed to read cache: {e}")
+            return [], 0.0
+    return [], 0.0
+
+def save_disk_cache(articles):
+    """Saves articles safely using atomic writes to prevent read collisions."""
+    os.makedirs(os.path.dirname(DATA_CACHE_FILE), exist_ok=True)
+    temp_file = DATA_CACHE_FILE + ".tmp"
+    
+    # Write to a temporary file first
+    with open(temp_file, "w", encoding="utf-8") as f:
+        json.dump(articles, f)
+        
+    # Atomically replace the old cache with the new one
+    os.replace(temp_file, DATA_CACHE_FILE)
+    
 def load_subscriptions() -> dict:
     """Loads saved RSS feed URLs and their titles from local cache."""
     data = load_json(CACHE_FILE, default_factory=dict)

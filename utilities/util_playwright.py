@@ -47,6 +47,38 @@ async def get_async_stealth_page(headless: bool = True, viewport: dict = None):
         finally:
             await browser.close()
 
+@asynccontextmanager
+async def get_async_stealth_browser(headless: bool = True, viewport: dict = None):
+    """
+    Yields the raw Playwright browser instance.
+    This allows us to spin up isolated "Incognito" contexts for every item.
+    """
+    try:
+        from playwright.async_api import async_playwright
+        from playwright_stealth import Stealth
+    except ImportError:
+        raise ImportError("Missing dependencies. Run: pip install playwright playwright-stealth")
+
+    if viewport is None:
+        viewport = {"width": 1920, "height": 1080}
+        
+    async with Stealth().use_async(async_playwright()) as p:
+        browser = await p.chromium.launch(
+            headless=headless,
+            args=[
+                '--disable-blink-features=AutomationControlled',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+                f'--window-size={viewport["width"]},{viewport["height"]}',
+                '--disable-infobars'
+            ]
+        )
+        
+        try:
+            yield browser
+        finally:
+            await browser.close()
+
 @contextmanager
 def get_sync_page(headless: bool = True, viewport: dict = None):
     """

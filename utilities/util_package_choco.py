@@ -1,6 +1,5 @@
 import subprocess
 import os
-import streamlit as st
 
 
 def run_choco_cmd(cmd: str) -> tuple[str, str]:
@@ -52,7 +51,6 @@ def get_choco_outdated() -> dict:
     return outdated
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
 def list_installed() -> tuple[bool, list]:
     """Returns all installed chocolatey packages with outdated status."""
     outdated = get_choco_outdated()
