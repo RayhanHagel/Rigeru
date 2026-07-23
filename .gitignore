@@ -6,9 +6,11 @@ venv/
 ENV/
 cache/
 .cache/
-test.py
-test/
-app.log
 .vscode/
-page_load_times.log
 static/
+tests/
+node_modules/
+utilities/playwright_scraper/*
+!utilities/playwright_scraper/scraper.js
+!package.json
+!package-lock.json

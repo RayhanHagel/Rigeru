@@ -1,7 +1,8 @@
 import os
 import asyncio
-from playwright.async_api import async_playwright
 import pandas as pd
+import json
+import subprocess
 
 # Global Path Management
 CACHE_DIR = os.path.join(".", "cache")
@@ -10,80 +11,68 @@ TEMP_DIR = os.path.join(CACHE_DIR, "temp")
 def _ensure_paths():
     os.makedirs(TEMP_DIR, exist_ok=True)
 
-async def _fetch_url(context, url: str, css_selector: str) -> list:
-    """Async worker handling a single URL."""
-    clean_url = url.strip()
-    if not clean_url:
-        return []
+NODE_SCRAPER_PATH = os.path.join(os.path.dirname(__file__), "playwright_scraper", "scraper.js")
 
-    if not clean_url.startswith('http'):
-        clean_url = 'https://' + clean_url
-
-    page = await context.new_page()
+def _run_node_scraper(payload: dict) -> dict:
+    process = subprocess.Popen(
+        ["node", NODE_SCRAPER_PATH],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8"
+    )
+    stdout, stderr = process.communicate(json.dumps(payload))
+    if process.returncode != 0:
+        raise RuntimeError(f"Node scraper failed: {stderr}")
     try:
-        await page.goto(clean_url, wait_until="domcontentloaded", timeout=20000)
-        await page.wait_for_timeout(1500)
-
-        # O(1) JavaScript evaluation mapping in the browser engine directly
-        extracted_texts = await page.locator(css_selector).evaluate_all(
-            "els => els.map(el => el.innerText.trim()).filter(t => t !== '')"
-        )
-
-        await page.close()
-        
-        if extracted_texts:
-            return [{"Target URL": clean_url, "Extracted Data": item} for item in extracted_texts]
-        else:
-            return [{"Target URL": clean_url, "Extracted Data": "[No matching elements found]"}]
-            
+        lines = stdout.strip().split('\n')
+        return json.loads(lines[-1])
     except Exception as e:
-        await page.close()
-        return [{"Target URL": clean_url, "Extracted Data": f"[Error: {str(e)}]"}]
+        raise RuntimeError(f"Failed to parse Node scraper output: {stdout}. Error: {e}")
 
-async def _run_headless_scraper_async(links: list, css_selector: str):
-    """Orchestrator for asynchronous Playwright."""
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        
-        tasks = [_fetch_url(context, url, css_selector) for url in links]
-        results_nested = await asyncio.gather(*tasks)
-        
-        await browser.close()
-        
-        # Flatten the nested results array
-        return [item for sublist in results_nested for item in sublist]
-
-def run_headless_scraper(links: list, css_selector: str) -> tuple:
+def run_headless_scraper(links: list, css_selector: str, headless: bool = True) -> tuple:
     """
-    Uses Playwright to navigate to a list of URLs and extract text concurrently.
+    Uses Node Playwright to navigate to a list of URLs and extract text concurrently.
     """
     try:
-        results = asyncio.run(_run_headless_scraper_async(links, css_selector))
-        
+        payload = {
+            "action": "scrape",
+            "links": links,
+            "css_selector": css_selector,
+            "headless": headless
+        }
+        res = _run_node_scraper(payload)
+        if not res.get("success"):
+            return False, res.get("error", "Unknown error in Node scraper")
+            
+        results = res.get("data", [])
         if not results:
             return False, "No valid links provided or no data could be extracted."
             
         return True, pd.DataFrame(results)
 
     except Exception as e:
-        return False, f"Scraping engine error: {str(e)}. (Did you run `playwright install`?)"
+        return False, f"Scraping engine error: {str(e)}."
 
-def get_page_preview_image(url: str, output_path: str) -> tuple[bool, str]:
+def get_page_preview_image(url: str) -> tuple[bool, str]:
     """Takes a screenshot of the target URL using Playwright for preview purposes."""
-    _ensure_paths()
-    from utilities.util_playwright import get_sync_page  # Assuming this remains standard for pure-sync UI actions
+    # Ensure static/temp exists
+    static_temp = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "temp")
+    os.makedirs(static_temp, exist_ok=True)
+    output_path = os.path.join(static_temp, "preview_screenshot.png")
     
     try:
-        with get_sync_page(headless=True, viewport={"width": 1280, "height": 800}) as page:
-            if not url.startswith('http'):
-                url = 'https://' + url
-
-            page.goto(url, wait_until="domcontentloaded", timeout=20000)
-            page.wait_for_timeout(2000) 
-            page.screenshot(path=output_path, full_page=False)
-
-        return True, output_path
+        payload = {
+            "action": "preview",
+            "url": url,
+            "outputPath": output_path
+        }
+        res = _run_node_scraper(payload)
+        if res.get("success"):
+            return True, output_path
+        else:
+            return False, f"Failed to load preview: {res.get('error')}"
     except Exception as e:
         return False, f"Failed to load preview: {str(e)}"
 

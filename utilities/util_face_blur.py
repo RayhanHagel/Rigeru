@@ -5,16 +5,14 @@ import shutil
 import subprocess
 import threading
 import queue
-import json
 import warnings
 from collections import defaultdict
 
-import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
+import functools
 
 # Import shared utilities
-from utilities.util_huggingface import download_hf_file, quantize_onnx_model
-from utilities.util_audio import format_ass_time
+from utilities.util_huggingface import download_hf_file, quantize_onnx_model, load_hf_token
+from utilities.util_time_format import format_ass_time
 from utilities.util_image_fx import make_blur_fn, apply_blur_fn
 
 # Silence underlying library warnings and ONNX GPU fallback warnings
@@ -78,11 +76,7 @@ def _ensure_hf_model(model_name: str, precision: str = "fp32"):
     model_path = os.path.join(models_dir, model_name)
 
     if not os.path.exists(model_path) or not any(f.endswith('.onnx') for f in os.listdir(model_path)):
-        cred_path = os.path.join(CACHE_DIR, "hf_creds.json")
-        hf_token = None
-        if os.path.exists(cred_path):
-            with open(cred_path, 'r') as f:
-                hf_token = json.load(f).get("hf_token")
+        hf_token = load_hf_token() or None
 
         hf_sources = {
             "buffalo_l":  {"repo_id": "vladmandic/insightface-faceanalysis", "filename": "buffalo_l.zip"},
@@ -149,8 +143,10 @@ class RealFace:
         self.embedding = emb
 
 
-@st.cache_resource(max_entries=2, show_spinner=False)
-def load_face_detector(det_model: str = "buffalo_l", rec_model: str = None, precision: str = "fp32", det_size: int = 640):
+@functools.lru_cache(maxsize=2)
+def load_face_detector(rec_model: str = None, precision: str = "fp32", det_size: int = 640):
+    from utilities.util_config import get_model_config
+    det_model = get_model_config("face_blur")
     if det_model in ["cv2", "mtcnn"] or (rec_model is not None and rec_model in ["cv2", "mtcnn"]):
         return None, "Fallback models removed for brevity. Please use InsightFace models."
 
@@ -244,13 +240,15 @@ def _match_cache_to_targets(frame_cache: dict, targets_normed: np.ndarray, match
 # ---------------------------------------------------------------------------
 
 
-def scan_faces(input_path: str, det_model: str = "buffalo_l", rec_model: str = None, precision: str = "fp32",
+def scan_faces(input_path: str, rec_model: str = None, precision: str = "fp32",
                sample_fps: float = 1.0, clustering_method: str = "Global", cluster_threshold: float = _CLUSTER_SIM_THRESHOLD,
                det_size: int = 640, progress_hook=None):
+    from utilities.util_config import get_model_config
+    det_model = get_model_config("face_blur")
     import cv2
     _ensure_paths()
     detector, status = load_face_detector(
-        det_model, rec_model, precision, det_size)
+        rec_model, precision, det_size)
     if detector is None:
         return False, None, None, None, status
 
@@ -695,11 +693,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
 
     num_workers = max(2, (os.cpu_count() or 2) - 1)
     workers = [threading.Thread(target=worker) for _ in range(num_workers)]
-
-    add_script_run_ctx(t_prod)
-    add_script_run_ctx(t_cons)
-    for w in workers:
-        add_script_run_ctx(w)
 
     t_prod.start()
     t_cons.start()

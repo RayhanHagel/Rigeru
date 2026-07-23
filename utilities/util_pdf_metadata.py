@@ -55,13 +55,17 @@ def check_pdf_authenticity(pdf_bytes: bytes) -> tuple[bool, dict | str]:
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         health_report["needs_password"] = doc.needs_pass
-        health_report["is_corrupt"] = doc.is_repaired
+        # Note: doc.is_repaired is NOT used here — it triggers for most normal PDFs
+        # that have minor structural issues PyMuPDF silently fixes on open.
+        # We only consider a PDF corrupt if fitz.open() raises an exception.
+        health_report["is_corrupt"] = False
         
         if not doc.needs_pass:
             health_report["page_count"] = len(doc)
             # Fetch the internal PDF version (e.g., 1.4, 1.7)
-            health_report["pdf_version"] = doc.pdf_version 
-            
+            metadata = doc.metadata or {}
+            format_str = metadata.get("format", "PDF")
+            health_report["pdf_version"] = format_str.replace("PDF-", "") if format_str else "Unknown"            
             # Check for digital signatures (sigflags indicate presence of signature fields)
             health_report["has_digital_signature"] = doc.get_sigflags() > 0
 

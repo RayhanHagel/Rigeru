@@ -34,12 +34,9 @@ def images_to_pdf(image_files: list[bytes]) -> tuple[bool, bytes | str]:
     try:
         doc = fitz.open()
         for img_bytes in image_files:
-            img_doc = fitz.open(stream=img_bytes, filetype="image")
-            pdf_bytes = img_doc.convert_to_pdf()
-            img_pdf = fitz.open("pdf", pdf_bytes)
-            doc.insert_pdf(img_pdf)
-            img_doc.close()
-            img_pdf.close()
+            pix = fitz.Pixmap(img_bytes)
+            page = doc.new_page(width=pix.width, height=pix.height)
+            page.insert_image(page.rect, stream=img_bytes)
             
         output_stream = io.BytesIO()
         doc.save(output_stream)

@@ -1,6 +1,7 @@
 import os
 import json
 import threading
+from utilities.util_json import load_json
 
 CACHE_DIR = "./cache/services"
 CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
@@ -103,17 +104,13 @@ def fetch_and_cache():
 
 def load_services_data() -> tuple[list[dict], list[dict], list[dict]]:
     if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
-            try:
-                data = json.load(f)
-                threading.Thread(target=fetch_and_cache, daemon=True).start()
-                return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
-            except json.JSONDecodeError:
-                pass
+        data = load_json(CACHE_FILE, lambda: {})
+        if data:
+            threading.Thread(target=fetch_and_cache, daemon=True).start()
+            return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
 
     fetch_and_cache()
-    with open(CACHE_FILE, "r") as f:
-        data = json.load(f)
+    data = load_json(CACHE_FILE, lambda: {})
     return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
 
 

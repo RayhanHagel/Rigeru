@@ -1,6 +1,7 @@
 import subprocess
 import os
 import json
+from utilities.util_json import load_json
 
 
 def run_cmd(cmd: str) -> tuple[str, str]:
@@ -77,8 +78,8 @@ def list_installed() -> tuple[bool, list]:
         manifest_path = os.path.join(apps_dir, app_name, 'current', 'manifest.json')
         if os.path.exists(manifest_path):
             try:
-                with open(manifest_path, 'r', encoding='utf-8') as f:
-                    manifest = json.load(f)
+                manifest = load_json(manifest_path, lambda: {})
+                if not manifest: continue
                 desc = manifest.get('description', 'No description provided.')
                 if isinstance(desc, list):
                     desc = " ".join(desc)

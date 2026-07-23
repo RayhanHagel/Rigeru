@@ -3,12 +3,12 @@ import shutil
 import subprocess
 import threading
 import queue
-import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
+import tempfile
+from functools import lru_cache
 
 # Import shared utilities
 from utilities.util_huggingface import download_hf_file, quantize_onnx_model
-from utilities.util_audio import format_ass_time
+from utilities.util_time_format import format_ass_time
 from utilities.util_image_fx import make_blur_fn, apply_blur_fn
 
 CACHE_DIR = os.path.join(".", "cache")
@@ -24,7 +24,7 @@ def _ensure_paths():
 # Download & Model Loading
 # ---------------------------------------------------------------------------
 
-@st.cache_resource(show_spinner=False)
+@lru_cache(maxsize=1)
 def load_nsfw_detector(model_type: str = "default", engine: str = "cpu", precision: str = "fp32"):
     try:
         from nudenet import NudeDetector
@@ -302,11 +302,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
             num_workers = max(2, (os.cpu_count() or 2) - 1)
             workers = [threading.Thread(target=worker)
                        for _ in range(num_workers)]
-
-            add_script_run_ctx(t_prod)
-            add_script_run_ctx(t_cons)
-            for w in workers:
-                add_script_run_ctx(w)
 
             t_prod.start()
             t_cons.start()

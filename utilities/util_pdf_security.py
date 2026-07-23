@@ -68,8 +68,8 @@ def add_pdf_watermark(pdf_bytes: bytes, text: str, opacity: float = 0.3) -> tupl
             # Create a shape to apply transparency
             shape = page.new_shape()
             shape.insert_text(
-                point=center_point,
-                text=text,
+                center_point,
+                text,
                 fontsize=50,
                 color=(0.5, 0.5, 0.5), # Gray
                 fontname="helv",

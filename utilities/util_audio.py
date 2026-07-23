@@ -1,13 +1,16 @@
 import os
 import gc
-import json
 import numpy as np
+
+# Re-exports for backward compatibility — these functions were extracted
+# to their own focused modules but old import paths should still resolve.
+from utilities.util_time_format import format_srt_time, format_ass_time, rgba_to_ass_hex
+from utilities.util_huggingface import load_hf_token, save_hf_token
 
 # ─────────────────────────────────────────────
 #  Constants
 # ─────────────────────────────────────────────
 CACHE_DIR  = "./cache"
-CREDS_FILE = os.path.join(CACHE_DIR, "hf_creds.json")
 
 VIDEO_EXTENSIONS = {"mp4", "mkv", "avi", "mov"}
 
@@ -46,25 +49,8 @@ STYLE_PRESETS = {
 DEFAULT_PRESET = "Cinema Black"
 
 
-# ─────────────────────────────────────────────
-#  Credentials
-# ─────────────────────────────────────────────
-def load_hf_token() -> str:
-    """Read the cached Hugging Face token, or return empty string."""
-    if os.path.exists(CREDS_FILE):
-        try:
-            with open(CREDS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f).get("hf_token", "")
-        except Exception:
-            return ""
-    return ""
-
-
-def save_hf_token(token: str) -> None:
-    """Persist a Hugging Face token to the local cache directory."""
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    with open(CREDS_FILE, "w", encoding="utf-8") as f:
-        json.dump({"hf_token": token.strip()}, f, indent=4)
+# NOTE: load_hf_token and save_hf_token are now in util_huggingface.py
+# and re-exported at the top of this file for backward compatibility.
 
 
 # ─────────────────────────────────────────────
@@ -160,6 +146,28 @@ def extract_speaker_thumbnail(video_path: str, start_seconds: float) -> np.ndarr
     return thumb
 
 
+def extract_speaker_clip(media_path: str, start_seconds: float, end_seconds: float, output_path: str) -> bool:
+    """
+    Extract a short audio clip from `start_seconds` to `end_seconds` and save to `output_path`.
+    Returns True if successful, False otherwise.
+    """
+    import subprocess
+    try:
+        duration = end_seconds - start_seconds
+        # -y to overwrite, -ss for start time, -t for duration, -vn to discard video, -acodec libmp3lame to ensure mp3 output
+        cmd = [
+            "ffmpeg", "-y", "-ss", str(start_seconds), "-i", media_path, 
+            "-t", str(duration), "-vn", "-acodec", "libmp3lame", "-q:a", "2", output_path
+        ]
+        # Hide output
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        return os.path.exists(output_path)
+    except subprocess.CalledProcessError:
+        return False
+    except Exception:
+        return False
+
+
 # ─────────────────────────────────────────────
 #  Transcription pipeline
 # ─────────────────────────────────────────────
@@ -178,6 +186,9 @@ def run_transcription_pipeline(
     Returns a list of segment dicts, each with keys:
         start, end, text, (speaker if diarized)
     """
+    from utilities.util_config import get_model_config
+    model_name = get_model_config("audio_transcription")
+    
     # Lazy load massive machine learning libraries only when executed
     import torch
     import whisperx
@@ -193,7 +204,8 @@ def run_transcription_pipeline(
             progress_bar.progress(pct)
 
     _status("Loading Whisper model weights…", 10)
-    model = whisperx.load_model(model_name, device, compute_type=compute_type)
+    models_dir = os.path.join(CACHE_DIR, "models")
+    model = whisperx.load_model(model_name, device, compute_type=compute_type, download_root=models_dir)
 
     _status("Transcribing audio stream…", 35)
     audio  = whisperx.load_audio(audio_path)
@@ -215,14 +227,13 @@ def run_transcription_pipeline(
         torch.cuda.empty_cache()
 
     if do_diarize and hf_token:
-        _status("Running speaker diarization…", 80)
-        try:
-            diarize_model    = DiarizationPipeline(token=hf_token, device=device)
-            diarize_segments = diarize_model(audio)
-            result           = whisperx.assign_word_speakers(diarize_segments, result)
-        except Exception as e:
-            if status_text:
-                status_text.text(f":material/warning: Diarization failed ({e}) — continuing without speaker labels.")
+        _status("Loading diarization pipeline...", 60)
+        diarize_model_name = get_model_config("speaker_diarization")
+        models_dir = os.path.join(CACHE_DIR, "models")
+        # Initialize pipeline. If this fails (e.g., due to ToS not accepted on HF), let it throw!
+        diarize_model = DiarizationPipeline(model_name=diarize_model_name, token=hf_token, device=device, cache_dir=models_dir)
+        diarize_segments = diarize_model(audio)
+        result = whisperx.assign_word_speakers(diarize_segments, result)
 
     # Apply any caller-supplied name remapping
     for seg in result.get("segments", []):
@@ -315,31 +326,8 @@ def render_subtitle_preview(
     return cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
 
 
-# ─────────────────────────────────────────────
-#  Time formatters
-# ─────────────────────────────────────────────
-def format_srt_time(seconds: float) -> str:
-    h  = int(seconds // 3600)
-    m  = int((seconds % 3600) // 60)
-    s  = int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
-    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-
-def format_ass_time(seconds: float) -> str:
-    h  = int(seconds // 3600)
-    m  = int((seconds % 3600) // 60)
-    s  = int(seconds % 60)
-    cs = int((seconds % 1) * 100)
-    return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
-
-
-def rgba_to_ass_hex(color_hex: str, transparency: float) -> str:
-    """Convert #RRGGBB + opacity float → ASS &H[AA][BB][GG][RR] string."""
-    h = color_hex.lstrip("#")
-    r, g, b = (h[0:2], h[2:4], h[4:6]) if len(h) == 6 else ("FF", "FF", "FF")
-    alpha = int((1.0 - transparency) * 255)
-    return f"&H{alpha:02X}{b}{g}{r}"
+# NOTE: format_srt_time, format_ass_time, and rgba_to_ass_hex are now in
+# util_time_format.py and re-exported at the top of this file for backward compatibility.
 
 
 # ─────────────────────────────────────────────
@@ -513,8 +501,7 @@ def extract_audio_snippet(media_path: str, start_time: float, end_time: float) -
         return buffer.getvalue()
         
     except ImportError:
-        import streamlit as st
-        st.error("Please install pydub to enable audio extraction: `pip install pydub`")
+        print("Please install pydub to enable audio extraction: `pip install pydub`")
         return None
     except Exception as e:
         print(f"Error extracting audio: {e}")
