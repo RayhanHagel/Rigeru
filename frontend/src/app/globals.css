@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --background: #131620;
+  --foreground: #ededed;
+
+  /* Theme CSS variables — set dynamically by MainLayout, defaults to Nebula */
+  --theme-bg: #131620;
+  --theme-text: rgba(255,255,255,0.78);
+  --theme-heading: rgba(255,255,255,0.92);
+  --theme-glow1: rgba(120,80,255,0.18);
+  --theme-glow2: rgba(255,60,120,0.12);
+  --theme-ui-bg: rgba(255,255,255,0.05);
+  --theme-ui-border: rgba(255,255,255,0.10);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  --animate-fade-in: fade-in 1s ease-out;
+  --animate-slide-up: slide-up 0.8s ease-out both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+body {
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  font-family: Arial, Helvetica, sans-serif;
+}

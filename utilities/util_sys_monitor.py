@@ -1,13 +1,11 @@
 import json
 from pathlib import Path
+from utilities.util_json import load_json
 
 CACHE_FILE = Path("./cache/system_monitor/settings.json")
 
 def load_settings():
-    if CACHE_FILE.exists():
-        with open(CACHE_FILE, "r") as f:
-            return json.load(f)
-    return {"history_len": 40, "proc_limit": 15}
+    return load_json(str(CACHE_FILE), lambda: {"history_len": 40, "proc_limit": 15})
 
 def save_settings(settings):
     CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

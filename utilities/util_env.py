@@ -1,6 +1,7 @@
 import os
 import json
 import threading
+from utilities.util_json import load_json
 
 CACHE_DIR = "./cache/env"
 CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
@@ -71,17 +72,13 @@ def fetch_and_cache():
 
 def load_env_data() -> tuple[list[dict], str, str]:
     if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
-            try:
-                data = json.load(f)
-                threading.Thread(target=fetch_and_cache, daemon=True).start()
-                return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
-            except json.JSONDecodeError:
-                pass
+        data = load_json(CACHE_FILE, lambda: {})
+        if data:
+            threading.Thread(target=fetch_and_cache, daemon=True).start()
+            return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
     
     fetch_and_cache()
-    with open(CACHE_FILE, "r") as f:
-        data = json.load(f)
+    data = load_json(CACHE_FILE, lambda: {})
     return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
 
 def force_refresh():

@@ -1,9 +1,8 @@
 import os
 import json
 import concurrent.futures
-import streamlit as st
 from utilities.util_network import better_get
-from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+from utilities.util_json import load_json
 
 
 CACHE_FOLDER = os.path.join("cache", "twitch")
@@ -22,18 +21,12 @@ def check_live_status(channel: str) -> bool:
     return 'isLiveBroadcast' in response.content.decode('utf-8', errors='ignore')
 
 
-@st.cache_data(ttl=5*60)
 def get_all_live_statuses(channels: tuple) -> list:
-    """Fetches all live statuses concurrently and caches the ENTIRE list."""
+    """Fetches all live statuses concurrently."""
     live_channels = []
-    ctx = get_script_run_ctx()
-
-    def thread_safe_check(channel):
-        add_script_run_ctx(ctx=ctx)
-        return check_live_status(channel)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(channels) or 1) as executor:
-        future_to_channel = {executor.submit(thread_safe_check, ch): ch for ch in channels}
+        future_to_channel = {executor.submit(check_live_status, ch): ch for ch in channels}
         for future in concurrent.futures.as_completed(future_to_channel):
             channel = future_to_channel[future]
             try:
@@ -42,17 +35,15 @@ def get_all_live_statuses(channels: tuple) -> list:
             except Exception:
                 pass
                 
-    return live_channels
+    # Sort by the original priority order
+    return sorted(live_channels, key=lambda ch: channels.index(ch))
 
 
 def read_cache() -> list:
     """Reads the saved Twitch channel priority list."""
-    if os.path.exists(PRIORITY_FILE):
-        try:
-            with open(PRIORITY_FILE, "r") as file:
-                return json.load(file)
-        except Exception:
-            pass
+    data = load_json(PRIORITY_FILE, lambda: None)
+    if data is not None:
+        return data
 
     # Initialize clean cache if it doesn't exist
     os.makedirs(CACHE_FOLDER, exist_ok=True)
@@ -64,16 +55,15 @@ def read_cache() -> list:
 def save_config(channel: str, replace_data: list = None):
     """Saves a new channel or a completely new list to the cache."""
     os.makedirs(CACHE_FOLDER, exist_ok=True)
+    
+    current_cache = read_cache()
 
     if replace_data is None:
-        if channel not in st.session_state.get('twitch_cache', []):
-            if 'twitch_cache' not in st.session_state:
-                st.session_state.twitch_cache = read_cache()
-            st.session_state.twitch_cache.append(channel)
+        if channel and channel not in current_cache:
+            current_cache.append(channel)
 
         with open(PRIORITY_FILE, "w") as f:
-            json.dump(st.session_state.twitch_cache, f, indent=4)
+            json.dump(current_cache, f, indent=4)
     else:
         with open(PRIORITY_FILE, "w") as f:
             json.dump(replace_data, f, indent=4)
-        st.session_state.twitch_cache = replace_data

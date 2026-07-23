@@ -1,5 +1,6 @@
 import os
 import json
+from utilities.util_json import load_json
 
 
 # Import the list functions to execute in the background
@@ -13,13 +14,7 @@ CACHE_FILE = os.path.join(".", "cache", "packages", "installed_packages.json")
 
 def load_local_cache() -> dict:
     """Loads the stale packages instantly from the JSON file."""
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {"winget": [], "scoop": [], "choco": []}
+    return load_json(CACHE_FILE, lambda: {"winget": [], "scoop": [], "choco": []})
 
 
 def save_local_cache(data: dict):

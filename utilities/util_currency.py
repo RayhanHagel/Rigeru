@@ -1,10 +1,10 @@
 import os
 import json
+import concurrent.futures
 from datetime import datetime, timedelta
-import streamlit as st
 from concurrent.futures import ThreadPoolExecutor
 from utilities.util_network import better_get
-from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+from utilities.util_json import load_json
 
 # UPDATED: New cache directory paths
 CACHE_DIR = "./cache/currency/"
@@ -28,13 +28,7 @@ def _revalidate_currencies():
         print(f"Currency SWR background revalidation failed: {e}")
 
 def get_available_currencies() -> tuple[bool, dict | str]:
-    data = None
-    if os.path.exists(CACHE_FILE_CURRENCIES):
-        try:
-            with open(CACHE_FILE_CURRENCIES, 'r') as f:
-                data = json.load(f)
-        except Exception:
-            pass 
+    data = load_json(CACHE_FILE_CURRENCIES, lambda: None)
             
     _executor.submit(_revalidate_currencies)
 
@@ -61,20 +55,15 @@ def convert_currency(amount: float, base: str, target: str) -> tuple[bool, float
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
-def _revalidate_trend(url: str, cache_file: str, ctx):
-    """Background task: fetches data and automatically forces the UI to refresh."""
+def _revalidate_trend(url: str, cache_file: str):
+    """Background task: fetches data and automatically updates the cache."""
     try:
-        if ctx:
-            add_script_run_ctx(ctx=ctx)
-            
         data = fetch_url(url)
         data['_cached_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         os.makedirs(CACHE_DIR, exist_ok=True)
         with open(cache_file, 'w') as f:
             json.dump(data, f)
             
-        st.rerun()
-        
     except Exception as e:
         print(f"Trend SWR background revalidation failed: {e}")
 
@@ -95,14 +84,14 @@ def get_historical_trend(base: str, target: str, days: int = 30, forecast_days: 
     
     if os.path.exists(cache_file):
         try:
-            with open(cache_file, 'r') as f:
-                api_data = json.load(f)
+            cache_data = load_json(cache_file, lambda: None)
+            if cache_data:
+                api_data = cache_data
                 cached_time = api_data.get('_cached_at', 'Unknown Time')
         except Exception:
             pass 
             
-    ctx = get_script_run_ctx()
-    _executor.submit(_revalidate_trend, url, cache_file, ctx)
+    _executor.submit(_revalidate_trend, url, cache_file)
     
     if not api_data:
         try:

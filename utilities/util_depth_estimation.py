@@ -2,9 +2,9 @@ import os
 import shutil
 import subprocess
 import threading
+import logging
 import queue
-import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
+from functools import lru_cache
 
 # Import the refactored shared utilities
 from utilities.util_huggingface import download_hf_file, quantize_onnx_model
@@ -40,7 +40,7 @@ def _ensure_depth_model(model_size: str) -> str:
     return model_path if success else ""
 
 
-@st.cache_resource(show_spinner=False)
+@lru_cache(maxsize=2)
 def load_depth_onnx(model_size: str, engine: str, precision: str = "fp32"):
     """Loads the ONNX Runtime session using the selected hardware provider and precision."""
     import onnxruntime as ort
@@ -252,7 +252,6 @@ def process_video_depth(input_path: str, model_size: str, engine: str, precision
 
     writer_thread = threading.Thread(
         target=post_process_and_write, daemon=True)
-    add_script_run_ctx(writer_thread)
     writer_thread.start()
 
     frames_processed = 0

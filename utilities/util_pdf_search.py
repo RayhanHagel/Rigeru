@@ -109,3 +109,47 @@ def search_documents(query_str: str, index_dir: str = "./cache/doc_index") -> tu
         return True, f"Found {len(results_list)} results.", results_list
     except Exception as e:
         return False, f"Search error: {str(e)}", []
+
+def delete_index(index_dir: str = "./cache/doc_index") -> bool:
+    """Deletes the entire search index directory."""
+    import shutil
+    if os.path.exists(index_dir):
+        shutil.rmtree(index_dir)
+        return True
+    return False
+
+def delete_document(file_path: str, index_dir: str = "./cache/doc_index") -> bool:
+    """Deletes a specific document from the search index."""
+    if not exists_in(index_dir):
+        return False
+    try:
+        ix = open_dir(index_dir)
+        writer = ix.writer()
+        writer.delete_by_term('path', file_path)
+        writer.commit()
+        return True
+    except Exception as e:
+        print(f"Failed to delete document from index: {e}")
+        return False
+
+def get_index_info(index_dir: str = "./cache/doc_index") -> dict:
+    """Returns info about the current index: document count and indexed paths."""
+    if not exists_in(index_dir):
+        return {"exists": False, "doc_count": 0, "files": []}
+    
+    ix = open_dir(index_dir)
+    files = set()
+    doc_count = 0
+    
+    with ix.searcher() as searcher:
+        for doc in searcher.all_stored_fields():
+            doc_count += 1
+            path = doc.get("path", "")
+            if path:
+                files.add(path)
+    
+    return {
+        "exists": True,
+        "doc_count": doc_count,
+        "files": sorted(list(files))
+    }

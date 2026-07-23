@@ -7,12 +7,13 @@ import shutil
 import subprocess
 import random as _random
 import json
+import math
 
-import streamlit as st
-from streamlit.runtime.scriptrunner import add_script_run_ctx
+import functools
 
 # Import shared utilities
-from utilities.util_audio import format_ass_time
+from utilities.util_time_format import format_ass_time
+from utilities.util_json import load_json
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", module="ultralytics")
@@ -30,13 +31,7 @@ _color_cache: dict[int, tuple] = {}
 
 def load_cached_settings():
     """Lazily load hardware settings so we don't freeze the page."""
-    if os.path.exists(SETTINGS_FILE):
-        try:
-            with open(SETTINGS_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
+    return load_json(SETTINGS_FILE, lambda: {})
 
 
 def save_cached_settings(key, value):
@@ -56,26 +51,18 @@ def get_class_color(cls_id: int) -> tuple:
     return _color_cache[cls_id]
 
 
-@st.cache_data(show_spinner=False, ttl=30)
+@functools.lru_cache(maxsize=1)
 def get_available_cameras() -> list[int]:
-    import cv2
-    try:
-        cv2.setLogLevel(0)
-    except AttributeError:
-        pass
-    available = [i for i in range(5) if cv2.VideoCapture(i).isOpened() and not cv2.VideoCapture(i).release()]
-    try:
-        cv2.setLogLevel(3)
-    except AttributeError:
-        pass
-    return available if available else [0]
+    return [0]
 
 
 # ─────────────────────────────────────────────
 # OPTIMIZED MODEL LOADER (WITH EXPORT PROGRESS)
 # ─────────────────────────────────────────────
-@st.cache_resource(show_spinner=False)
-def load_yolo_model(model_name: str = "yolov8n.pt", optimization: str = "PyTorch", resolution: int = 640):
+@functools.lru_cache(maxsize=1)
+def load_yolo_model(optimization: str = "PyTorch", resolution: int = 640):
+    from utilities.util_config import get_model_config
+    model_name = get_model_config("object_detection")
     try:
         from ultralytics import YOLO
     except ImportError:
@@ -106,19 +93,13 @@ def load_yolo_model(model_name: str = "yolov8n.pt", optimization: str = "PyTorch
         if os.path.exists(expected_path):
             return YOLO(expected_path, task="detect"), "Success"
 
-        with st.status(f"⚙️ First-time compilation to {optimization}...", expanded=True) as status:
-            prog = st.progress(0.1, text="Initializing export pipeline...")
-            st.write(f"Exporting {model_name} to {target_format.upper()} (This takes a few minutes)...")
+        print(f"Exporting {model_name} to {target_format.upper()} (This takes a few minutes)...")
+        exported_path = model.export(format=target_format, **export_kwargs)
+        
+        if os.path.exists(exported_path):
+            shutil.move(exported_path, expected_path)
             
-            prog.progress(0.4, text="Compiling network graph and optimizing weights...")
-            exported_path = model.export(format=target_format, **export_kwargs)
-            
-            prog.progress(0.8, text="Moving optimized model to cache...")
-            if os.path.exists(exported_path):
-                shutil.move(exported_path, expected_path)
-                
-            prog.progress(1.0, text="Complete!")
-            status.update(label="Compilation complete!", state="complete", expanded=False)
+        print("Compilation complete!")
 
         return YOLO(expected_path, task="detect"), "Success"
 
@@ -254,7 +235,6 @@ def process_video_object_detection(
 
     if not is_ass:
         writer_thread = threading.Thread(target=post_process_and_write, daemon=True)
-        add_script_run_ctx(writer_thread)
         writer_thread.start()
 
     try:
@@ -351,17 +331,17 @@ def process_video_object_detection(
 # ─────────────────────────────────────────────
 # HYBRID WEBCAM (NATIVE GPU OR CPU EXTRAPOLATION)
 # ─────────────────────────────────────────────
-def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, stop_flag_func, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False, ai_fps: float = 30.0):
+def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False, ai_fps: float = 30.0):
     import cv2
     
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
-        placeholder.error(f"Could not access Camera {camera_index}.")
         return
 
     ret, first_frame = cap.read()
     if not ret:
-        return cap.release()
+        cap.release()
+        return
         
     target_width = int(target_height * (first_frame.shape[1] / first_frame.shape[0]))
 
@@ -382,18 +362,15 @@ def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, st
             frame_queue.put(f)
 
     producer_thread = threading.Thread(target=frame_producer, daemon=True)
-    add_script_run_ctx(producer_thread)
     producer_thread.start()
 
-    frame_count, start_time = 0, time.time()
     font = cv2.FONT_HERSHEY_DUPLEX
-    
     inference_interval = 1.0 / ai_fps if ai_fps > 0 else 0
     last_inference_time = 0
     active_tracks = {}
 
     try:
-        while not stop_flag_func():
+        while True:
             try:
                 frame = frame_queue.get(timeout=0.5)
             except queue.Empty:
@@ -404,7 +381,6 @@ def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, st
             res_plotted = frame.copy()
             overlay = frame.copy()
 
-            # 1. AI Inference (Throttle based on ai_fps if extrapolating)
             if not use_extrapolation or dt >= inference_interval:
                 results = model.track(frame, imgsz=resolution, conf=conf_thresh, persist=True, tracker="bytetrack.yaml", verbose=False)
                 boxes = results[0].boxes
@@ -434,7 +410,6 @@ def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, st
             else:
                 time_since_inference = current_time - last_inference_time
 
-            # 2. Rendering & Extrapolation
             for track_id, data in active_tracks.items():
                 if use_extrapolation:
                     e_box = [data['box'][i] + (data['v'][i] * time_since_inference) for i in range(4)]
@@ -473,13 +448,14 @@ def run_webcam_stream(placeholder, fps_placeholder, model, camera_index: int, st
                 
                 cv2.putText(res_plotted, text, (x1 + 5, label_y - 4), font, 0.5, text_color, 1, cv2.LINE_AA)
 
-            placeholder.image(cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB), channels="RGB", width="stretch")
+            ret_enc, buffer = cv2.imencode('.jpg', res_plotted)
+            if ret_enc:
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-            frame_count += 1
-            if frame_count % 15 == 0:
-                fps_placeholder.metric("Display Pipeline Speed", f"{round(15 / (time.time() - start_time), 1)} FPS")
-                start_time = time.time()
-
+    except Exception:
+        pass
     finally:
         thread_stop_event.set()
         producer_thread.join(timeout=1.0)

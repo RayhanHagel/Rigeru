@@ -1,41 +1,47 @@
 import io
 import os
 import json
+import logging
 from PIL import Image
-import streamlit as st
+from functools import lru_cache
+from utilities.util_huggingface import load_hf_token
+from utilities.util_config import get_model_config
 
 CACHE_DIR = os.path.join(".", "cache", "models")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
-@st.cache_resource(show_spinner=False)
-def load_qwen_receipt_model(optimization: str = "PyTorch"):
+@lru_cache(maxsize=2)
+def load_receipt_model():
     """
-    Lazy loads the Qwen2-VL model. This model has explicit 2D spatial awareness,
-    making it perfect for tracking multi-column layouts in receipts.
+    Lazy loads the configured model (Qwen2-VL or Donut).
     """
     # --- Lazy Load HF Token ---
     # Automatically loads the token from cache and sets it as an environment variable
     # so transformers and huggingface_hub use it automatically to bypass rate limits.
     if "HF_TOKEN" not in os.environ:
-        hf_creds_path = os.path.join(".", "cache", "hf_creds.json")
-        if os.path.exists(hf_creds_path):
-            try:
-                with open(hf_creds_path, "r") as f:
-                    creds = json.load(f)
-                    if "hf_token" in creds:
-                        os.environ["HF_TOKEN"] = creds["hf_token"]
-            except Exception as e:
-                print(f"Warning: Failed to load HF token: {e}")
+        token = load_hf_token()
+        if token:
+            os.environ["HF_TOKEN"] = token
 
     import torch
-    from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 
-    # We use the base instruct model as it is highly capable of structured JSON output
-    model_id = "Qwen/Qwen2-VL-2B-Instruct"
+    # We use the configured vision model
+    model_id = get_model_config("expense_tracker")
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    processor = AutoProcessor.from_pretrained(model_id, cache_dir=CACHE_DIR)
+    if "donut" in model_id.lower():
+        from transformers import DonutProcessor, VisionEncoderDecoderModel
+        processor = DonutProcessor.from_pretrained(model_id, cache_dir=CACHE_DIR)
+        model = VisionEncoderDecoderModel.from_pretrained(model_id, cache_dir=CACHE_DIR)
+        if device == "cuda":
+            model.to("cuda")
+        return processor, model, device, "donut"
+
+    from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
+    processor = AutoProcessor.from_pretrained(model_id, cache_dir=CACHE_DIR, use_fast=False)
+
+    optimization = get_model_config("hardware_optimization")
 
     if "INT8" in optimization and device == "cuda":
         try:
@@ -49,17 +55,17 @@ def load_qwen_receipt_model(optimization: str = "PyTorch"):
                 cache_dir=CACHE_DIR
             )
         except ImportError:
-            st.warning("bitsandbytes not installed. Falling back to FP16.")
+            logging.warning("bitsandbytes not installed. Falling back to FP16.")
             model = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
-                torch_dtype=torch.float16,
+                dtype=torch.float16,
                 device_map="auto",
                 cache_dir=CACHE_DIR
             )
     elif "FP16" in optimization and device == "cuda":
         model = Qwen2VLForConditionalGeneration.from_pretrained(
             model_id,
-            torch_dtype=torch.float16,
+            dtype=torch.float16,
             device_map="auto",
             cache_dir=CACHE_DIR
         )
@@ -71,10 +77,10 @@ def load_qwen_receipt_model(optimization: str = "PyTorch"):
             cache_dir=CACHE_DIR
         )
 
-    return processor, model, device
+    return processor, model, device, "qwen"
 
 
-def extract_receipt_data(image_bytes: bytes, optimization: str = "PyTorch") -> tuple[bool, dict | str]:
+def extract_receipt_data(image_bytes: bytes) -> tuple[bool, dict | str]:
     try:
         img = Image.open(io.BytesIO(image_bytes))
         if img.mode != "RGB":
@@ -85,8 +91,54 @@ def extract_receipt_data(image_bytes: bytes, optimization: str = "PyTorch") -> t
         if max(img.size) > max_dim:
             img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
             
-        processor, model, device = load_qwen_receipt_model(optimization)
+        processor, model, device, model_type = load_receipt_model()
         
+        if model_type == "donut":
+            import torch
+            import re
+            
+            # Prepare Donut inputs
+            pixel_values = processor(img, return_tensors="pt").pixel_values
+            task_prompt = "<s_cord-v2>"
+            decoder_input_ids = processor.tokenizer(task_prompt, add_special_tokens=False, return_tensors="pt").input_ids
+            
+            # Generate Donut output
+            outputs = model.generate(
+                pixel_values.to(device),
+                decoder_input_ids=decoder_input_ids.to(device),
+                max_length=model.decoder.config.max_position_embeddings,
+                pad_token_id=processor.tokenizer.pad_token_id,
+                eos_token_id=processor.tokenizer.eos_token_id,
+                use_cache=True,
+                bad_words_ids=[[processor.tokenizer.unk_token_id]],
+                return_dict_in_generate=True,
+            )
+            
+            sequence = processor.batch_decode(outputs.sequences)[0]
+            sequence = sequence.replace(processor.tokenizer.eos_token, "").replace(processor.tokenizer.pad_token, "")
+            # Remove first task start token
+            sequence = re.sub(r"<.*?>", "", sequence, count=1).strip()
+            parsed_json = processor.token2json(sequence)
+            
+            # Donut does not have standard 'total' and 'date' keys for CORD, try to extract them
+            total_val = "Not Found"
+            if isinstance(parsed_json, dict):
+                total_obj = parsed_json.get("total")
+                if isinstance(total_obj, dict):
+                    total_val = total_obj.get("total_price", total_obj.get("cashprice", "Not Found"))
+                elif isinstance(total_obj, list) and len(total_obj) > 0 and isinstance(total_obj[0], dict):
+                    total_val = total_obj[0].get("total_price", total_obj[0].get("cashprice", "Not Found"))
+                    
+            date_val = "Not Found"
+            # CORD sometimes puts date under validating -> datetime
+            
+            return True, {
+                "date": date_val,
+                "total": str(total_val),
+                "raw_text": json.dumps(parsed_json, indent=2)
+            }
+        
+        # --- Qwen2-VL Flow ---
         # System prompt forcing strict JSON output and column awareness
         messages = [
             {
@@ -106,8 +158,6 @@ def extract_receipt_data(image_bytes: bytes, optimization: str = "PyTorch") -> t
         # Prepare inputs
         text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         
-        # FIX: Pass the PIL image directly to the main processor 
-        # instead of manually calling the inner image_processor
         inputs = processor(
             text=[text],
             images=[img],
@@ -127,7 +177,6 @@ def extract_receipt_data(image_bytes: bytes, optimization: str = "PyTorch") -> t
         )[0]
         
         # Clean up the output text to parse the JSON
-        # LLMs sometimes wrap JSON in markdown block ticks (```json ... ```)
         cleaned_output = output_text.strip()
         if cleaned_output.startswith("```json"):
             cleaned_output = cleaned_output[7:]

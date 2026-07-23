@@ -3,6 +3,7 @@ import json
 import hashlib
 from datetime import datetime
 import concurrent.futures
+from utilities.util_json import load_json
 
 # OPTIMIZED: Helper to recursively scan directories natively via scandir
 def _scan_files_fast(path: str):
@@ -62,9 +63,8 @@ def verify_integrity(target_dir: str, snapshot_path: str) -> tuple[bool, dict | 
         return False, None, "Snapshot file does not exist."
         
     try:
-        with open(snapshot_path, 'r', encoding='utf-8') as f:
-            snapshot_data = json.load(f)
-            baseline = snapshot_data.get("files", {})
+        snapshot_data = load_json(snapshot_path, lambda: {})
+        baseline = snapshot_data.get("files", {})
     except Exception as e:
         return False, None, f"Failed to read snapshot: {e}"
 
