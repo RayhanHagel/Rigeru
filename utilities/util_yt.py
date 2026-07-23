@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from utilities.util_os import open_file_in_os
 
 
 def search_youtube(query: str, limit: int = 10) -> tuple[bool, list | str]:
@@ -138,17 +139,3 @@ def download_youtube(
     except Exception as e:
         return False, f"❌ Download error: {str(e)}", None
 
-
-def open_file_in_os(file_path: str):
-    """Opens the downloaded file or folder in the OS file manager."""
-    if not os.path.exists(file_path):
-        return
-    try:
-        if sys.platform == "win32":
-            os.startfile(file_path)
-        elif sys.platform == "darwin":
-            subprocess.call(["open", file_path])
-        else:
-            subprocess.call(["xdg-open", file_path])
-    except Exception as e:
-        print(f"Failed to open {file_path}: {e}")

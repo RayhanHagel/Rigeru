@@ -2,22 +2,12 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 from bs4 import BeautifulSoup
-import streamlit as st
 from utilities.util_network import better_get, get_image_cache
-from utilities.util_persistent import THEMES, FONTS
+from utilities.util_json import load_json
 
 CACHE_FOLDER = os.path.join("cache", "spotify")
 SPOTIFY_CONFIG = os.path.join(CACHE_FOLDER, "spotify_scrobbler.json")
 SPOTIFY_DATA = os.path.join(CACHE_FOLDER, "spotify_data.json")
-
-
-def get_current_theme():
-    current_theme_name = st.session_state.get(
-        "selected_theme", "Nebula (Default)")
-    theme = THEMES.get(current_theme_name, THEMES["Nebula (Default)"])
-    font_choice = st.session_state.get("selected_font", "Serif Mono (Default)")
-    fonts = FONTS.get(font_choice, FONTS["Serif Mono (Default)"])
-    return theme, fonts["SERIF"], fonts["MONO"]
 
 
 def get_default_cover_src():
@@ -38,32 +28,20 @@ def read_config_cache() -> dict:
         "track_limit": 5  # <-- New Default Key
     }
     
-    if os.path.exists(SPOTIFY_CONFIG):    
-        try:
-            with open(SPOTIFY_CONFIG, "r") as file:
-                data = json.load(file)
-                if isinstance(data, dict):
-                    for key, val in default_data.items():
-                        if key not in data:
-                            data[key] = val
-                    return data
-        except Exception:
-            pass
-            
-    os.makedirs(os.path.dirname(SPOTIFY_CONFIG), exist_ok=True)
-    with open(SPOTIFY_CONFIG, 'w') as f:
-        json.dump(default_data, f, indent=4) 
-    return default_data
+    data = load_json(SPOTIFY_CONFIG, lambda: {})
+    if not data:
+        os.makedirs(os.path.dirname(SPOTIFY_CONFIG), exist_ok=True)
+        with open(SPOTIFY_CONFIG, 'w') as f:
+            json.dump(default_data, f, indent=4) 
+        return default_data
 
+    for key, val in default_data.items():
+        if key not in data:
+            data[key] = val
+    return data
 
 def read_data_cache() -> dict:
-    if os.path.exists(SPOTIFY_DATA):
-        try:
-            with open(SPOTIFY_DATA, "r") as file:
-                return json.load(file)
-        except Exception:
-            pass
-    return {}
+    return load_json(SPOTIFY_DATA, lambda: {})
 
 
 def save_config_cache(data: dict):
@@ -84,8 +62,6 @@ def clean_text(element) -> str:
         return ""
     return " ".join(element.get_text(strip=True).replace("\xa0", " ").split())
 
-
-@st.cache_data(persist="disk")
 def get_album_cover(url: str) -> str | None:
     if not url:
         return None

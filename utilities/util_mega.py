@@ -3,7 +3,8 @@ import json
 import base64
 import requests
 from Crypto.Cipher import AES
-import streamlit as st
+
+from utilities.util_network import better_post
 
 # --- MEGA Cryptography Helpers ---
 
@@ -52,8 +53,10 @@ def get_folder_nodes(folder_url: str) -> tuple[list, str, bytes]:
     api_url = f"https://g.api.mega.co.nz/cs?id=0&n={folder_id}"
     payload = [{"a": "f", "c": 1, "r": 1, "ca": 1}]
 
-    # CRITICAL: Added timeout to prevent infinite hangs
-    response = requests.post(api_url, json=payload, timeout=15)
+    # CRITICAL: Using better_post for Tor failover and connection stability
+    response = better_post(api_url, json=payload, timeout=15)
+    if not response:
+        raise Exception("Failed to connect to MEGA API.")
     response_data = response.json()
 
     if isinstance(response_data, int) or not response_data or 'f' not in response_data[0]:
@@ -68,9 +71,10 @@ def get_file_category(filename: str) -> str:
     """Determines the file type based on its decrypted extension."""
     ext = filename.split('.')[-1].lower() if '.' in filename else ''
 
-    if ext in {'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v'}:
+    # Exhaustive lists based on common and obscure formats
+    if ext in {'mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'mpg', 'mpeg', '3gp', '3g2', 'ts', 'vob', 'ogv', 'rm', 'rmvb', 'asf', 'm2ts'}:
         return "🎬 VIDEO"
-    elif ext in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'svg'}:
+    elif ext in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'svg', 'heic', 'heif', 'raw', 'cr2', 'nef', 'orf', 'sr2', 'ico', 'psd', 'ai', 'eps'}:
         return "🖼️ IMAGE"
     elif ext in {'pdf', 'doc', 'docx', 'txt', 'rtf', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'epub'}:
         return "📄 DOCUMENT"
@@ -84,23 +88,20 @@ def get_file_category(filename: str) -> str:
 # --- Main Processor ---
 
 
-@st.cache_data(show_spinner=False)
-def process_mega_link(folder_link: str, min_size_mb: int, max_size_mb: int) -> tuple[str, str, str, str]:
+
+def process_mega_link(folder_link: str, max_image_size_mb: int, max_video_size_mb: int, max_other_size_mb: int) -> dict:
     """
-    Processes the mega link and returns formatted strings for the UI.
-    Returns: (output_raw, output_named, total_size_string, output_logs)
+    Processes the mega link and returns structured stats.
     """
     if not folder_link:
-        return "Please enter a valid link.", "", "0.00 GB (0 MB)", ""
-
-    if min_size_mb > max_size_mb:
-        return "Error: Minimum size cannot be greater than Maximum size.", "", "0.00 GB (0 MB)", ""
+        return {"error": "Please enter a valid link."}
 
     try:
         nodes, folder_id, master_key = get_folder_nodes(folder_link)
 
-        min_size_bytes = min_size_mb * 1024 * 1024
-        max_size_bytes = max_size_mb * 1024 * 1024
+        max_img_bytes = max_image_size_mb * 1024 * 1024
+        max_vid_bytes = max_video_size_mb * 1024 * 1024
+        max_oth_bytes = max_other_size_mb * 1024 * 1024
 
         seen_sizes = set()
         raw_links = []
@@ -108,6 +109,7 @@ def process_mega_link(folder_link: str, min_size_mb: int, max_size_mb: int) -> t
         logs = []
         skipped_logs = []
         total_selection_bytes = 0
+        original_size_bytes = 0
 
         for node in nodes:
             if node.get('t') != 0:  # Skip folders
@@ -116,12 +118,7 @@ def process_mega_link(folder_link: str, min_size_mb: int, max_size_mb: int) -> t
             node_id = node['h']
             file_size = node['s']
             file_size_mb = file_size / (1024 * 1024)
-
-            # --- 1. Min/Max Size Filter ---
-            if not (min_size_bytes <= file_size <= max_size_bytes):
-                skipped_logs.append(
-                    f"Skipped (Size Out of Bounds): Node {node_id} ({file_size_mb:.2f} MB)")
-                continue
+            original_size_bytes += file_size
 
             # --- 2. Decrypt File Name ---
             file_name = "Unknown_Encrypted_File"
@@ -138,6 +135,18 @@ def process_mega_link(folder_link: str, min_size_mb: int, max_size_mb: int) -> t
                 file_name = f"Encrypted_File_{node_id}"
 
             category = get_file_category(file_name)
+
+            # --- 2.5 Size Filter ---
+            limit_bytes = max_oth_bytes
+            if category == "🎬 VIDEO":
+                limit_bytes = max_vid_bytes
+            elif category == "🖼️ IMAGE":
+                limit_bytes = max_img_bytes
+
+            if file_size > limit_bytes:
+                skipped_logs.append(
+                    f"Skipped (Size Out of Bounds - {category}): Node {node_id} ({file_size_mb:.2f} MB)")
+                continue
 
             # --- 3. Duplicate Removal ---
             if file_size in seen_sizes:
@@ -165,17 +174,16 @@ def process_mega_link(folder_link: str, min_size_mb: int, max_size_mb: int) -> t
         output_named = "\n".join(formatted_links_with_names)
         output_logs = "\n".join(logs + ["\n--- SKIPPED ---"] + skipped_logs)
 
-        total_gb = total_selection_bytes / (1024 ** 3)
-        total_mb = total_selection_bytes / (1024 ** 2)
-        total_size_string = f"{total_gb:.2f} GB ({total_mb:,.2f} MB)"
-
-        if not raw_links:
-            output_raw = "No files matched your criteria."
-            output_named = "No files matched your criteria."
-
-        return output_raw, output_named, total_size_string, output_logs
+        return {
+            "raw": output_raw,
+            "named": output_named,
+            "logs": output_logs,
+            "original_size": original_size_bytes,
+            "cleaned_size": total_selection_bytes,
+            "error": None
+        }
 
     except requests.exceptions.Timeout:
-        return "Error: MEGA.nz API timed out. Try again later.", "", "0.00 GB (0 MB)", ""
+        return {"error": "Error: MEGA.nz API timed out. Try again later."}
     except Exception as e:
-        return f"Error: {str(e)}", "", "0.00 GB (0 MB)", ""
+        return {"error": f"Error: {str(e)}"}

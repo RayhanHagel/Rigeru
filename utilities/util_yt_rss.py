@@ -4,6 +4,7 @@ import re
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
+from utilities.util_json import load_json
 
 folder_location = os.path.join("cache", "youtube")
 DB_FILE = os.path.join(folder_location, "yt_channels.json")
@@ -15,13 +16,7 @@ def _ensure_db():
 def load_tracked_channels() -> list:
     """Loads tracked channels from the local JSON file."""
     _ensure_db()
-    if not os.path.exists(DB_FILE):
-        return []
-    try:
-        with open(DB_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return load_json(DB_FILE, lambda: [])
 
 def save_tracked_channels(channels: list):
     """Saves tracked channels to the local file."""
@@ -32,13 +27,7 @@ def save_tracked_channels(channels: list):
 def load_feed_cache() -> dict:
     """Loads the pre-fetched RSS data so the UI doesn't freeze on load."""
     _ensure_db()
-    if not os.path.exists(CACHE_FILE):
-        return {}
-    try:
-        with open(CACHE_FILE, 'r') as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return load_json(CACHE_FILE, lambda: {})
 
 def save_feed_cache(data: dict):
     """Saves the fully parsed feed data to JSON for instant loading."""

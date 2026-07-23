@@ -1,127 +1,69 @@
-from contextlib import asynccontextmanager, contextmanager
-
-# Standardized User Agent to help bypass basic blocks
-DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
-@asynccontextmanager
-async def get_async_stealth_page(headless: bool = True, viewport: dict = None):
-    """
-    Yields an asynchronous Playwright page injected with stealth scripts 
-    and evasion arguments to bypass anti-bot systems.
-    """
-    try:
-        from playwright.async_api import async_playwright
-        from playwright_stealth import Stealth
-    except ImportError:
-        raise ImportError("Missing dependencies. Run: pip install playwright playwright-stealth")
-
-    if viewport is None:
-        viewport = {"width": 1920, "height": 1080}
+def get_proxy_html(url: str) -> str:
+    from bs4 import BeautifulSoup
+    from utilities.util_scraper import _run_node_scraper
+    
+    payload = {
+        "action": "proxy",
+        "url": url
+    }
+    res = _run_node_scraper(payload)
+    if not res.get("success"):
+        raise RuntimeError(f"Failed to fetch proxy HTML: {res.get('error')}")
         
-    async with Stealth().use_async(async_playwright()) as p:
-        browser = await p.chromium.launch(
-            headless=headless,
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process',
-                f'--window-size={viewport["width"]},{viewport["height"]}',
-                '--disable-infobars'
-            ]
-        )
-
-        context = await browser.new_context(
-            user_agent=DEFAULT_UA,
-            viewport=viewport,
-            device_scale_factor=1,
-            has_touch=False,
-            ignore_https_errors=True
-        )
-
-        # Additional stealth override
-        await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    html_content = res.get("html")
         
-        page = await context.new_page()
-        try:
-            yield page
-        finally:
-            await browser.close()
-
-@asynccontextmanager
-async def get_async_stealth_browser(headless: bool = True, viewport: dict = None):
-    """
-    Yields the raw Playwright browser instance.
-    This allows us to spin up isolated "Incognito" contexts for every item.
-    """
-    try:
-        from playwright.async_api import async_playwright
-        from playwright_stealth import Stealth
-    except ImportError:
-        raise ImportError("Missing dependencies. Run: pip install playwright playwright-stealth")
-
-    if viewport is None:
-        viewport = {"width": 1920, "height": 1080}
+    # Parse and inject logic
+    soup = BeautifulSoup(html_content, "lxml")
+    
+    # Inject <base> tag to fix relative assets
+    base_tag = soup.new_tag("base", href=url)
+    if soup.head:
+        soup.head.insert(0, base_tag)
+    else:
+        head_tag = soup.new_tag("head")
+        head_tag.insert(0, base_tag)
+        soup.insert(0, head_tag)
         
-    async with Stealth().use_async(async_playwright()) as p:
-        browser = await p.chromium.launch(
-            headless=headless,
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process',
-                f'--window-size={viewport["width"]},{viewport["height"]}',
-                '--disable-infobars'
-            ]
-        )
+    # Inject interactive selector JS
+    script_tag = soup.new_tag("script")
+    script_tag.string = """
+        document.addEventListener('mouseover', function(e) {
+            if(e.target === document.body) return;
+            e.target.style.outline = '2px solid #a855f7';
+            e.target.style.backgroundColor = 'rgba(168,85,247,0.1)';
+            e.stopPropagation();
+        });
+        document.addEventListener('mouseout', function(e) {
+            if(e.target === document.body) return;
+            e.target.style.outline = '';
+            e.target.style.backgroundColor = '';
+        });
+        document.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let path = [];
+            let node = e.target;
+            while(node && node.nodeType === Node.ELEMENT_NODE) {
+                let selector = node.nodeName.toLowerCase();
+                if(node.id) {
+                    selector += '#' + node.id;
+                    path.unshift(selector);
+                    break;
+                } else {
+                    let sib = node, nth = 1;
+                    while(sib = sib.previousElementSibling) nth++;
+                    selector += ":nth-child(" + nth + ")";
+                }
+                path.unshift(selector);
+                node = node.parentNode;
+            }
+            let finalSelector = path.join(' > ');
+            window.parent.postMessage({ type: 'SELECTOR_PICKED', selector: finalSelector }, '*');
+        }, true);
+    """
+    if soup.body:
+        soup.body.append(script_tag)
+    else:
+        soup.append(script_tag)
         
-        try:
-            yield browser
-        finally:
-            await browser.close()
-
-@contextmanager
-def get_sync_page(headless: bool = True, viewport: dict = None):
-    """
-    Yields a standard, synchronous Playwright page for basic scraping tasks.
-    """
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        raise ImportError("Missing dependencies. Run: pip install playwright")
-
-    if viewport is None:
-        viewport = {"width": 1280, "height": 800}
-        
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=headless)
-        context = browser.new_context(
-            user_agent=DEFAULT_UA,
-            viewport=viewport
-        )
-        page = context.new_page()
-        try:
-            yield page
-        finally:
-            browser.close()
-
-async def smooth_scroll_to_bottom(page, distance: int = 800, delay_ms: int = 200):
-    """
-    Injects a JavaScript loop into the page to smoothly scroll to the bottom.
-    Highly effective for triggering lazy-loaded images or infinite scrolling elements.
-    """
-    await page.evaluate(f"""async () => {{
-        await new Promise((resolve) => {{
-            let totalHeight = 0;
-            const distance = {distance};
-            const timer = setInterval(() => {{
-                const scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-
-                if (totalHeight >= scrollHeight) {{
-                    clearInterval(timer);
-                    resolve();
-                }}
-            }}, {delay_ms});
-        }});
-    }}""")
+    return str(soup)

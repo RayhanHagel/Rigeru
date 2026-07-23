@@ -1,10 +1,13 @@
 import io
+import os
 from PIL import Image
 
-# Import rembg and cache it to avoid reloading the model on every Streamlit rerun
-import streamlit as st
+# Set U2NET_HOME so rembg downloads models to cache/models/
+os.environ["U2NET_HOME"] = os.path.join(os.getcwd(), "cache", "models")
 
-@st.cache_resource(show_spinner=False)
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
 def load_rembg_session():
     """Loads the rembg model session into cache for faster processing."""
     try:

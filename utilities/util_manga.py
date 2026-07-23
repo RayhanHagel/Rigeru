@@ -3,59 +3,36 @@ import shutil
 import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urljoin
-import streamlit as st
 import time
 
 # Import shared utilities
 from utilities.util_network import better_get, better_post
 from utilities.util_json import load_json, save_json
 
-
-def save_config(key: str = None, value: dict = None, replace_data: bool = False):
-    config_path = "./cache/reading_library.json"
-
-    if not replace_data and key is not None and value is not None:
-        if key in st.session_state.get('manga_cache', {}):
-            if isinstance(st.session_state.manga_cache[key], dict) and isinstance(value, dict):
-                st.session_state.manga_cache[key].update(value)
-            else:
-                st.session_state.manga_cache[key] = value
-        else:
-            st.session_state.manga_cache[key] = value
-
-    save_json(config_path, st.session_state.get('manga_cache', {}))
-
-
-def refresh_library(title: str = None) -> None:
-    cache = st.session_state.get('manga_cache', {})
-    if title is None:
-        for chapter_title, value in cache.items():
-            chapter_json = None
+def refresh_library_standalone(cache: dict) -> tuple[dict, list]:
+    """Standalone version of refresh_library that doesn't depend on st.session_state.
+    Takes and returns the cache dict directly. Returns (updated_cache, results_log)."""
+    results = []
+    for chapter_title, value in cache.items():
+        chapter_json = None
+        try:
             if value.get("website") == "asurascans.com/":
                 chapter_json = asura_get_chapter(chapter_url=value["main_url"], website=value["website"])
             elif value.get("website") == "mangadex.org/":
                 chapter_json = mangadex_get_chapter(chapter_url=value["main_url"], website=value["website"])
-            
-            if chapter_json is None:
-                st.toast(body=f":red[Failed to refresh library for {chapter_title}]", icon="⚠️")
-            else:
-                save_config(key=chapter_title, value=chapter_json)
-                st.toast(body=f":blue[Refreshed library for **{chapter_title}**!]", icon="🔄")
-    else:
-        chapter_json = None
-        if cache.get(title, {}).get("website") == "asurascans.com/":
-            chapter_json = asura_get_chapter(
-                chapter_url=cache[title]["main_url"],
-                website=cache[title]["website"]
-            )
-        elif cache.get(title, {}).get("website") == "mangadex.org/":
-            chapter_json = mangadex_get_chapter(chapter_url=cache[title]["main_url"], website=cache[title]["website"])
-            
+        except Exception as e:
+            results.append({"title": chapter_title, "success": False, "error": str(e)})
+            continue
+
         if chapter_json is None:
-            st.toast(body=f":red[Failed to refresh library for {title}]", icon="⚠️")
+            results.append({"title": chapter_title, "success": False, "error": "Failed to fetch"})
         else:
-            save_config(key=title, value=chapter_json)
-            st.toast(body=f":blue[Refreshed library for **{title}**!]", icon="🔄")
+            if isinstance(cache[chapter_title], dict) and isinstance(chapter_json, dict):
+                cache[chapter_title].update(chapter_json)
+            else:
+                cache[chapter_title] = chapter_json
+            results.append({"title": chapter_title, "success": True})
+    return cache, results
 
 
 def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
@@ -166,7 +143,8 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
             local_image_path = get_image_cache(
                 url=cover_url, 
                 crop=True,
-                use_default_headers=False
+                use_default_headers=False,
+                headers={"User-Agent": "MangaApp/1.0"}
             )
 
         return {
@@ -204,11 +182,6 @@ def search_titles(websites: list, title: str) -> list:
                 search_results.extend(search_response.keys())
                 combined_results.update(search_response)
 
-    if not search_results or not combined_results:
-        st.session_state.search_lookup = {}
-        return []
-
-    st.session_state.search_lookup = combined_results
     return search_results
 
 def search_titles_asura(title: str) -> dict | None:
@@ -221,7 +194,10 @@ def search_titles_asura(title: str) -> dict | None:
         if not response_json:
             return None
 
-        search_result_clean = {f"🌑 {item['title']}": f"https://asurascans.com/comics/{item['slug']}" for item in response_json}
+        search_result_clean = {
+            f"🌑 {item['title']}": f"https://asurascans.com/comics/{item['slug']}||{item.get('cover', '')}" 
+            for item in response_json
+        }
         return search_result_clean if search_result_clean else None
     except Exception:
         return None
@@ -326,7 +302,7 @@ def download_single_image(args: tuple) -> bool:
         duration = int((time.time() - start_time) * 1000)
         success = False
         
-    if "mangadex.org" not in url:
+    if "mangadex.network" in url:
         report_payload = {
             "url": url,
             "success": success,
@@ -345,25 +321,24 @@ def download_single_image(args: tuple) -> bool:
 
     return success
 
-def change_chapter_read(title: str, chapter_read: int) -> None:
-    save_config(key=title, value={"chapter_read": chapter_read})
-
 
 async def get_asura_images(url: str) -> list:
     """Uses centralized Playwright utility to scroll, then BeautifulSoup to extract image URLs."""
     from bs4 import BeautifulSoup
-    from utilities.util_playwright import get_async_stealth_page, smooth_scroll_to_bottom
+    from utilities.util_scraper import _run_node_scraper
     
     try:
-        async with get_async_stealth_page() as page:
-            await page.route(
-                "**/*", 
-                lambda route: route.abort() if route.request.resource_type == "image" else route.continue_()
-            )
-            await page.goto(url, wait_until="domcontentloaded", timeout=60000)
-            await smooth_scroll_to_bottom(page, distance=800, delay_ms=200)
-            await asyncio.sleep(1.5)
-            html_content = await page.content()
+        payload = {
+            "action": "manga_asura",
+            "url": url
+        }
+        res = await asyncio.to_thread(_run_node_scraper, payload)
+        
+        if not res.get("success"):
+            print(f"Scraping Error: {res.get('error')}")
+            return []
+            
+        html_content = res.get("html")
 
         soup = BeautifulSoup(html_content, "lxml")
         image_urls = []
@@ -429,6 +404,8 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     if website_type == "mangadex.org/":
         image_urls = get_mangadex_images(chapter_url)
     else:
+        if os.name == 'nt':
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
         image_urls = asyncio.run(get_asura_images(chapter_url))
     if not image_urls:
         return False
@@ -437,8 +414,8 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
         (url, os.path.join(chapter_dir, f"{str(idx).zfill(4)}.jpg"))
         for idx, url in enumerate(image_urls)
     ]
-
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    max_threads = min(20, len(download_tasks)) if download_tasks else 1
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = {executor.submit(download_single_image, task): task for task in download_tasks}
         for future in as_completed(futures):
             future.result()
@@ -472,23 +449,57 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     finally:
         shutil.rmtree(chapter_dir, ignore_errors=True)
 
-    cache_entry = st.session_state.get('manga_cache', {}).get(title, {})
+    cache = read_cache()
+    cache_entry = cache.get(title, {})
     downloaded = cache_entry.get("chapter_downloaded", [])
     if chapter_url not in downloaded:
         downloaded.append(chapter_url)
-        save_config(key=title, value={"chapter_downloaded": downloaded})
+        cache_entry["chapter_downloaded"] = downloaded
+        cache[title] = cache_entry
+        save_json("./cache/reading_library.json", cache)
 
     return True
 
-
-def sync_and_save(new_layout: list):
-    sorted_layout = sorted(new_layout, key=lambda item: (item['y'], item['x']))
-    new_order_indices = [int(item['i']) for item in sorted_layout]
-    current_cache = st.session_state.get('temp_manga_cache', {})
-    keys = list(current_cache.keys())
+def get_read_progress(title: str, total_chapters: int, cache: dict) -> float:
+    """Helper for FastAPI endpoints to calculate progress."""
+    entry = cache.get(title, {})
+    if not entry:
+        return 0.0
+    latest = float(entry.get("latest_chapter", 0) or 0)
+    current = float(entry.get("current_chapter", 0) or 0)
     
-    reordered = {keys[i]: current_cache[keys[i]] for i in new_order_indices if i < len(keys)}
+    if latest <= 0 or current <= 0:
+        return 0.0
+        
+    return min((current / latest) * 100, 100.0)
 
-    st.session_state.temp_manga_cache = reordered
-    st.session_state.manga_cache = reordered
-    save_config(replace_data=True)
+def get_manga_library_data() -> dict:
+    """Returns the manga library cache data."""
+    return read_cache()
+
+def sort_manga_library_data(keys: list[str]) -> dict:
+    """Reorders the manga library based on the provided list of keys."""
+    cache = read_cache()
+    reordered = {k: cache[k] for k in keys if k in cache}
+    save_json("./cache/reading_library.json", reordered)
+    return reordered
+
+def update_manga_library_progress(title: str, chapter_read: int) -> int:
+    """Updates the chapter_read for a given manga title."""
+    cache = read_cache()
+    if title not in cache:
+        raise ValueError(f"Title '{title}' not found in library.")
+    
+    new_progress = max(0, chapter_read)
+    cache[title]["chapter_read"] = new_progress
+    save_json("./cache/reading_library.json", cache)
+    return new_progress
+
+def delete_manga_from_library_data(title: str) -> None:
+    """Deletes a manga from the library cache."""
+    cache = read_cache()
+    if title in cache:
+        del cache[title]
+        save_json("./cache/reading_library.json", cache)
+    else:
+        raise ValueError("Title not found.")

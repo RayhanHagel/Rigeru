@@ -1,5 +1,5 @@
 import os
-import streamlit as st
+from functools import lru_cache
 
 _MODEL_CONFIG = {
     2: {"weights": "RealESRGAN_x2plus.pth", "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x2plus.pth", "num_block": 23},
@@ -8,7 +8,7 @@ _MODEL_CONFIG = {
 }
 
 
-@st.cache_resource(show_spinner=False)
+@lru_cache(maxsize=4)
 def _load_upscale_model(scale: int, device: str):
     import torch
     import urllib.request

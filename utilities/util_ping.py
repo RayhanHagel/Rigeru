@@ -10,6 +10,10 @@ DNS_PRESETS = {
     "OpenDNS": {"primary": "208.67.222.222", "secondary": "208.67.220.220", "ipv6_primary": "2620:119:35::35"}
 }
 
+def get_dns_presets() -> list[str]:
+    """Returns a list of available DNS preset names."""
+    return list(DNS_PRESETS.keys())
+
 # OPTIMIZED: Moved regex compilations to global scope to prevent recompilation in loops
 RE_WIN_AVG = re.compile(r'(?:Average|Rata-rata)[^\d]*(\d+)', re.IGNORECASE)
 RE_WIN_TIME = re.compile(r'time[=<](\d+)', re.IGNORECASE)
@@ -72,10 +76,12 @@ def get_ping_latency(host: str, ipv6: bool = False) -> float:
         
     return float('inf')
 
-def check_all_dns_speeds() -> dict:
+def check_all_dns_speeds(preset_names: list[str] = None) -> dict:
     """Pings the primary IP of preset DNS servers and returns their latency for IPv4 and IPv6."""
     results = {}
     for name, ips in DNS_PRESETS.items():
+        if preset_names and name not in preset_names:
+            continue
         lat_v4 = get_ping_latency(ips["primary"])
         lat_v6 = get_ping_latency(ips["ipv6_primary"], ipv6=True)
         results[name] = {"ipv4": lat_v4, "ipv6": lat_v6}

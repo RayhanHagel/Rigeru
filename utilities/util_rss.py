@@ -2,7 +2,7 @@ import os
 import feedparser
 import time
 from datetime import datetime
-import streamlit as st
+
 import re
 import xml.etree.ElementTree as ET
 import concurrent.futures
@@ -20,8 +20,9 @@ def load_disk_cache():
     """Loads articles from the JSON file and returns the data + modification time."""
     if os.path.exists(DATA_CACHE_FILE):
         try:
-            with open(DATA_CACHE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f), os.path.getmtime(DATA_CACHE_FILE)
+            mtime = os.path.getmtime(DATA_CACHE_FILE)
+            data = load_json(DATA_CACHE_FILE, lambda: [])
+            return data, mtime
         except Exception as e:
             print(f"Failed to read cache: {e}")
             return [], 0.0
@@ -68,7 +69,6 @@ def fetch_feed_data(url: str):
     # Fallback to feedparser's internal downloader if the custom request fails
     return feedparser.parse(url)
 
-@st.cache_data(ttl=900)
 def fetch_all_feeds(feed_urls: list) -> list:
     """Fetches and aggregates articles from all subscribed RSS feeds."""
     aggregated_entries = []
@@ -155,7 +155,6 @@ def parse_opml_links(opml_text: str) -> dict:
                 
     return feeds
 
-@st.cache_data(show_spinner=False)
 def fetch_remote_recommendations(url: str) -> dict:
     """Fetches and parses a remote Markdown or OPML file via URL."""
     try:
@@ -170,7 +169,6 @@ def fetch_remote_recommendations(url: str) -> dict:
         print(f"Failed to fetch remote feeds: {e}")
     return {}
 
-@st.cache_data(ttl=300, show_spinner=False)
 def preview_rss_feed(url: str) -> tuple[bool, str | dict]:
     """Fetches a single RSS feed to preview its content before subscribing."""
     try:

@@ -1,8 +1,9 @@
 import os
 import secrets
 import time
-import requests
+import urllib.parse
 from utilities.util_json import load_json, save_json
+from utilities.util_network import better_get, better_post
 
 # Route the DB files to the cache folder
 CACHE_DIR = os.path.join(".", "cache", "malsync")
@@ -12,7 +13,7 @@ MANGA_DB_FILE = os.path.join(CACHE_DIR, "manga_tracking.json") # <-- NEW
 OAUTH_FILE = os.path.join(CACHE_DIR, "mal_oauth.json")
 CRED_FILE = os.path.join(CACHE_DIR, "mal_credentials.json")
 
-REDIRECT_URI = "http://localhost:8501/malsync"
+REDIRECT_URI = "http://localhost:3000/media-entertainment/malsync"
 
 
 # ─────────────────────────────────────────────
@@ -84,9 +85,9 @@ def exchange_code_for_token(code: str) -> tuple[bool, str]:
         data["client_secret"] = client_secret
     
     try:
-        response = requests.post("https://myanimelist.net/v1/oauth2/token", data=data)
+        response = better_post("https://myanimelist.net/v1/oauth2/token", payload=data)
         
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             token_data = response.json()
             oauth_state.update({
                 "access_token": token_data["access_token"],
@@ -130,8 +131,8 @@ def get_valid_token() -> str | None:
         if client_secret:
             data["client_secret"] = client_secret
             
-        response = requests.post("https://myanimelist.net/v1/oauth2/token", data=data)
-        if response.status_code == 200:
+        response = better_post("https://myanimelist.net/v1/oauth2/token", payload=data)
+        if response and response.status_code == 200:
             token_data = response.json()
             oauth_state.update({
                 "access_token": token_data["access_token"],
@@ -217,9 +218,9 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
     try:
         # --- SYNC ANIME ---
         url_anime = "https://api.myanimelist.net/v2/users/@me/animelist?fields=list_status,num_episodes,main_picture&limit=1000"
-        resp_anime = requests.get(url_anime, headers=headers)
-        if resp_anime.status_code != 200:
-            return False, f"Anime Sync Error: {resp_anime.json()}"
+        resp_anime = better_get(url_anime, headers=headers)
+        if not resp_anime or resp_anime.status_code != 200:
+            return False, f"Anime Sync Error: {resp_anime.json() if resp_anime else 'Network Error'}"
             
         anime_data = resp_anime.json().get("data", [])
         anime_library = load_anime_list()
@@ -249,9 +250,9 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
 
         # --- SYNC MANGA ---
         url_manga = "https://api.myanimelist.net/v2/users/@me/mangalist?fields=list_status,num_chapters,main_picture&limit=1000"
-        resp_manga = requests.get(url_manga, headers=headers)
-        if resp_manga.status_code != 200:
-            return False, f"Manga Sync Error: {resp_manga.json()}"
+        resp_manga = better_get(url_manga, headers=headers)
+        if not resp_manga or resp_manga.status_code != 200:
+            return False, f"Manga Sync Error: {resp_manga.json() if resp_manga else 'Network Error'}"
             
         manga_data = resp_manga.json().get("data", [])
         manga_library = load_manga_list()

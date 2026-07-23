@@ -1,131 +1,72 @@
-<h1 align="center">RIGERU PROJECT</h1>
-<p align="center">A streamlit application that I made for fun.</p>
+# Rigeru - Comprehensive Developer & Media Toolbox
 
-## Features
-The application is divided into several powerful modules:
-1. Files & Documents
-    - Data Diff
-    - Document Search
-    - Excel Cleaner
-    - Expense Tracker
-    - File Organizer
-    - Hash Integrity
-    - Math LaTeX
-    - PDF Redact
+A powerful, all-in-one locally hosted dashboard that integrates a Next.js frontend with a robust FastAPI backend. It features dozens of utilities ranging from media processing (like machine translation and image upscaling) to system monitoring, file conversions, and web scraping—all easily accessible through a unified web interface.
 
-2. Media & Entertainment
-    - MAL Sync
-    - Manga Library
-    - Manga Search
-    - Spotify Listen
-    - Twitch Watch
+## 🚀 Features
 
-3. Media & Vision Processing
-    - Background Remove
-    - Color Picker
-    - Depth Estimation
-    - Face Blur
-    - Image Upscaler
-    - Media Compressor
-    - Object Detect
-    - Vision Censor
+The toolbox is organized into several distinct categories:
 
-4. Subtitles & Metadata
-    - EXIF Remover
-    - File Timestamps
-    - Media Tags
-    - Subtitle Fetcher
-    - Subtitle Merger
-    - Subtitle Studio
+### 📁 Files & Documents
+- **CV Builder**: Build and generate professional resumes.
+- **Excel Cleaner**: Sanitize and process spreadsheet data.
+- **Expense Tracker**: Manage and visualize your spending.
+- **File Organizer**: Sort and organize clutter into coherent directories.
+- **Hash Integrity**: Verify file integrity using cryptographic hashes.
+- **Link Cleaner**: Remove tracking parameters from URLs.
+- **Math LaTeX**: Render mathematical equations.
+- **PDF Studio**: A comprehensive suite for PDF conversions, editing, and compression.
 
-5. System & Network
-    - Package Managers
-    - Environment Variables
-    - Network Monitor
-    - Ping Test
-    - System Monitor:
-    - Services
+### 🎮 Media & Entertainment
+- **MAL Sync**: Synchronize anime/manga lists with MyAnimeList.
+- **Manga Library & Reader**: Browse, search, and read your local manga collection.
+- **Spotify Scrobbler**: Track and manage listening habits.
+- **Twitch Watch**: Integrated Twitch viewing experience.
 
-6. Web Downloads
-    - Currency View
-    - Price Monitor
-    - RSS Manager
-    - Spotify Download
-    - Web Scraper
-    - YouTube Download
-    - YouTube RSS
+### 👁️ Media & Vision Processing
+- **AI Machine Translation**: High-speed, local translation using NLLB (CTranslate2).
+- **Background Remover**: Automatically strip backgrounds from images.
+- **Code to Image**: Generate beautiful snippets of your code.
+- **Face Blur & Vision Censor**: Automate privacy masks on images and video.
+- **Image Upscaler**: AI-driven resolution enhancement.
+- **Depth Estimation & Object Detect**: Computer vision analysis tools.
 
-## Prerequisite
-If you're ISP blocks some of the websites needed, then TOR might be needed. To install TOR via Scoop, run this command below.
+### 📝 Subtitles & Metadata
+- **EXIF Remover**: Strip metadata from images for privacy.
+- **Media Tags**: Edit audio/video metadata.
+- **Subtitle Fetcher & Merger**: Automatically download and merge subtitles into video files.
+- **Transcriber**: Audio-to-text transcriptions.
+
+### ⚙️ System & Network
+- **Docker Manager**: Monitor and manage local containers.
+- **Environment Variables**: Edit system/app configuration easily.
+- **Package Manager**: GUI wrapper for choco, scoop, and winget.
+- **System Monitor & Services**: Real-time stats on CPU, RAM, and background services.
+- **Ping Test**: Network latency analyzer.
+
+### 🌐 Web & Downloads
+- **Currency & Price Monitor**: Track exchange rates and product prices.
+- **RSS Reader**: Aggregate feeds (including specialized YouTube RSS).
+- **Visual Scraper**: Playwright-powered graphical web scraper.
+- **Spotify & YouTube Downloaders**: Download media directly for offline access.
+
+---
+
+## 🛠️ Getting Started (Cross-Platform)
+
+The project requires **Python 3.8+** and **Node.js** installed on your system.
+
+We have included an automated startup script that handles:
+1. Creating a Python virtual environment (`.venv`).
+2. Installing all backend Python dependencies.
+3. Installing all frontend Node.js dependencies (`node_modules`).
+4. Concurrently launching the FastAPI backend and Next.js frontend.
+
+
+### Manual Execution (Any OS)
+If you prefer to run the setup script manually through Python:
 ```bash
-    scoop bucket add extras
-    scoop install extras/tor-browser
+python start.py
 ```
+*(Use `python3` on macOS/Linux if `python` is not aliased).*
 
-## How to Install
-
-### 1.) Clone repository
-```bash
-    git clone https://github.com/RayhanHagel/Rigeru.git
-```
-
-### 2.) Create Virtual Environment (Python 3.11)
-```bash
-    uv venv .venv --python 3.11
-```
-
-### 3.) Activate Virtual Enviroment
-- For MacOS
-```bash
-    source .venv/bin/activate
-```
-
-- For Windows (Powershell)
-```bash
-    .venv\Scripts\Activate.ps1
-```
-
-- For Windows (Command Prompt)
-```bash
-    .venv\Scripts\activate.bat
-```
-
-### 4.) Install Required Packages
-```bash
-    uv pip install -r requirements.txt
-```
-
-### 5.) Apply Hot Fixes
-```bash
-    <FolderPath>.venv\Scripts\python.exe <FolderPath>/patches/config_toml.py
-    <FolderPath>.venv\Scripts\python.exe <FolderPath>/patches/streamlit-elements.py
-```
-
-## Running the Script
-Simply run this command below in the terminal.
-```bash
-    streamlit run main.py
-```
-
-## To-do List
-- [ ] Fully remove tkinter.
-- [ ] Fix issue regarding the st.DataFrame theme style.
-- [ ] Save the chosen theme and fonts to the settings cache.
-- [ ] Fix utilities: Math to Latex, Receipt Scanner, MalSync, Spotify Listen, Spotify Download.
-- [ ] Apply lazy loading for instant streamlit load.
-- [ ] Move twitch_cache read and manga_cache read to the concerning page rather in the main page.
-- [ ] Make Document Studio UI better (especially on the drag and drop ui).
-- [ ] Maybe refactor codes? Not sure tho.
-
-
-## QnA
-1. What if I want to modify the project myself?
-> Sure, go ahead since the license of this project is under MIT license.
-
-2. What other questions are there here?
-> I dont know, I'll just leave this here as a placeholder.
-
-
-## License
-The entire code in this repository is licensed under the [MIT](https://mit-license.org/) license.
-
+Once started, the backend API will run on `http://127.0.0.1:8000` and the web interface will automatically be available at `http://localhost:3000`.

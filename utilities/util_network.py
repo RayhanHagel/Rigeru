@@ -8,99 +8,109 @@ import hashlib
 from PIL import Image, ImageOps, UnidentifiedImageError
 from io import BytesIO
 
+import json
+import urllib.request
+from urllib3.util import connection
 
-STATIC_DIR = os.path.join(os.getcwd(), "static", "image_cache")
+STATIC_DIR = os.path.join("static", "image_cache")
 os.makedirs(STATIC_DIR, exist_ok=True)
 
-
 DEFAULT_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
+# ==============================================================================
+# Cloudflare DNS-over-HTTPS (DoH) Monkeypatch for urllib3 / requests
+# This intercepts all socket connections made by requests and resolves
+# the hostname via Cloudflare DoH, completely bypassing ISP DNS blocking.
+# ==============================================================================
+_orig_create_connection = connection.create_connection
 
-def is_tor_running(port: int = 9050) -> bool:
-    """Checks if the Tor SOCKS proxy is currently listening on the specified port."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(1)
-        try:
-            return s.connect_ex(('127.0.0.1', port)) == 0
-        except Exception:
-            return False
+def resolve_doh(hostname):
+    if hostname.replace('.', '').isdigit():
+        return hostname
+    try:
+        req = urllib.request.Request(
+            f'https://cloudflare-dns.com/dns-query?name={hostname}&type=A',
+            headers={'Accept': 'application/dns-json'}
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read())
+            if 'Answer' in data:
+                for answer in data['Answer']:
+                    if answer['type'] == 1: # A record (IPv4)
+                        return answer['data']
+    except Exception as e:
+        print(f"DoH resolution failed for {hostname}: {e}")
+    return hostname
 
+def patched_create_connection(address, *args, **kwargs):
+    host, port = address
+    ip = resolve_doh(host)
+    return _orig_create_connection((ip, port), *args, **kwargs)
 
-def start_tor_background():
-    """Starts Tor in a background thread and waits for it to bootstrap."""
-    def run_tor():
-        try:
-            # We route stdout/stderr to DEVNULL to prevent Tor logs from spamming your Streamlit console
-            subprocess.run(["tor"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except FileNotFoundError:
-            print("ERROR: 'tor' executable not found in system PATH.")
-    
-    print("Tor not detected. Booting Tor in a background thread...")
-    tor_thread = threading.Thread(target=run_tor, daemon=True)
-    tor_thread.start()
+connection.create_connection = patched_create_connection
+# ==============================================================================
 
-    # Wait up to 15 seconds for Tor to establish its connection circuit
-    for _ in range(15):
-        if is_tor_running():
-            print("Tor successfully connected and is ready!")
-            return True
-        time.sleep(1)
-    
-    print("Tor failed to start within the timeout period.")
-    return False
+from utilities.util_tor import is_tor_running, start_tor_background
 
-
-def better_get(url: str, params: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = False) -> requests.Response | None:
+def better_get(url: str, params: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = False, force_tor: bool = False) -> requests.Response | None:
     """
-    Robust GET request. Tries a normal connection multiple times first. 
-    If blocked or failed, automatically boots Tor and retries through the proxy.
+    Robust GET request. Uses Cloudflare DoH natively to bypass DNS blocking.
+    Falls back to Tor if DoH fails (e.g. SNI blocking by ISP).
     """
     req_headers = {**DEFAULT_HEADERS, **(headers or {})} if use_default_headers else (headers or {})
     
-    # Try normal request (No proxy) with retries
-    for attempt in range(retries):
-        try:
-            response = requests.get(url, params=params, headers=req_headers, timeout=timeout)
-            if response.status_code == 200:
-                return response
-            else:
-                print(f"Normal GET failed (attempt {attempt + 1}/{retries}) with status {response.status_code}.")
-                if response.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+    if not force_tor:
+        for attempt in range(retries):
+            try:
+                response = requests.get(url, params=params, headers=req_headers, timeout=timeout)
+                if response.status_code == 200:
+                    return response
+                elif response.status_code == 404:
+                    print(f"GET returned 404 Not Found. Skipping retries.")
+                    return response
+                else:
+                    print(f"GET failed (attempt {attempt + 1}/{retries}) with status {response.status_code}.")
+                    if response.status_code in (429, 500, 502, 503, 504, 600) and attempt < retries - 1:
+                        time.sleep(2)
+                    continue
+            except requests.exceptions.SSLError as e:
+                print(f"GET intercepted (SSL Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
+                break
+            except requests.RequestException as e:
+                print(f"GET threw an error (attempt {attempt + 1}/{retries}): {e}.")
+                if attempt < retries - 1:
                     time.sleep(2)
                 continue
-        except requests.RequestException as e:
-            print(f"Normal GET threw an error (attempt {attempt + 1}/{retries}): {e}.")
-            if attempt < retries - 1:
-                time.sleep(2)
-            continue
-            
-    print(f"All normal GET requests failed. Failing over to Tor.\nURL: {url}")
+                
+        print(f"All GET requests failed. Failing over to Tor.\nURL: {url}")
 
-    # Verify Tor is running, boot if necessary
     if not is_tor_running():
         success = start_tor_background()
         if not success:
             return None
 
-    # SOCKS5h ensures that DNS resolution also happens through Tor, preventing DNS leaks
     proxies = {
         'http': 'socks5h://127.0.0.1:9050',
         'https': 'socks5h://127.0.0.1:9050'
     }
 
-    # Retry through Tor loop
     for attempt in range(retries):
         try:
             response = requests.get(url, params=params, headers=req_headers, timeout=timeout + 5, proxies=proxies)
-            if response.status_code in (429, 500, 502, 503, 504):
+            if response.status_code in (429, 500, 502, 503, 504, 600):
+                print(f"[Tor GET] Failed with status {response.status_code} (attempt {attempt + 1}/{retries})")
                 if attempt < retries - 1:
                     time.sleep(2)
                 continue
+            if response.status_code == 200:
+                print(f"[Tor GET] Successfully fetched via Tor proxy.")
+            else:
+                print(f"[Tor GET] Returned status {response.status_code}")
             return response
-        except requests.RequestException:
+        except requests.RequestException as e:
+            print(f"[Tor GET] Threw an error (attempt {attempt + 1}/{retries}): {e}")
             if attempt < retries - 1:
                 time.sleep(2)
             continue
@@ -108,33 +118,34 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
     return None
 
 
-def better_post(url: str, payload: dict | str | bytes = None, json: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = True) -> requests.Response | None:
+def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = True) -> requests.Response | None:
     """
-    Robust POST request. Tries a normal connection multiple times first. 
-    If blocked or failed, automatically boots Tor and retries through the proxy.
+    Robust POST request. Uses Cloudflare DoH natively to bypass DNS blocking.
+    Falls back to Tor if DoH fails (e.g. SNI blocking by ISP).
     """
     req_headers = {**DEFAULT_HEADERS, **(headers or {})} if use_default_headers else (headers or {})
     
-    # Try normal request (No proxy) with retries
     for attempt in range(retries):
         try:
-            response = requests.post(url, data=payload, json=json, headers=req_headers, timeout=timeout)
+            response = requests.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout)
             if response.status_code == 200:
                 return response
             else:
-                print(f"Normal POST failed (attempt {attempt + 1}/{retries}) with status {response.status_code}.")
-                if response.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                print(f"POST failed (attempt {attempt + 1}/{retries}) with status {response.status_code}.")
+                if response.status_code in (429, 500, 502, 503, 504, 600) and attempt < retries - 1:
                     time.sleep(2)
                 continue
+        except requests.exceptions.SSLError as e:
+            print(f"POST intercepted (SSL Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
+            break
         except requests.RequestException as e:
-            print(f"Normal POST threw an error (attempt {attempt + 1}/{retries}): {e}.")
+            print(f"POST threw an error (attempt {attempt + 1}/{retries}): {e}.")
             if attempt < retries - 1:
                 time.sleep(2)
             continue
             
-    print(f"All normal POST requests failed. Falling over to Tor.\nURL: {url}")
+    print(f"All POST requests failed. Failing over to Tor.\nURL: {url}")
 
-    # Verify Tor is running, boot if necessary
     if not is_tor_running():
         success = start_tor_background()
         if not success:
@@ -145,21 +156,27 @@ def better_post(url: str, payload: dict | str | bytes = None, json: dict = None,
         'https': 'socks5h://127.0.0.1:9050'
     }
 
-    # Retry through Tor loop
     for attempt in range(retries):
         try:
-            response = requests.post(url, data=payload, json=json, headers=req_headers, timeout=timeout + 5, proxies=proxies)
-            if response.status_code in (429, 500, 502, 503, 504):
+            response = requests.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout + 5, proxies=proxies)
+            if response.status_code in (429, 500, 502, 503, 504, 600):
+                print(f"[Tor POST] Failed with status {response.status_code} (attempt {attempt + 1}/{retries})")
                 if attempt < retries - 1:
                     time.sleep(2)
                 continue
+            if response.status_code == 200:
+                print(f"[Tor POST] Successfully fetched via Tor proxy.")
+            else:
+                print(f"[Tor POST] Returned status {response.status_code}")
             return response
-        except requests.RequestException:
+        except requests.RequestException as e:
+            print(f"[Tor POST] Threw an error (attempt {attempt + 1}/{retries}): {e}")
             if attempt < retries - 1:
                 time.sleep(2)
             continue
             
     return None
+
 
 
 def detect_mime_type(data: bytes) -> str:
@@ -175,7 +192,7 @@ def detect_mime_type(data: bytes) -> str:
     return "image/jpeg"
 
 
-def get_image_cache(url: str, crop: bool = False, crop_size: tuple = (400, 600), max_width: int = 600, use_default_headers: bool = None) -> str | None:
+def get_image_cache(url: str, crop: bool = False, crop_size: tuple = (400, 600), max_width: int = 600, use_default_headers: bool = None, force_tor: bool = False, headers: dict = None) -> str | None:
     """
     Downloads an image, saves it to the static folder, and returns the web URL.
     This acts as its own cache—if the file exists, it skips downloading entirely.
@@ -191,7 +208,7 @@ def get_image_cache(url: str, crop: bool = False, crop_size: tuple = (400, 600),
             return f"/app/static/image_cache/{cached_filename}"
 
     # If not cached, download and process
-    response = better_get(url=url, use_default_headers=use_default_headers)
+    response = better_get(url=url, headers=headers, use_default_headers=use_default_headers, force_tor=force_tor)
     if response is None or response.status_code != 200:
         return None
     
