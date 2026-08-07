@@ -16,6 +16,7 @@ TEMP_DIR = os.path.join(CACHE_DIR, "temp")
 
 
 def _ensure_paths():
+    """Ensures that the required cache and temp directories exist."""
     os.makedirs(CACHE_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
 
@@ -26,6 +27,10 @@ def _ensure_paths():
 
 @lru_cache(maxsize=1)
 def load_nsfw_detector(model_type: str = "default", engine: str = "cpu", precision: str = "fp32"):
+    """
+    Loads and caches the NudeNet model for NSFW detection.
+    Downloads the required ONNX model if not already present.
+    """
     try:
         from nudenet import NudeDetector
 
@@ -87,6 +92,11 @@ def process_media_censor(
     encoder: str = "libx264",
     progress_hook=None
 ) -> tuple[bool, str]:
+    """
+    Processes media (image or video) to censor specified NSFW classes.
+    For videos, it can generate an ASS subtitle overlay or perform a hard re-encode.
+    Returns a success boolean and the output file path (or error message).
+    """
 
     # LAZY IMPORTS: Only loaded when the pipeline actually starts running
     import cv2
@@ -234,6 +244,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
             WINDOW_SIZE = 64
 
             def producer():
+                """Reads frames from the video and queues them for processing."""
                 cap_prod = cv2.VideoCapture(input_path)
                 current_boxes = []
                 for i in range(total_frames):
@@ -254,6 +265,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
                 cap_prod.release()
 
             def worker():
+                """Processes queued frames by detecting NSFW areas and applying blur."""
                 while True:
                     item = read_queue.get()
                     if item is None:
@@ -277,6 +289,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
                         write_cond.notify_all()
 
             def consumer():
+                """Takes processed frames and writes them to the output video."""
                 nonlocal frames_written
                 while frames_written < total_frames:
                     with write_cond:

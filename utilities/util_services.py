@@ -1,13 +1,9 @@
 import os
-import json
 import threading
-from utilities.util_json import load_json
-
-CACHE_DIR = "./cache/services"
-CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
-
+from utilities.util_store import get_data, set_data
 
 def get_registry_startup() -> list[dict]:
+    """Retrieves a list of applications configured to run at startup via the Windows Registry."""
     import winreg
     apps = []
     keys = [
@@ -32,6 +28,7 @@ def get_registry_startup() -> list[dict]:
 
 
 def get_service_dependencies(service_name: str) -> str:
+    """Queries the Windows Service Control Manager to retrieve dependencies for a specific service."""
     import win32service
     try:
         scm = win32service.OpenSCManager(
@@ -46,73 +43,84 @@ def get_service_dependencies(service_name: str) -> str:
         if not deps:
             return "None"
         if isinstance(deps, str):
-            return deps
-        if isinstance(deps, (list, tuple)):
-            return ", ".join(deps)
-        return str(deps)
+            return deps.replace("\x00", " ").strip()
+        elif isinstance(deps, list) or isinstance(deps, tuple):
+            return ", ".join(deps).replace("\x00", " ").strip()
+        return "Unknown"
     except Exception:
         return "Unknown"
 
 
-def get_all_services_sync() -> tuple[list[dict], list[dict]]:
+def get_windows_services() -> list[dict]:
+    """Retrieves a comprehensive list of all Windows services and their current status."""
     import psutil
-    ms_services = []
-    non_ms_services = []
-
+    services = []
     for svc in psutil.win_service_iter():
         try:
             info = svc.as_dict()
-            binpath = str(info.get('binpath', '')).lower()
-            desc = str(info.get('description', 'No description provided.'))
-            display = str(info.get('display_name', info.get('name')))
-            name = info.get('name')
+            svc_name = info.get('name', 'Unknown')
 
-            is_ms = any(x in binpath for x in ["windows\\system32", "svchost.exe"]
-                        ) or "microsoft" in display.lower() or "microsoft" in desc.lower()
-
-            data = {
-                "Service Name": name,
-                "Display Name": display,
-                "Status": info.get('status', 'unknown').capitalize(),
-                "Start Type": info.get('start_type', 'unknown').capitalize(),
-                "Dependencies": get_service_dependencies(name),
-                "Path": info.get('binpath', 'Unknown'),
-                "Purpose (Description)": desc
-            }
-
-            if is_ms:
-                ms_services.append(data)
-            else:
-                non_ms_services.append(data)
+            deps = get_service_dependencies(svc_name)
+            
+            services.append({
+                "Service Name": svc_name,
+                "Display Name": info.get('display_name', ''),
+                "Status": info.get('status', ''),
+                "Start Type": info.get('start_type', ''),
+                "Purpose (Description)": info.get('description', ''),
+                "Dependencies": deps,
+                "Path": info.get('binpath', '')
+            })
+        except psutil.NoSuchProcess:
+            pass
         except Exception:
             pass
-
-    ms_services.sort(key=lambda x: x['Display Name'])
-    non_ms_services.sort(key=lambda x: x['Display Name'])
-
-    return ms_services, non_ms_services
+    return services
 
 
-def fetch_and_cache():
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    startup = get_registry_startup()
-    ms, non_ms = get_all_services_sync()
-    data = {"startup": startup, "ms": ms, "non_ms": non_ms}
-    with open(CACHE_FILE, "w") as f:
-        json.dump(data, f)
+def fetch_and_cache_services():
+    """Fetches both startup applications and Windows services, caching them to the store."""
+    try:
+        startup_apps = get_registry_startup()
+        services = get_windows_services()
+
+        ms_services = []
+        non_ms_services = []
+        for svc in services:
+            desc = str(svc.get("Purpose (Description)", "")).lower()
+            disp = str(svc.get("Display Name", "")).lower()
+            path = str(svc.get("Path", "")).lower()
+            
+            if "microsoft" in desc or "microsoft" in disp or "windows" in disp or "system32" in path or "svchost.exe" in path:
+                ms_services.append(svc)
+            else:
+                non_ms_services.append(svc)
+
+        data = {
+            "startup_apps": startup_apps,
+            "ms_services": ms_services,
+            "non_ms_services": non_ms_services
+        }
+        set_data("startup_services", data)
+    except Exception as e:
+        print(f"Failed to cache services: {e}")
 
 
 def load_services_data() -> tuple[list[dict], list[dict], list[dict]]:
-    if os.path.exists(CACHE_FILE):
-        data = load_json(CACHE_FILE, lambda: {})
-        if data:
-            threading.Thread(target=fetch_and_cache, daemon=True).start()
-            return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
+    """Loads services and startup apps from the store, triggering a background refresh."""
+    data = get_data("startup_services")
+    
+    if data and "ms_services" in data:
+        # Trigger background refresh if we already have stale cache
+        threading.Thread(target=fetch_and_cache_services, daemon=True).start()
+        return data.get("startup_apps", []), data.get("ms_services", []), data.get("non_ms_services", [])
+        
+    # Block and fetch if cache doesn't exist
+    fetch_and_cache_services()
+    data = get_data("startup_services") or {}
+    return data.get("startup_apps", []), data.get("ms_services", []), data.get("non_ms_services", [])
 
-    fetch_and_cache()
-    data = load_json(CACHE_FILE, lambda: {})
-    return data.get("startup", []), data.get("ms", []), data.get("non_ms", [])
 
-
-def force_refresh():
-    fetch_and_cache()
+def force_refresh_services():
+    """Forces an immediate, blocking refresh of the services cache."""
+    fetch_and_cache_services()

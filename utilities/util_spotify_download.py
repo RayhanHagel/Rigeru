@@ -23,31 +23,4 @@ def download_playlist_cli(playlist_url: str, output_dir: str, audio_format: str,
         return False
 
 
-
-def stream_spotdl_download(playlist_url: str, output_dir: str, audio_format: str, bitrate: str):
-    """
-    Executes spotDL as a subprocess and yields output lines for Streamlit to display.
-    """
-    cmd = [
-        "spotdl", playlist_url,
-        "--format", audio_format,
-        "--bitrate", bitrate,
-        "--output", os.path.join(output_dir, "{artists} - {title}.{output-ext}")
-    ]
-    
-    # Run the process. 'bufsize=1' and 'universal_newlines=True' 
-    # ensure we get text line-by-line in real-time.
-    process = subprocess.Popen(
-        cmd, 
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.STDOUT, 
-        text=True, 
-        bufsize=1
-    )
-    
-    # Yield output lines as they are produced
-    for line in iter(process.stdout.readline, ''):
-        yield line
-        
-    process.stdout.close()
-    process.wait()
+

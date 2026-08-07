@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Activity, Cpu, HardDrive, Network, Layers, Thermometer } from "lucide-react";
-import { STHeader } from "@/components/streamlit/STHeader";
-import { STContainer } from "@/components/streamlit/STContainer";
 
 type HardwareStats = {
   cpu_percent: number;
@@ -41,7 +39,7 @@ export default function SystemMonitorPage() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/monitor/stats");
+      const res = await fetch("/api/system/monitor/stats");
       if (!res.ok) throw new Error("Failed to fetch stats");
       const data = await res.json();
       setStats(data);
@@ -70,7 +68,7 @@ export default function SystemMonitorPage() {
   };
 
   const renderMetric = (icon: React.ReactNode, title: string, percent: number, text: string) => (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4">
+    <div className="animate-slide-up bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-zinc-400 font-medium">
           {icon}
@@ -91,18 +89,25 @@ export default function SystemMonitorPage() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in">
-      <div>
-        <STHeader title="📈 System & Network Monitor" />
-        <p className="text-zinc-400 mt-2 flex items-center gap-2">
-          Real-time telemetry and network diagnostics.
-          <span className="relative flex h-3 w-3 ml-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-          </span>
-          <span className="text-xs text-emerald-400">Live</span>
-        </p>
-        {error && <p className="text-red-400 text-sm mt-2">Error: {error}</p>}
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
+        <div className="flex items-center gap-0">
+          
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+              System & Network Monitor
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mt-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Live</span>
+              </div>
+            </h1>
+            <p className="text-zinc-400 text-sm font-medium">Real-time telemetry and network diagnostics.</p>
+            {error && <p className="text-red-400 text-xs">Error: {error}</p>}
+          </div>
+        </div>
       </div>
 
       {stats.hardware && (
@@ -114,8 +119,10 @@ export default function SystemMonitorPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <STContainer title="Top Processes (by Memory)" icon={<Layers size={18} className="text-blue-400" />}>
+      <div className="flex flex-col gap-6 animate-slide-up w-full mt-6">
+        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 shadow-xl">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Top Processes (by Memory)
+          </h3>
           <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
@@ -138,9 +145,11 @@ export default function SystemMonitorPage() {
               </tbody>
             </table>
           </div>
-        </STContainer>
+        </div>
         
-        <STContainer title="Active Network Connections" icon={<Network size={18} className="text-purple-400" />}>
+        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 shadow-xl">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Active Network Connections
+          </h3>
           <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
@@ -155,20 +164,20 @@ export default function SystemMonitorPage() {
                   <tr key={`${c.pid}-${c.remote_port}-${i}`} className="hover:bg-zinc-800/50">
                     <td className="px-4 py-2 font-medium text-emerald-400">{c.app}</td>
                     <td className="px-4 py-2 text-zinc-400 font-mono text-xs">{c.local_port}</td>
-                    <td className="px-4 py-2 text-purple-400 font-mono text-xs">{c.remote_ip}:{c.remote_port}</td>
+                    <td className="px-4 py-2 text-primary font-mono text-xs">{c.remote_ip}:{c.remote_port}</td>
                   </tr>
                 ))}
                 {stats.network.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
-                      Loading connections...
+                      Loading connections
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </STContainer>
+        </div>
       </div>
     </div>
   );

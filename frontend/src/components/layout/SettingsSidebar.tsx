@@ -15,15 +15,28 @@ export function SettingsSidebar() {
 
   const [staticSize, setStaticSize] = useState("0 B");
   const [isClearing, setIsClearing] = useState(false);
+  const [tempSize, setTempSize] = useState("0 B");
+  const [isClearingTemp, setIsClearingTemp] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [authMsg, setAuthMsg] = useState({ text: "", type: "" });
+  const [isSavingAuth, setIsSavingAuth] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+    setNewUsername(localStorage.getItem("username") || "");
   }, []);
 
   const fetchStaticSize = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/static-storage/size");
+      const res = await fetch("/api/system/static-storage/size", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setStaticSize(data.size_str);
@@ -33,15 +46,56 @@ export function SettingsSidebar() {
     }
   };
 
+  const fetchTempSize = async () => {
+    try {
+      const res = await fetch("/api/system/temp-storage/size", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTempSize(data.size_str);
+      }
+    } catch (e) {
+      console.error("Failed to fetch temp storage size", e);
+    }
+  };
+
   useEffect(() => {
     fetchStaticSize();
+    fetchTempSize();
   }, [pathname]);
+
+  const handleClearTemp = async () => {
+    if (!confirm("Are you sure you want to clear all temp files? This cannot be undone.")) return;
+    setIsClearingTemp(true);
+    try {
+      const res = await fetch("/api/system/temp-storage/clear", { 
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (res.ok) {
+        await fetchTempSize();
+      }
+    } catch (e) {
+      console.error("Failed to clear temp files", e);
+    }
+    setIsClearingTemp(false);
+  };
 
   const handleClearStatic = async () => {
     if (!confirm("Are you sure you want to clear all static saved images? This cannot be undone.")) return;
     setIsClearing(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/static-storage/clear", { method: "DELETE" });
+      const res = await fetch("/api/system/static-storage/clear", { 
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
       if (res.ok) {
         await fetchStaticSize();
       }
@@ -52,18 +106,26 @@ export function SettingsSidebar() {
   };
 
   useEffect(() => {
-    if (pathname === "/media-entertainment/spotify-scrobbler") {
-      fetch("http://127.0.0.1:8000/api/media-entertainment/spotify-scrobbler/config")
-        .then(res => res.json())
-        .then(data => setSpotifyConfig(data))
-        .catch(console.error);
-    }
-  }, [pathname, setSpotifyConfig]);
+    const loadSpotifyConfig = () => {
+      if (!isMounted) return;
+      if (pathname === "/entertainment-reading/spotify-scrobbler") {
+        fetch("/api/media-entertainment/spotify-scrobbler/config", {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        })
+          .then(res => res.json())
+          .then(data => setSpotifyConfig(data))
+          .catch(console.error);
+      }
+    };
+    loadSpotifyConfig();
+  }, [pathname, setSpotifyConfig, isMounted]);
 
   const handleSaveSpotifyConfig = async () => {
     setIsSavingSpotify(true);
     try {
-      await fetch("http://127.0.0.1:8000/api/media-entertainment/spotify-scrobbler/config", {
+      await fetch("/api/media-entertainment/spotify-scrobbler/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(spotifyConfig),
@@ -75,6 +137,37 @@ export function SettingsSidebar() {
     }
   };
 
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      setAuthMsg({ text: "Please fill both password fields", type: "error" });
+      return;
+    }
+    setIsSavingAuth(true);
+    setAuthMsg({ text: "", type: "" });
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`
+        },
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword, new_username: newUsername }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update credentials");
+      
+      setAuthMsg({ text: "Credentials updated! You will need to log in again.", type: "success" });
+      setTimeout(() => {
+        localStorage.removeItem("auth_token");
+        window.location.href = "/login";
+      }, 2000);
+    } catch (e: any) {
+      setAuthMsg({ text: e.message, type: "error" });
+    } finally {
+      setIsSavingAuth(false);
+    }
+  };
+
   const inputStyle: React.CSSProperties = {
     borderColor: "var(--theme-ui-border)",
   };
@@ -82,7 +175,7 @@ export function SettingsSidebar() {
 
   // Determine what settings to show based on the current route
   const renderSettings = () => {
-    if (pathname === "/media-entertainment/manga-library") {
+    if (pathname === "/entertainment-reading/manga-library") {
       return (
         <div className="flex flex-col gap-4 animate-fade-in">
           <Slider 
@@ -97,7 +190,7 @@ export function SettingsSidebar() {
       );
     }
     
-    if (pathname === "/media-entertainment/spotify-scrobbler") {
+    if (pathname === "/entertainment-reading/spotify-scrobbler") {
       return (
         <div className="flex flex-col gap-5 animate-fade-in">
           <div>
@@ -218,7 +311,6 @@ export function SettingsSidebar() {
     // Default empty state
     return (
       <div className="flex flex-col items-center justify-center h-48 text-zinc-600 text-sm">
-        <Settings2 size={32} className="mb-2 opacity-50" />
         <p>No settings for this page</p>
       </div>
     );
@@ -235,7 +327,6 @@ export function SettingsSidebar() {
       >
         <div className="p-6 border-b flex items-center justify-between gap-3" style={{ borderColor: "color-mix(in srgb, var(--theme-ui-border) 50%, transparent)" }}>
           <div className="flex items-center gap-3">
-            <Settings2 size={20} className="text-zinc-400" />
             <h2 className="text-lg font-semibold text-zinc-200">Page Settings</h2>
           </div>
           <button 
@@ -251,7 +342,6 @@ export function SettingsSidebar() {
             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">App Theme</h3>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-zinc-400 text-sm mb-2">
-                <Palette size={16} />
                 <span>Color Scheme</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -289,27 +379,97 @@ export function SettingsSidebar() {
             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Page Settings</h3>
             {renderSettings()}
           </div>
+          
+          {/* Account Settings */}
+          <div>
+            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Account Settings</h3>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">Username</label>
+                <input 
+                  type="text" 
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className={inputFocusClass}
+                  style={inputStyle}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">Current Password</label>
+                <input 
+                  type="password" 
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className={inputFocusClass}
+                  style={inputStyle}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">New Password</label>
+                <input 
+                  type="password" 
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className={inputFocusClass}
+                  style={inputStyle}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
+                />
+              </div>
+              {authMsg.text && (
+                <div className={`p-2 rounded text-xs text-center ${authMsg.type === "error" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"}`}>
+                  {authMsg.text}
+                </div>
+              )}
+              <Button variant="primary" onClick={handleChangePassword} isLoading={isSavingAuth} className="w-full">
+                {isSavingAuth ? null : <Save size={16} />} Update Credentials
+              </Button>
+            </div>
+          </div>
         </div>
         
-        {/* Static Storage Footer */}
+        {/* Storage Footer */}
         <div className="p-6 border-t mt-auto" style={{ borderColor: "var(--theme-ui-border)" }}>
-          <div className="bg-zinc-950/50 border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
-                <HardDrive size={14} />
-                <span>Static Images</span>
+          <div className="flex flex-col gap-3">
+            <div className="bg-zinc-950/50 border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
+                  <span>Static Images</span>
+                </div>
+                <span className="text-zinc-300 text-xs font-mono">{staticSize}</span>
               </div>
-              <span className="text-zinc-300 text-xs font-mono">{staticSize}</span>
+              <button 
+                onClick={handleClearStatic}
+                suppressHydrationWarning
+                disabled={!isMounted || isClearing || staticSize === "0 B"}
+                className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={12} />
+                {isClearing ? "Clearing" : "Clear Static Images"}
+              </button>
             </div>
-            <button 
-              onClick={handleClearStatic}
-              suppressHydrationWarning
-              disabled={!isMounted || isClearing || staticSize === "0 B"}
-              className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={12} />
-              {isClearing ? "Clearing..." : "Clear Static Images"}
-            </button>
+            
+            <div className="bg-zinc-950/50 border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
+                  <span>Temp Files</span>
+                </div>
+                <span className="text-zinc-300 text-xs font-mono">{tempSize}</span>
+              </div>
+              <button 
+                onClick={handleClearTemp}
+                suppressHydrationWarning
+                disabled={!isMounted || isClearingTemp || tempSize === "0 B"}
+                className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={12} />
+                {isClearingTemp ? "Clearing" : "Clear Temp Files"}
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -317,7 +477,7 @@ export function SettingsSidebar() {
     {isSettingsCollapsed && (
       <button
         onClick={() => setSettingsCollapsed(false)}
-        className="fixed right-4 top-4 z-40 p-2 backdrop-blur-xl border rounded-md text-zinc-400 hover:text-white shadow-lg transition-colors hidden lg:flex"
+        className="fixed right-4 top-4 z-50 p-2 backdrop-blur-xl border rounded-md text-zinc-400 hover:text-white shadow-lg transition-colors hidden lg:flex"
         style={{ 
           backgroundColor: "color-mix(in srgb, var(--theme-bg) 90%, transparent)",
           borderColor: "var(--theme-ui-border)",

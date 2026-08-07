@@ -64,7 +64,7 @@ export function Button({
       )}
       
       {isLoading ? <Loader2 size={16} className="animate-spin" /> : icon}
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">{children}</span>
     </button>
   );
 }

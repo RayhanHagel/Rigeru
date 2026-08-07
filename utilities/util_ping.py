@@ -84,8 +84,13 @@ def check_all_dns_speeds(preset_names: list[str] = None) -> dict:
             continue
         lat_v4 = get_ping_latency(ips["primary"])
         lat_v6 = get_ping_latency(ips["ipv6_primary"], ipv6=True)
-        results[name] = {"ipv4": lat_v4, "ipv6": lat_v6}
+        # Replace float('inf') with a large sentinel (-1) since Infinity is not valid JSON
+        results[name] = {
+            "ipv4": -1 if lat_v4 == float('inf') else lat_v4,
+            "ipv6": -1 if lat_v6 == float('inf') else lat_v6
+        }
     return results
+
 
 def set_windows_dns(interface_name: str, primary: str, secondary: str) -> tuple[bool, str]:
     """Uses netsh to change the DNS server of a specific Windows network interface."""

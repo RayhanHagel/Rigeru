@@ -2,23 +2,24 @@ import os
 from transformers import pipeline
 from utilities.util_config import load_all_config
 
-CACHE_DIR = os.path.join(".", "cache", "hf_cache")
+CACHE_DIR = os.path.join(".", "cache", "models", "hf_cache")
 
 _translation_pipelines = {}
 
 def get_translation_model_id() -> str:
+    """Retrieves the default translation model ID from the configuration."""
     # Get model from config or default
     config = load_all_config().get("models", {})
     return config.get("translation", "facebook/nllb-200-distilled-600M")
 
 def load_translation_pipeline(model_id: str):
+    """Loads and caches the Hugging Face NLP translation pipeline for the given model ID."""
     global _translation_pipelines
     if model_id not in _translation_pipelines:
         print(f"Loading NLP translation pipeline for {model_id}...")
-        # Device map auto will use GPU if available, else CPU
-        # But we also have global compute engine config. For simplicity, let pipeline infer.
-        config = load_all_config().get("models", {})
+        config = load_all_config()
         device_pref = config.get("device_preference", "Auto-Detect")
+        opt_pref = config.get("hardware_optimization", "PyTorch")
         
         device = -1 # CPU
         if device_pref != "CPU Only":
@@ -29,6 +30,14 @@ def load_translation_pipeline(model_id: str):
         hf_cache_dir = CACHE_DIR
         os.environ["HF_HOME"] = hf_cache_dir
         
+        # Determine precision based on hardware optimization
+        model_kwargs = {"cache_dir": hf_cache_dir}
+        if "FP16" in opt_pref:
+            import torch
+            model_kwargs["torch_dtype"] = torch.float16
+        elif "INT8" in opt_pref:
+            model_kwargs["load_in_8bit"] = True
+        
         # Load the pipeline
         try:
             if "nllb" in model_id.lower():
@@ -37,15 +46,16 @@ def load_translation_pipeline(model_id: str):
                 import torch
                 
                 device_str = "cuda" if device == 0 else "cpu"
+                compute_type = "int8" if "INT8" in opt_pref else ("float16" if "FP16" in opt_pref else "default")
                 
-                output_dir = os.path.join(hf_cache_dir, "models", f"{model_id.replace('/', '-')}-int8")
+                output_dir = os.path.join(hf_cache_dir, "models", f"{model_id.replace('/', '-')}-{compute_type}")
                 if not os.path.exists(output_dir):
-                    print(f"Converting {model_id} to ctranslate2 int8 format...")
+                    print(f"Converting {model_id} to ctranslate2 {compute_type} format...")
                     os.makedirs(os.path.join(hf_cache_dir, "models"), exist_ok=True)
                     converter = ctranslate2.converters.TransformersConverter(model_id)
-                    converter.convert(output_dir=output_dir, quantization="int8")
+                    converter.convert(output_dir=output_dir, quantization=compute_type if compute_type != "default" else None)
                     
-                translator = ctranslate2.Translator(output_dir, device=device_str, compute_type="int8")
+                translator = ctranslate2.Translator(output_dir, device=device_str, compute_type=compute_type)
                 tokenizer = transformers.AutoTokenizer.from_pretrained(model_id)
                 _translation_pipelines[model_id] = (translator, tokenizer)
             else:
@@ -54,7 +64,7 @@ def load_translation_pipeline(model_id: str):
                     task_name, 
                     model=model_id,
                     device=device,
-                    model_kwargs={"cache_dir": hf_cache_dir}
+                    model_kwargs=model_kwargs
                 )
                 _translation_pipelines[model_id] = pipe
         except Exception as e:
@@ -78,6 +88,7 @@ def get_nllb_lang_map() -> dict:
     return {name: code for code, name in data.items()}
 
 def translate_text(text: str, source_lang: str, target_lang: str, model_id: str = None) -> str:
+    """Translates text from a source language to a target language using the specified NLP model."""
     if not model_id:
         model_id = get_translation_model_id()
         

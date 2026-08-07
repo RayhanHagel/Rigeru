@@ -12,11 +12,15 @@
   --theme-glow2: rgba(255,60,120,0.12);
   --theme-ui-bg: rgba(255,255,255,0.05);
   --theme-ui-border: rgba(255,255,255,0.10);
+  --theme-primary-base: #7850ff;
+  --theme-secondary-base: #ff3c78;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--theme-primary-base);
+  --color-secondary: var(--theme-secondary-base);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   

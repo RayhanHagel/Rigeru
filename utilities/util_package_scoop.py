@@ -1,24 +1,6 @@
-import subprocess
 import os
 import json
-from utilities.util_json import load_json
-
-
-def run_cmd(cmd: str) -> tuple[str, str]:
-    """Runs a terminal command silently and returns (stdout, stderr)."""
-    startupinfo = None
-    if os.name == 'nt':
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-    try:
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True,
-            startupinfo=startupinfo, encoding='utf-8', errors='ignore'
-        )
-        return result.stdout.strip(), result.stderr.strip()
-    except Exception as e:
-        return "", str(e)
+from utilities.util_stream import run_cmd
 
 
 def is_scoop_installed() -> bool:
@@ -78,7 +60,8 @@ def list_installed() -> tuple[bool, list]:
         manifest_path = os.path.join(apps_dir, app_name, 'current', 'manifest.json')
         if os.path.exists(manifest_path):
             try:
-                manifest = load_json(manifest_path, lambda: {})
+                with open(manifest_path, 'r', encoding='utf-8') as f:
+                    manifest = json.load(f)
                 if not manifest: continue
                 desc = manifest.get('description', 'No description provided.')
                 if isinstance(desc, list):
@@ -87,6 +70,7 @@ def list_installed() -> tuple[bool, list]:
                 is_outdated = app_name in outdated
                 apps.append({
                     "name": app_name,
+                    "id": app_name,
                     "version": manifest.get('version', 'Unknown'),
                     "new_version": outdated.get(app_name, ""),
                     "description": desc,
@@ -124,6 +108,7 @@ def search_scoop(query: str) -> tuple[bool, list]:
             if len(parts) >= 2:
                 results.append({
                     "name": parts[0],
+                    "id": parts[0],
                     "version": parts[1] if len(parts) > 1 else "Unknown",
                     "bucket": parts[2] if len(parts) > 2 else "main",
                 })
@@ -132,6 +117,7 @@ def search_scoop(query: str) -> tuple[bool, list]:
 
 
 def install_package(pkg: str) -> tuple[bool, str]:
+    """Installs a single scoop package by name."""
     out, err = run_cmd(f"scoop install {pkg}")
     if "was installed successfully!" in out or "is already installed" in out:
         return True, out
@@ -148,6 +134,7 @@ def install_packages(pkgs: list[str]) -> tuple[bool, str]:
 
 
 def uninstall_package(pkg: str) -> tuple[bool, str]:
+    """Uninstalls a scoop package by name."""
     out, err = run_cmd(f"scoop uninstall {pkg}")
     if "was uninstalled" in out:
         return True, out

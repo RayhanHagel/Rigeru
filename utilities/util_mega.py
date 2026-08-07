@@ -1,7 +1,7 @@
 import re
 import json
 import base64
-import requests
+import httpx
 from Crypto.Cipher import AES
 
 from utilities.util_network import better_post
@@ -183,7 +183,7 @@ def process_mega_link(folder_link: str, max_image_size_mb: int, max_video_size_m
             "error": None
         }
 
-    except requests.exceptions.Timeout:
+    except httpx.TimeoutException:
         return {"error": "Error: MEGA.nz API timed out. Try again later."}
     except Exception as e:
         return {"error": f"Error: {str(e)}"}

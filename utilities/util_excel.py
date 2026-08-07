@@ -1,4 +1,5 @@
 def load_data(file_bytes: bytes, filename: str, has_header: bool = True) -> tuple:
+    """Loads CSV or Excel file bytes into a Pandas DataFrame, sanitizing columns."""
     import pandas as pd
     import numpy as np
     import io
@@ -63,6 +64,7 @@ def process_dataframe(
     drop_duplicates: bool = False, 
     rules: list = None
 ) -> tuple:
+    """Applies filtering rules and data cleaning operations to the DataFrame."""
     if rules is None:
         rules = []
     
@@ -123,6 +125,7 @@ def process_dataframe(
         return False, f"Error applying filters: {str(e)}\nCheck your rules."
 
 def export_data(df, format_type: str = "CSV") -> bytes:
+    """Exports the cleaned DataFrame to CSV or Excel bytes."""
     import pandas as pd
     import io
     
@@ -133,3 +136,46 @@ def export_data(df, format_type: str = "CSV") -> bytes:
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Cleaned_Data')
     return output.getvalue()
+
+def format_dataframe_for_preview(df) -> dict:
+    """
+    Formats a Pandas DataFrame for JSON serialization by taking the top 50 rows, 
+    replacing NaNs/Infs, inferring column types, and stringifying datetimes/times.
+    """
+    import pandas as pd
+    import numpy as np
+    import datetime
+    
+    preview_df = df.head(50).copy()
+    
+    # Convert NaNs and Infs to None for JSON serialization
+    preview_df = preview_df.replace([np.inf, -np.inf, np.nan, pd.NaT], None)
+    
+    # Extract column types
+    col_types = {}
+    for col, dtype in df.dtypes.items():
+        if pd.api.types.is_numeric_dtype(dtype):
+            col_types[col] = "number"
+        elif pd.api.types.is_datetime64_any_dtype(dtype):
+            col_types[col] = "date"
+        else:
+            sample = df[col].dropna().head(1)
+            if not sample.empty and isinstance(sample.iloc[0], datetime.time):
+                col_types[col] = "time"
+            else:
+                col_types[col] = "text"
+                
+    # Also explicitly convert datetime and time columns to strings for JSON
+    for col in preview_df.columns:
+        if pd.api.types.is_datetime64_any_dtype(preview_df[col]):
+            preview_df[col] = preview_df[col].dt.strftime('%Y-%m-%d %H:%M:%S').replace("NaT", None)
+        elif col_types.get(col) == "time":
+            preview_df[col] = preview_df[col].apply(lambda x: x.strftime('%H:%M:%S') if isinstance(x, datetime.time) else None)
+    
+    return {
+        "rows": df.shape[0],
+        "cols": df.shape[1],
+        "columns": list(df.columns),
+        "columnTypes": col_types,
+        "data": preview_df.to_dict(orient="records")
+    }

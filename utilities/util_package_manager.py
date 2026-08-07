@@ -1,6 +1,5 @@
 import os
-import json
-from utilities.util_json import load_json
+from utilities.util_store import get_data, set_data
 
 
 # Import the list functions to execute in the background
@@ -9,19 +8,14 @@ from utilities.util_package_scoop import list_installed as list_scoop_installed
 from utilities.util_package_choco import list_installed as list_choco_installed
 
 
-CACHE_FILE = os.path.join(".", "cache", "packages", "installed_packages.json")
-
-
 def load_local_cache() -> dict:
-    """Loads the stale packages instantly from the JSON file."""
-    return load_json(CACHE_FILE, lambda: {"winget": [], "scoop": [], "choco": []})
+    """Loads the stale packages instantly from the store."""
+    return get_data("installed_packages") or {"winget": [], "scoop": [], "choco": []}
 
 
 def save_local_cache(data: dict):
-    """Saves the fresh packages to the JSON file."""
-    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    """Saves the fresh packages to the store."""
+    set_data("installed_packages", data)
 
 def fetch_all_fresh_data(current_cache: dict) -> dict:
     """Runs the slow CLI commands sequentially and returns the updated dataset."""

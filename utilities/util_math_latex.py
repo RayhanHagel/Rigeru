@@ -180,12 +180,16 @@ def load_hf_model(model_id: str):
 
     raise ValueError("Unsupported model selection.")
 
-def process_math_image(image: Image.Image):
+def process_math_image(image_bytes: bytes):
     """
-    Processes a cropped PIL image through the OCR model and returns the LaTeX output.
+    Processes image bytes through the OCR model and returns the LaTeX output.
     Returns: (bool success, str result_or_error)
     """
     try:
+        import io
+        from PIL import Image
+        image = Image.open(io.BytesIO(image_bytes))
+        
         model_id = get_model_config("math_latex")
         
         # Load (or grab from cache) the model and flags

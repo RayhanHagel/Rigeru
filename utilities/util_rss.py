@@ -10,39 +10,32 @@ import json
 
 # Import shared utilities
 from utilities.util_network import better_get
-from utilities.util_json import load_json, save_json
+from utilities.util_store import get_data, set_data
 
-CACHE_FILE = os.path.join(".", "cache", "rss", "rss_subscriptions.json")
-DATA_CACHE_FILE = os.path.join(".", "cache", "rss", "rss_feed.json")
+def _get_rss_manager() -> dict:
+    return get_data("rss_manager") or {}
+
+def _set_rss_manager(data: dict):
+    set_data("rss_manager", data)
 
 
 def load_disk_cache():
-    """Loads articles from the JSON file and returns the data + modification time."""
-    if os.path.exists(DATA_CACHE_FILE):
-        try:
-            mtime = os.path.getmtime(DATA_CACHE_FILE)
-            data = load_json(DATA_CACHE_FILE, lambda: [])
-            return data, mtime
-        except Exception as e:
-            print(f"Failed to read cache: {e}")
-            return [], 0.0
-    return [], 0.0
+    """Loads articles from the store and returns the data + modification time."""
+    data = _get_rss_manager()
+    cache = data.get("cache", [])
+    mtime = data.get("cache_mtime", 0.0)
+    return cache, mtime
 
 def save_disk_cache(articles):
-    """Saves articles safely using atomic writes to prevent read collisions."""
-    os.makedirs(os.path.dirname(DATA_CACHE_FILE), exist_ok=True)
-    temp_file = DATA_CACHE_FILE + ".tmp"
-    
-    # Write to a temporary file first
-    with open(temp_file, "w", encoding="utf-8") as f:
-        json.dump(articles, f)
-        
-    # Atomically replace the old cache with the new one
-    os.replace(temp_file, DATA_CACHE_FILE)
+    """Saves articles safely to the store."""
+    data = _get_rss_manager()
+    data["cache"] = articles
+    data["cache_mtime"] = time.time()
+    _set_rss_manager(data)
     
 def load_subscriptions() -> dict:
     """Loads saved RSS feed URLs and their titles from local cache."""
-    data = load_json(CACHE_FILE, default_factory=dict)
+    data = _get_rss_manager().get("subscriptions", {})
     # Backward compatibility for old list-based format
     if isinstance(data, list):
         return {url: url for url in data}
@@ -50,7 +43,9 @@ def load_subscriptions() -> dict:
 
 def save_subscriptions(feed_urls: dict):
     """Saves RSS feed URLs to local cache."""
-    save_json(CACHE_FILE, feed_urls)
+    data = _get_rss_manager()
+    data["subscriptions"] = feed_urls
+    _set_rss_manager(data)
 
 def fetch_feed_data(url: str):
     """Robustly fetches feed data using a real User-Agent to bypass bot blocks."""
@@ -109,65 +104,7 @@ def fetch_all_feeds(feed_urls: list) -> list:
     aggregated_entries.sort(key=lambda x: x['sort_key'], reverse=True)
     return aggregated_entries
 
-def parse_markdown_links(markdown_text: str) -> dict:
-    """Extracts [Title](URL) pairs from markdown text."""
-    pattern = r'\[([^\]]+)\]\((https?://[^\)]+)\)'
-    matches = re.findall(pattern, markdown_text)
-    
-    feeds = {}
-    ignore_domains = ['play.google.com', 'twitter.com', 'wikipedia.org']
-    
-    for title, url in matches:
-        url = url.strip()
-        title = title.strip()
-        
-        if any(domain in url for domain in ignore_domains):
-            continue
-            
-        if 'github.com' in url and '/blob/' in url:
-            url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-            
-        feeds[title] = url
-    return feeds
 
-def parse_opml_links(opml_text: str) -> dict:
-    """Extracts feed titles and URLs from an OPML file, with an indestructible regex fallback."""
-    feeds = {}
-    try:
-        clean_text = re.sub(r'&(?![A-Za-z0-9#]+;)', '&amp;', opml_text)
-        root = ET.fromstring(clean_text)
-        for outline in root.iter('outline'):
-            xml_url = outline.get('xmlUrl') or outline.get('url')
-            title = outline.get('title') or outline.get('text') or outline.get('name')
-            
-            if xml_url and title:
-                feeds[title.strip()] = xml_url.strip()
-                
-    except Exception as e:
-        print(f"Strict OPML parse failed: {e}. Switching to Line-by-Line Regex fallback.")
-        
-        for line in opml_text.splitlines():
-            url_match = re.search(r'(?:xmlUrl|url)=["\']([^"\']+)["\']', line, re.IGNORECASE)
-            title_match = re.search(r'(?:title|text|name)=["\']([^"\']+)["\']', line, re.IGNORECASE)
-            
-            if url_match and title_match:
-                feeds[title_match.group(1).strip()] = url_match.group(1).strip()
-                
-    return feeds
-
-def fetch_remote_recommendations(url: str) -> dict:
-    """Fetches and parses a remote Markdown or OPML file via URL."""
-    try:
-        response = better_get(url)
-        if response and response.status_code == 200:
-            content = response.text
-            if '<opml' in content.lower() or 'xmlurl' in content.lower():
-                return parse_opml_links(content)
-            else:
-                return parse_markdown_links(content)
-    except Exception as e:
-        print(f"Failed to fetch remote feeds: {e}")
-    return {}
 
 def preview_rss_feed(url: str) -> tuple[bool, str | dict]:
     """Fetches a single RSS feed to preview its content before subscribing."""

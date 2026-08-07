@@ -60,7 +60,7 @@ export function Slider({ label, min, max, value, step = 1, onChange, helpText }:
           className="absolute left-0 h-1.5 rounded-l-lg pointer-events-none"
           style={{ 
             width: `${percentage}%`,
-            background: `linear-gradient(to right, color-mix(in srgb, var(--theme-heading) 80%, #6366f1), var(--theme-heading))`,
+            background: `var(--theme-heading)`,
           }}
         />
       </div>

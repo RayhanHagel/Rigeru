@@ -3,29 +3,16 @@ import re
 import random
 import asyncio
 from datetime import datetime
-from utilities.util_json import load_json, save_json
+from utilities.util_store import get_data, set_data
 from utilities.util_scraper import _run_node_scraper
 
-# Global Path Management
-TEMP_DIR = os.path.join(".", "cache", "temp")
-DB_FILE = os.path.join(".", "cache", "price_tracker", "tracked_prices.json")
-
-
-def _ensure_paths():
-    os.makedirs(os.path.dirname(TEMP_DIR), exist_ok=True)
-    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-
-
 def load_tracked_items() -> list:
-    """Loads tracked items from the local JSON file."""
-    _ensure_paths()
-    return load_json(DB_FILE, default_factory=list)
-
+    """Loads tracked items from the store."""
+    return get_data("tracked_prices") or []
 
 def save_tracked_items(items: list):
-    """Saves tracked items to the local JSON file."""
-    _ensure_paths()
-    save_json(DB_FILE, items)
+    """Saves tracked items to the store."""
+    set_data("tracked_prices", items)
 
 
 def add_item(name: str, url: str) -> tuple[bool, str]:
@@ -48,6 +35,7 @@ def add_item(name: str, url: str) -> tuple[bool, str]:
 
 
 def delete_item(item_id: str):
+    """Deletes a tracked item by its ID."""
     items = load_tracked_items()
     items = [i for i in items if i['id'] != item_id]
     save_tracked_items(items)
@@ -162,4 +150,3 @@ async def _refresh_all_prices_async() -> list:
 
     save_tracked_items(items)
     return logs
-
