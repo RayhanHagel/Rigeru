@@ -1,73 +1,41 @@
-import io
+import fitz  # PyMuPDF
+import difflib
 
-def extract_text(file_bytes: bytes, filename: str) -> tuple[bool, str]:
-    ext = filename.lower().split('.')[-1]
-    try:
-        if ext == 'txt':
-            return True, file_bytes.decode('utf-8', errors='ignore')
-        elif ext == 'pdf':
-            try:
-                import fitz  # Lazy Load PyMuPDF
-            except ImportError:
-                return False, "PyMuPDF not installed. Please install `pymupdf` to read PDFs."
-            
-            doc = fitz.open(stream=file_bytes, filetype="pdf")
-            text_parts = [page.get_text() for page in doc]
-            return True, "\n".join(text_parts)
-        elif ext == 'docx':
-            try:
-                import docx  # Lazy Load python-docx
-            except ImportError:
-                return False, "python-docx not installed. Please install `python-docx` to read Word files."
-            
-            doc_file = docx.Document(io.BytesIO(file_bytes))
-            text_parts = [para.text for para in doc_file.paragraphs]
-            return True, "\n".join(text_parts)
-        else:
-            return False, f"Unsupported file type: {ext}"
-    except Exception as e:
-        return False, f"Failed to extract text: {str(e)}"
-
-def generate_diff_html(text1: str, text2: str) -> str:
-    import difflib  # Lazy Load difflib
-    
-    differ = difflib.HtmlDiff(wrapcolumn=60)
-    lines1 = text1.splitlines()
-    lines2 = text2.splitlines()
-    
-    html = differ.make_file(
-        lines1, 
-        lines2, 
-        fromdesc="Original Document", 
-        todesc="Modified Document",
-        context=False 
-    )
-    
-    custom_css = """
-    <style>
-        body { 
-            font-family: var(--font-stack, monospace); 
-            font-size: 14px; 
-            color: var(--text-color); 
-            background-color: transparent; 
-            padding: 10px; 
-        }
-        table.diff { width: 100%; border-collapse: collapse; }
-        td.diff_header { 
-            background-color: #e9ecef; 
-            text-align: right; 
-            padding-right: 5px; 
-            width: 1%; 
-            border-right: 1px solid #ced4da;
-            color: #495057;
-            font-weight: bold;
-        }
-        td.diff_next { display: none; }
-        td { padding: 4px 8px; vertical-align: top;}
-        
-        .diff_add { background-color: #d4edda !important; color: #155724 !important; font-weight: 500; }
-        .diff_chg { background-color: #fff3cd !important; color: #856404 !important; font-weight: 500; }
-        .diff_sub { background-color: #f8d7da !important; color: #721c24 !important; font-weight: 500; text-decoration: line-through; }
-    </style>
+def compare_pdfs(file1_bytes: bytes, file2_bytes: bytes) -> tuple[bool, list | str]:
     """
-    return html.replace("<style type=\"text/css\">", custom_css + "<style type=\"text/css\">")
+    Compares two PDFs by extracting their text and generating a line-by-line diff.
+    Returns a list of dictionaries with 'type' and 'text'.
+    """
+    try:
+        doc1 = fitz.open(stream=file1_bytes, filetype="pdf")
+        doc2 = fitz.open(stream=file2_bytes, filetype="pdf")
+        
+        text1 = []
+        for page in doc1:
+            text1.append(page.get_text())
+        text1_lines = "\n".join(text1).splitlines()
+        
+        text2 = []
+        for page in doc2:
+            text2.append(page.get_text())
+        text2_lines = "\n".join(text2).splitlines()
+        
+        diff = difflib.ndiff(text1_lines, text2_lines)
+        
+        result = []
+        for line in diff:
+            if line.startswith('? '):
+                continue
+            
+            line_type = "unchanged"
+            if line.startswith('+ '):
+                line_type = "added"
+            elif line.startswith('- '):
+                line_type = "removed"
+                
+            text = line[2:] if len(line) >= 2 else line
+            result.append({"type": line_type, "text": text})
+            
+        return True, result
+    except Exception as e:
+        return False, str(e)

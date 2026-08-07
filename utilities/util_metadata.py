@@ -4,25 +4,7 @@ import win32file
 import win32con
 import pywintypes
 import mutagen
-from tkinter import filedialog
-import tkinter as tk
 
-def _init_tkinter():
-    """Helper to initialize a hidden, top-most tkinter root window."""
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-    return root
-
-def open_media_dialog() -> str:
-    """Opens a native Windows file browser for selecting any file."""
-    root = _init_tkinter()
-    file_path = filedialog.askopenfilename(
-        title="Select File to Edit",
-        filetypes=[("All Files", "*.*")]
-    )
-    root.destroy()
-    return file_path
 
 def get_media_metadata(file_path: str) -> dict:
     """Safely extracts basic media metadata using Mutagen."""

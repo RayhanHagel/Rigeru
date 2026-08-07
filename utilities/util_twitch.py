@@ -1,12 +1,7 @@
 import os
-import json
 import concurrent.futures
 from utilities.util_network import better_get
-from utilities.util_json import load_json
-
-
-CACHE_FOLDER = os.path.join("cache", "twitch")
-PRIORITY_FILE = os.path.join(CACHE_FOLDER, "twitch_priority.json")
+from utilities.util_store import get_data, set_data
 
 
 def check_live_status(channel: str) -> bool:
@@ -41,29 +36,45 @@ def get_all_live_statuses(channels: tuple) -> list:
 
 def read_cache() -> list:
     """Reads the saved Twitch channel priority list."""
-    data = load_json(PRIORITY_FILE, lambda: None)
-    if data is not None:
-        return data
-
-    # Initialize clean cache if it doesn't exist
-    os.makedirs(CACHE_FOLDER, exist_ok=True)
-    with open(PRIORITY_FILE, 'w') as f:
-        json.dump([], f, indent=4)
-    return []
+    return get_data("twitch_priority") or []
 
 
 def save_config(channel: str, replace_data: list = None):
-    """Saves a new channel or a completely new list to the cache."""
-    os.makedirs(CACHE_FOLDER, exist_ok=True)
-    
+    """Saves a new channel or a completely new list to the store."""
     current_cache = read_cache()
 
     if replace_data is None:
         if channel and channel not in current_cache:
             current_cache.append(channel)
+        replace_data = current_cache
 
-        with open(PRIORITY_FILE, "w") as f:
-            json.dump(current_cache, f, indent=4)
-    else:
-        with open(PRIORITY_FILE, "w") as f:
-            json.dump(replace_data, f, indent=4)
+    set_data("twitch_priority", replace_data)
+
+
+import subprocess
+import sys
+
+def check_streamlink_installed() -> bool:
+    try:
+        subprocess.run(["streamlink", "--version"], check=True, capture_output=True)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
+
+def install_streamlink() -> bool:
+    try:
+        subprocess.run(["scoop.cmd", "install", "streamlink"], check=True)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
+
+def launch_streamlink(channel: str) -> bool:
+    try:
+        # 0x08000000 is CREATE_NO_WINDOW
+        subprocess.Popen(
+            ["streamlink", f"twitch.tv/{channel}", "best"],
+            creationflags=0x08000000
+        )
+        return True
+    except Exception:
+        return False

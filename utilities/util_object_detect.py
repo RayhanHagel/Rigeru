@@ -13,15 +13,14 @@ import functools
 
 # Import shared utilities
 from utilities.util_time_format import format_ass_time
-from utilities.util_json import load_json
+from utilities.util_store import get_data, set_data
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", module="ultralytics")
 os.environ['YOLO_VERBOSE'] = 'False'
 
 CACHE_DIR = os.path.join(".", "cache", "models")
-TEMP_DIR = os.path.join(".", "cache", "temp")
-SETTINGS_FILE = os.path.join(".", "cache", "object_detection", "settings.json")
+TEMP_DIR = os.path.join(".", "temp")
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -31,19 +30,19 @@ _color_cache: dict[int, tuple] = {}
 
 def load_cached_settings():
     """Lazily load hardware settings so we don't freeze the page."""
-    return load_json(SETTINGS_FILE, lambda: {})
+    data = get_data("object_detect") or {}
+    return data
 
 
 def save_cached_settings(key, value):
     """Save hardware findings so future visits load instantly."""
-    os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
     settings = load_cached_settings()
     settings[key] = value
-    with open(SETTINGS_FILE, "w") as f:
-        json.dump(settings, f)
+    set_data("object_detect", settings)
 
 
 def get_class_color(cls_id: int) -> tuple:
+    """Generates and caches a consistent random RGB color for a given class ID."""
     cls_id = int(cls_id)
     if cls_id not in _color_cache:
         rng = _random.Random(cls_id * 812)
@@ -53,6 +52,7 @@ def get_class_color(cls_id: int) -> tuple:
 
 @functools.lru_cache(maxsize=1)
 def get_available_cameras() -> list[int]:
+    """Returns a list of available camera indices (currently hardcoded to [0])."""
     return [0]
 
 
@@ -60,7 +60,8 @@ def get_available_cameras() -> list[int]:
 # OPTIMIZED MODEL LOADER (WITH EXPORT PROGRESS)
 # ─────────────────────────────────────────────
 @functools.lru_cache(maxsize=1)
-def load_yolo_model(optimization: str = "PyTorch", resolution: int = 640):
+def load_yolo_model(compute_engine: str = "cpu", resolution: int = 640):
+    """Loads and compiles the YOLO model into the requested format (PyTorch, TensorRT, ONNX, OpenVINO)."""
     from utilities.util_config import get_model_config
     model_name = get_model_config("object_detection")
     try:
@@ -74,21 +75,19 @@ def load_yolo_model(optimization: str = "PyTorch", resolution: int = 640):
     try:
         model = YOLO(base_model_path)
         
-        if "PyTorch" in optimization:
+        if compute_engine in ["cpu", "cuda", "Auto-Detect"]:
             return model, "Success"
 
         export_kwargs = {'imgsz': resolution, 'workspace': 4}
-        if "FP16" in optimization:
+        if compute_engine == "tensorrt":
             target_format = 'engine'
             export_kwargs['half'] = True
             expected_path = os.path.join(CACHE_DIR, f"{model_name_base}_{resolution}.engine")
-        elif "INT8" in optimization:
+        elif compute_engine == "onnx":
             target_format = 'onnx'
-            export_kwargs['int8'] = True
-            expected_path = os.path.join(CACHE_DIR, f"{model_name_base}_{resolution}_int8.onnx")
-        elif "OpenVINO" in optimization:
-            target_format = 'openvino'
-            expected_path = os.path.join(CACHE_DIR, f"{model_name_base}_{resolution}_openvino_model")
+            expected_path = os.path.join(CACHE_DIR, f"{model_name_base}_{resolution}.onnx")
+        else:
+            return model, "Success"
             
         if os.path.exists(expected_path):
             return YOLO(expected_path, task="detect"), "Success"
@@ -111,6 +110,7 @@ def load_yolo_model(optimization: str = "PyTorch", resolution: int = 640):
 # MEMORY OPTIMIZED IMAGE ANALYSIS
 # ─────────────────────────────────────────────
 def analyze_image(image_bytes: bytes, model, resolution: int, conf_thresh: float):
+    """Runs YOLO inference on a single image and extracts bounding boxes and cropped elements."""
     import cv2
     import numpy as np
     
@@ -133,10 +133,16 @@ def analyze_image(image_bytes: bytes, model, resolution: int, conf_thresh: float
                 x1, y1, x2, y2 = max(0, xyxy[0]), max(0, xyxy[1]), min(xyxy[2], img_w), min(xyxy[3], img_h)
                 crop = rgb_img[y1:y2, x1:x2].copy()
                 if crop.size > 0:
+                    ch, cw = crop.shape[:2]
+                    max_dim = 150
+                    if max(ch, cw) > max_dim:
+                        scale = max_dim / float(max(ch, cw))
+                        crop = cv2.resize(crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+                        
                     obj_data.append({
                         "id": i, "label": model.names[cls_id], "cls_id": int(cls_id),
-                        "conf": int(conf * 100), "box": (x1, y1, x2, y2),
-                        "crop": cv2.resize(crop, (150, 150), interpolation=cv2.INTER_AREA)
+                        "conf": int(conf * 100), "box": (int(x1), int(y1), int(x2), int(y2)),
+                        "crop": crop
                     })
         return True, rgb_img, obj_data, ""
     except Exception as e:
@@ -144,6 +150,7 @@ def analyze_image(image_bytes: bytes, model, resolution: int, conf_thresh: float
 
 
 def render_image_boxes(rgb_img, obj_data, selected_ids: list):
+    """Draws bounding boxes, transparent fills, and text labels onto an image based on detection data."""
     import cv2
     
     out_img = rgb_img.copy()
@@ -191,9 +198,12 @@ def render_image_boxes(rgb_img, obj_data, selected_ids: list):
 # ─────────────────────────────────────────────
 def process_video_object_detection(
     input_path: str, model, resolution: int, conf_thresh: float,
-    output_method: str, progress_hook, encoder: str = "libx264"
+    output_method: str, progress_hook, encoder: str = "libx264",
+    selected_classes: list = None, ai_fps: float = 5.0
 ) -> tuple:
+    """Processes a video frame-by-frame, tracking objects and exporting either an overlaid video or an .ass subtitle file."""
     import cv2
+    import numpy as np
     
     filename = os.path.basename(input_path)
     cap = cv2.VideoCapture(input_path)
@@ -213,25 +223,29 @@ def process_video_object_detection(
         ass_header = f"[Script Info]\nTitle: YOLO Detection Overlay\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Box,Arial,24,&H00FFFFFF,&H00000000,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,0,7,0,0,0,1\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     else:
         if has_ffmpeg and encoder != "cv2":
-            cmd = ["ffmpeg", "-y", "-f", "rawvideo", "-vcodec", "rawvideo", "-s", f"{width}x{height}", "-pix_fmt", "bgr24", "-r", str(fps), "-i", "-", "-i", input_path, "-map", "0:v:0", "-map", "1:a?", "-map", "1:s?", "-map_chapters", "1", "-c:v", encoder, "-pix_fmt", "yuv420p", "-c:a", "copy", "-c:s", "copy", out_path]
+            cmd = ["ffmpeg", "-y", "-f", "rawvideo", "-vcodec", "rawvideo", "-s", f"{width}x{height}", "-pix_fmt", "bgr24", "-r", str(fps), "-i", "-", "-i", input_path, "-map", "0:v:0", "-map", "1:a?", "-map", "1:s?", "-map_chapters", "1", "-c:v", encoder, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p", "-c:a", "copy", "-c:s", "copy", out_path]
             writer_proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             writer_cv2 = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
 
-    # Threaded Writer Implementation
     write_queue = queue.Queue(maxsize=30)
     
     def post_process_and_write():
         while True:
             frame = write_queue.get()
             if frame is None: 
+                write_queue.task_done()
                 break
-            if writer_proc:
-                writer_proc.stdin.write(frame.tobytes())
-            elif writer_cv2:
-                writer_cv2.write(frame)
-            write_queue.task_done()
+            try:
+                if writer_proc:
+                    writer_proc.stdin.write(frame.tobytes())
+                elif writer_cv2:
+                    writer_cv2.write(frame)
+            except Exception as e:
+                pass # Prevent deadlock by silently consuming the rest of the queue
+            finally:
+                write_queue.task_done()
 
     if not is_ass:
         writer_thread = threading.Thread(target=post_process_and_write, daemon=True)
@@ -245,66 +259,85 @@ def process_video_object_detection(
             ret, frame = cap.read()
             if not ret:
                 break
-
-            results = model.track(frame, imgsz=resolution, conf=conf_thresh, persist=True, tracker="bytetrack.yaml", verbose=False)
-            boxes = results[0].boxes
-            
+                
             start_str = format_ass_time(frame_idx / fps)
             end_str = format_ass_time((frame_idx + 1) / fps)
 
+            # Use YOLOv8 built-in tracking for every frame! (Significantly faster and more stable than OpenCV trackers)
+            results = model.track(frame, persist=True, imgsz=resolution, conf=conf_thresh, tracker="bytetrack.yaml", verbose=False)
+            boxes = results[0].boxes
+            
+            tracker_info = {}
             if len(boxes) > 0 and boxes.id is not None:
                 all_xyxy = boxes.xyxy.cpu().numpy().astype(int)
                 all_conf = boxes.conf.cpu().numpy()
                 all_cls = boxes.cls.cpu().numpy().astype(int)
                 all_ids = boxes.id.cpu().numpy().astype(int)
-
-                if not is_ass:
-                    overlay = frame.copy()
-
-                for xyxy, conf, cls_id, track_id in zip(all_xyxy, all_conf, all_cls, all_ids):
-                    x1, y1, x2, y2 = xyxy
-                    label = model.names[cls_id]
-                    color_rgb = get_class_color(cls_id)
+                
+                for xyxy, conf, cls_id, tid in zip(all_xyxy, all_conf, all_cls, all_ids):
+                    label_name = model.names[cls_id].lower()
+                    if selected_classes and label_name not in selected_classes:
+                        continue
+                        
+                    x1, y1, x2, y2 = map(int, xyxy)
+                    h_img, w_img = frame.shape[:2]
+                    x1 = max(0, min(x1, w_img - 2))
+                    y1 = max(0, min(y1, h_img - 2))
+                    x2 = max(x1 + 1, min(x2, w_img - 1))
+                    y2 = max(y1 + 1, min(y2, h_img - 1))
                     
-                    if is_ass:
-                        w, h_box = x2 - x1, y2 - y1
-                        r, g, b_col = color_rgb
-                        hex_color = f"&H00{b_col:02X}{g:02X}{r:02X}&"
-                        lbl = f"{label} #{track_id} {int(conf*100)}%"
-                        vector = f"{{\\pos({x1},{y1})}}{{\\1a&HFF&}}{{\\3c{hex_color}}}{{\\bord3}}{{\\p1}}m 0 0 l {w} 0 l {w} {h_box} l 0 {h_box} l 0 0{{\\p0}}"
-                        ass_events.extend([
-                            f"Dialogue: 0,{start_str},{end_str},Box,,0,0,0,,{vector}",
-                            f"Dialogue: 1,{start_str},{end_str},Box,,0,0,0,,{{\\pos({x1},{y1-5})}}{{\\c{hex_color}}}{lbl}"
-                        ])
-                    else:
-                        color_bgr = color_rgb[::-1]
-                        cv2.rectangle(overlay, (x1, y1), (x2, y2), color_bgr, -1)
-
-                if not is_ass:
-                    cv2.addWeighted(overlay, 0.25, frame, 0.75, 0, frame)
-
-                    for xyxy, conf, cls_id, track_id in zip(all_xyxy, all_conf, all_cls, all_ids):
-                        x1, y1, x2, y2 = xyxy
-                        label = model.names[cls_id]
-                        color_rgb = get_class_color(cls_id)
-                        color_bgr = color_rgb[::-1]
-                        
-                        cv2.rectangle(frame, (x1, y1), (x2, y2), color_bgr, 2)
-                        
-                        text = f"{label} #{track_id} {int(conf*100)}%"
-                        (tw, th), baseline = cv2.getTextSize(text, font, 0.5, 1)
-                        label_y = max(th + 10, y1)
-                        
-                        cv2.rectangle(frame, (x1, label_y - th - 10), (x1 + tw + 10, label_y), color_bgr, -1)
-                        
-                        r, g, b = color_rgb
-                        brightness = (r * 299 + g * 587 + b * 114) / 1000
-                        text_color = (0, 0, 0) if brightness > 140 else (255, 255, 255)
-                        
-                        cv2.putText(frame, text, (x1 + 5, label_y - 4), font, 0.5, text_color, 1, cv2.LINE_AA)
+                    tracker_info[tid] = {"cls_id": int(cls_id), "conf": float(conf), "box": (x1, y1, x2, y2)}
 
             if not is_ass:
-                # Delegate I/O to background thread
+                overlay = frame.copy()
+
+            for tid, info in tracker_info.items():
+                x1, y1, x2, y2 = info["box"]
+                cls_id = info["cls_id"]
+                conf = info["conf"]
+                label = model.names[cls_id]
+                color_rgb = get_class_color(cls_id)
+                
+                if is_ass:
+                    w, h_box = x2 - x1, y2 - y1
+                    r, g, b_col = color_rgb
+                    hex_color = f"&H00{b_col:02X}{g:02X}{r:02X}&"
+                    lbl = f"{label} #{tid} {int(conf*100)}%"
+                    vector = f"{{\\pos({x1},{y1})}}{{\\1a&HFF&}}{{\\3c{hex_color}}}{{\\bord3}}{{\\p1}}m 0 0 l {w} 0 l {w} {h_box} l 0 {h_box} l 0 0{{\\p0}}"
+                    ass_events.extend([
+                        f"Dialogue: 0,{start_str},{end_str},Box,,0,0,0,,{vector}",
+                        f"Dialogue: 1,{start_str},{end_str},Box,,0,0,0,,{{\\pos({x1},{y1-5})}}{{\\c{hex_color}}}{lbl}"
+                    ])
+                else:
+                    color_bgr = color_rgb[::-1]
+                    cv2.rectangle(overlay, (x1, y1), (x2, y2), color_bgr, -1)
+
+            if not is_ass:
+                cv2.addWeighted(overlay, 0.25, frame, 0.75, 0, frame)
+
+                for tid, info in tracker_info.items():
+                    x1, y1, x2, y2 = info["box"]
+                    cls_id = info["cls_id"]
+                    conf = info["conf"]
+                    label = model.names[cls_id]
+                    color_rgb = get_class_color(cls_id)
+                    color_bgr = color_rgb[::-1]
+                    
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), color_bgr, 2)
+                    
+                    text = f"{label} #{tid} {int(conf*100)}%"
+                    (tw, th), baseline = cv2.getTextSize(text, font, 0.5, 1)
+                    label_y = max(th + 10, y1)
+                    
+                    cv2.rectangle(frame, (x1, label_y - th - 10), (x1 + tw + 10, label_y), color_bgr, -1)
+                    
+                    r, g, b = color_rgb
+                    brightness = (r * 299 + g * 587 + b * 114) / 1000
+                    text_color = (0, 0, 0) if brightness > 140 else (255, 255, 255)
+                    
+                    cv2.putText(frame, text, (x1 + 5, label_y - 4), font, 0.5, text_color, 1, cv2.LINE_AA)
+
+            if not is_ass:
                 write_queue.put(frame)
 
             frame_idx += 1
@@ -318,7 +351,8 @@ def process_video_object_detection(
                 f.write(ass_header + "\n".join(ass_events))
         else:
             write_queue.put(None)
-            writer_thread.join()
+            if not is_ass:
+                writer_thread.join()
             if writer_proc:
                 writer_proc.stdin.close()
                 writer_proc.wait()
@@ -328,10 +362,24 @@ def process_video_object_detection(
     return True, out_path
 
 
+WEBCAM_CONFIG = {}
+
+def update_webcam_config(camera_index: int, ai_fps: float, selected_classes: str):
+    import json
+    try:
+        classes = json.loads(selected_classes)
+    except:
+        classes = []
+    WEBCAM_CONFIG[camera_index] = {
+        "ai_fps": ai_fps,
+        "classes": set(classes) if classes else None
+    }
+
 # ─────────────────────────────────────────────
 # HYBRID WEBCAM (NATIVE GPU OR CPU EXTRAPOLATION)
 # ─────────────────────────────────────────────
-def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False, ai_fps: float = 30.0):
+def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False):
+    """Yields live MJPEG frames from a webcam with YOLO bounding boxes, supporting extrapolation for smooth tracking between inferences."""
     import cv2
     
     cap = cv2.VideoCapture(camera_index)
@@ -359,18 +407,26 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
                     frame_queue.get_nowait()
                 except queue.Empty:
                     pass
-            frame_queue.put(f)
+            try:
+                frame_queue.put(f, timeout=0.1)
+            except queue.Full:
+                pass
 
     producer_thread = threading.Thread(target=frame_producer, daemon=True)
     producer_thread.start()
 
     font = cv2.FONT_HERSHEY_DUPLEX
-    inference_interval = 1.0 / ai_fps if ai_fps > 0 else 0
     last_inference_time = 0
     active_tracks = {}
 
     try:
         while True:
+            # Read dynamic config
+            config = WEBCAM_CONFIG.get(camera_index, {"ai_fps": 30.0, "classes": None})
+            current_fps = config["ai_fps"]
+            allowed_classes = config["classes"]
+            inference_interval = 1.0 / current_fps if current_fps > 0 else 0
+
             try:
                 frame = frame_queue.get(timeout=0.5)
             except queue.Empty:
@@ -393,6 +449,9 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
                     all_ids = boxes.id.cpu().numpy().astype(int)
                     
                     for xyxy, conf, cls_id, track_id in zip(all_xyxy, all_conf, all_cls, all_ids):
+                        if allowed_classes is not None and model.names[cls_id] not in allowed_classes:
+                            continue
+                        
                         box = list(xyxy)
                         v = [0, 0, 0, 0]
                         

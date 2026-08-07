@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Settings, RefreshCw, Server, Zap, ShieldAlert } from "lucide-react";
-import { STHeader } from "@/components/streamlit/STHeader";
-import { STTabs } from "@/components/streamlit/STTabs";
+import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
 
 type ServiceInfo = {
@@ -27,6 +26,7 @@ export default function ServicesPage() {
   const [msServices, setMsServices] = useState<ServiceInfo[]>([]);
   const [nonMsServices, setNonMsServices] = useState<ServiceInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("startup");
 
   type SortColumn = "Display Name" | "Service Name" | "Status" | "Start Type" | "Purpose (Description)";
   const [sortColumn, setSortColumn] = useState<SortColumn>("Status");
@@ -144,21 +144,37 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in">
-      <div className="flex justify-between items-center">
-        <div>
-          <STHeader title="⚙️ Services & Startup" />
-          <p className="text-zinc-400 mt-2">
-            View background Windows services and applications that start with your PC.
-          </p>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
+        <div className="flex items-center gap-0">
+          
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Services & Startup</h1>
+            <p className="text-zinc-400 text-sm font-medium">View background Windows services and applications that start with your PC.</p>
+          </div>
         </div>
         <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />}>
           Refresh Lists
         </Button>
+      
+        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+          <ModernTabs 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        tabs={[
+          { id: 'startup', label: `Startup Apps (${startup.length})`, icon: ':material/bolt:' },
+          { id: 'nonms', label: `Non-MS Services (${nonMsServices.length})`, icon: ':material/dns:' },
+          { id: 'ms', label: `MS Services (${msServices.length})`, icon: ':material/shield:' }
+        ]} 
+      />
+        </div>
       </div>
 
-      <STTabs tabs={[`:material/bolt: Startup Apps (${startup.length})`, `:material/dns: Non-MS Services (${nonMsServices.length})`, `:material/shield: MS Services (${msServices.length})`]}>
-        <div>
+      
+      
+      <div className="flex-1 min-h-0 flex flex-col mt-4">
+        <ModernTabContent activeTab={activeTab}>
+          {activeTab === 'startup' && (
           <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden mt-4">
             <table className="w-full text-sm text-left">
               <thead className="bg-zinc-900 text-zinc-400">
@@ -190,14 +206,19 @@ export default function ServicesPage() {
               </tbody>
             </table>
           </div>
-        </div>
-        <div>
-          {renderServiceTable(nonMsServices)}
-        </div>
-        <div>
-          {renderServiceTable(msServices)}
-        </div>
-      </STTabs>
+          )}
+          {activeTab === 'nonms' && (
+            <div>
+              {renderServiceTable(nonMsServices)}
+            </div>
+          )}
+          {activeTab === 'ms' && (
+            <div>
+              {renderServiceTable(msServices)}
+            </div>
+          )}
+        </ModernTabContent>
+      </div>
     </div>
   );
 }

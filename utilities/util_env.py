@@ -1,12 +1,9 @@
 import os
-import json
 import threading
-from utilities.util_json import load_json
-
-CACHE_DIR = "./cache/env"
-CACHE_FILE = os.path.join(CACHE_DIR, "cache.json")
+from utilities.util_store import get_data, set_data
 
 def get_registry_value(key: int, subkey: str, value_name: str) -> str:
+    """Reads a value from the Windows Registry."""
     import winreg
     try:
         registry_key = winreg.OpenKey(key, subkey, 0, winreg.KEY_READ)
@@ -19,6 +16,7 @@ def get_registry_value(key: int, subkey: str, value_name: str) -> str:
         return ""
 
 def guess_application_from_path(folder_path: str) -> str:
+    """Heuristically guesses the application or tool associated with a PATH directory."""
     if not os.path.exists(folder_path):
         return ":material/warning: Path Does Not Exist (Dead Link)"
 
@@ -45,6 +43,7 @@ def guess_application_from_path(folder_path: str) -> str:
     return ":material/folder: System / Unknown Utility"
 
 def get_all_paths_sync() -> tuple[list[dict], str, str]:
+    """Synchronously fetches system and user PATH variables from the registry."""
     import winreg
     sys_path_raw = get_registry_value(
         winreg.HKEY_LOCAL_MACHINE, r"System\CurrentControlSet\Control\Session Manager\Environment", "Path")
@@ -64,26 +63,27 @@ def get_all_paths_sync() -> tuple[list[dict], str, str]:
     return paths, sys_path_raw, user_path_raw
 
 def fetch_and_cache():
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    """Fetches environment data and saves it to the store."""
     paths, sys_raw, user_raw = get_all_paths_sync()
     data = {"paths": paths, "sys_raw": sys_raw, "user_raw": user_raw}
-    with open(CACHE_FILE, "w") as f:
-        json.dump(data, f)
+    set_data("env_paths", data)
 
 def load_env_data() -> tuple[list[dict], str, str]:
-    if os.path.exists(CACHE_FILE):
-        data = load_json(CACHE_FILE, lambda: {})
-        if data:
-            threading.Thread(target=fetch_and_cache, daemon=True).start()
-            return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
+    """Loads environment paths from store, triggering a background refresh if needed."""
+    data = get_data("env_paths")
+    if data:
+        threading.Thread(target=fetch_and_cache, daemon=True).start()
+        return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
     
     fetch_and_cache()
-    data = load_json(CACHE_FILE, lambda: {})
+    data = get_data("env_paths") or {}
     return data.get("paths", []), data.get("sys_raw", ""), data.get("user_raw", "")
 
 def force_refresh():
+    """Forces an immediate refresh of the environment cache."""
     fetch_and_cache()
 
 def export_env_backup() -> str:
+    """Returns a formatted text string of the raw PATH variables for backup purposes."""
     _, sys_raw, user_raw = load_env_data()
     return f"=== WINDOWS ENVIRONMENT BACKUP ===\n\n[SYSTEM PATH]\n{sys_raw}\n\n[USER PATH]\n{user_raw}\n"

@@ -1,4 +1,5 @@
 def get_proxy_html(url: str) -> str:
+    """Fetches HTML via node scraper and injects proxy interactivity (base tag and JS)."""
     from bs4 import BeautifulSoup
     from utilities.util_scraper import _run_node_scraper
     

@@ -54,26 +54,7 @@ def search_youtube(query: str, limit: int = 10) -> tuple[bool, list | str]:
         return False, str(e)
 
 
-def get_available_resolutions(url: str) -> list[str]:
-    """
-    Fetches the available video resolutions for a given URL.
-    Returns a list like ['Best', '1080p', '720p', '480p', '360p'].
-    """
-    import yt_dlp
-    ydl_opts = {'quiet': True, 'no_warnings': True}
-    resolutions = {'Best'}
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            for fmt in info.get('formats', []):
-                h = fmt.get('height')
-                if h:
-                    resolutions.add(f"{h}p")
-    except Exception:
-        pass
 
-    order = ['Best', '2160p', '1440p', '1080p', '720p', '480p', '360p', '240p', '144p']
-    return [r for r in order if r in resolutions] or ['Best', '1080p', '720p', '480p']
 
 
 def download_youtube(
@@ -139,3 +120,24 @@ def download_youtube(
     except Exception as e:
         return False, f"❌ Download error: {str(e)}", None
 
+def parse_youtube_takeout_csv(content: str) -> tuple[bool, list | str]:
+    import csv
+    import io
+    
+    try:
+        reader = csv.DictReader(io.StringIO(content.strip()))
+        channels = []
+        for row in reader:
+            c_id = row.get("Channel Id")
+            title = row.get("Channel Title")
+            if c_id and title:
+                channels.append({"id": c_id, "name": title})
+            elif c_id:
+                channels.append({"id": c_id, "name": c_id})
+                
+        if not channels:
+            return False, "No valid channels found in the CSV file (missing 'Channel Id' and 'Channel Title' headers?)."
+            
+        return True, channels
+    except Exception as e:
+        return False, f"Failed to parse CSV: {str(e)}"

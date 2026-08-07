@@ -7,13 +7,22 @@ playwrightExtra.use(stealth);
 
 async function main() {
 
-    // Cloudflare DoH via Local State injection is disabled.
-    // Chromium headless mode (chrome-headless-shell) completely ignores Local State DoH settings.
-    // If DNS bypass is needed, please enable DNS-over-HTTPS at the Windows OS level.
-    const userDataDir = path.join(__dirname, '.doh_profile');
+    // Cloudflare DoH via Local State injection.
+    const crypto = require('crypto');
+    const profileId = crypto.randomBytes(8).toString('hex');
+    const userDataDir = path.join(__dirname, '..', '..', 'cache', '.doh_profile_' + profileId);
     if (!fs.existsSync(userDataDir)) {
         fs.mkdirSync(userDataDir, { recursive: true });
     }
+
+    const localStatePath = path.join(userDataDir, 'Local State');
+    const localState = {
+        dns_over_https: {
+            mode: "secure",
+            templates: "https://chrome.cloudflare-dns.com/dns-query"
+        }
+    };
+    fs.writeFileSync(localStatePath, JSON.stringify(localState));
 
     const browserContext = await playwrightExtra.launchPersistentContext(userDataDir, {
         headless: false, // Run in headful mode to support DoH and improve Cloudflare bypass
@@ -60,6 +69,7 @@ async function main() {
             console.error("Error processing action:", e);
         } finally {
             try { await browserContext.close(); } catch(e) {}
+            try { fs.rmSync(userDataDir, { recursive: true, force: true }); } catch(e) {}
             process.exit(0);
         }
     });

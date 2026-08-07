@@ -81,6 +81,9 @@ def load_receipt_model():
 
 
 def extract_receipt_data(image_bytes: bytes) -> tuple[bool, dict | str]:
+    """
+    Extracts structured data (date, total, items) from a receipt image using a Vision-Language Model.
+    """
     try:
         img = Image.open(io.BytesIO(image_bytes))
         if img.mode != "RGB":

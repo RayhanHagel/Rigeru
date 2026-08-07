@@ -1,13 +1,48 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SettingsSidebar } from "@/components/layout/SettingsSidebar";
 import { APP_THEMES } from "@/lib/themes";
 
+// Global fetch interceptor to attach JWT token immediately upon script load
+if (typeof window !== "undefined" && !(window as any).__fetchIntercepted) {
+  (window as any).__fetchIntercepted = true;
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    let [resource, config] = args;
+    const url = typeof resource === 'string' ? resource : resource instanceof Request ? resource.url : '';
+    
+    if (url.includes('/api/') && !url.includes('/api/auth/login')) {
+      config = config || {};
+      config.headers = {
+        ...config.headers,
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      };
+    }
+    return originalFetch(resource, config);
+  };
+}
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { isSidebarCollapsed, isSettingsCollapsed, theme } = useSettingsStore();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Authentication Check
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (!token && pathname !== "/login") {
+      router.push("/login");
+    } else {
+      setIsAuthenticated(!!token);
+    }
+    setLoading(false);
+  }, [pathname, router]);
 
   // Resolve theme colors — fallback to Nebula if the stored name doesn't match
   const themeKey = Object.keys(APP_THEMES).find(k => k.startsWith(theme)) || "Nebula (Default)";
@@ -31,6 +66,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   // Determine if this is a mono/terminal theme
   const isMono = theme.includes("Terminal") || theme.includes("Hacker") || theme.includes("Wave");
 
+  if (loading) {
+    return <div className="h-screen w-full flex items-center justify-center bg-[var(--theme-bg)]">Loading</div>;
+  }
+
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  if (!isAuthenticated) {
+    return null; // Prevents flashing before redirect
+  }
+
   return (
     <div className="flex h-screen w-full relative">
       {isMono && (
@@ -45,12 +92,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           isSettingsCollapsed ? "lg:mr-0" : "lg:mr-80"
         }`}
       >
-        <div 
-          className="absolute top-0 -left-1/4 w-[150%] h-[150%] pointer-events-none -z-10"
-          style={{
-            background: `radial-gradient(ellipse at top, var(--theme-glow1), var(--theme-glow2), transparent 70%)`
-          }}
-        />
+
         
         <div className="w-full min-h-full">
           {children}

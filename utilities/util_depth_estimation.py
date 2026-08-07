@@ -14,6 +14,7 @@ TEMP_DIR = os.path.join(CACHE_DIR, "temp")
 
 
 def _ensure_paths():
+    """Ensures that the cache and models directories exist."""
     os.makedirs(CACHE_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
     os.makedirs(os.path.join(CACHE_DIR, "models"), exist_ok=True)
@@ -149,6 +150,7 @@ def apply_colormap_raw(depth_raw, colormap_name: str, invert: bool, target_size:
 # ---------------------------------------------------------------------------
 
 def process_image_depth(input_path: str, model_size: str, engine: str, precision: str, colormap: str, invert: bool):
+    """Processes a single image to estimate depth and applies a colormap."""
     import cv2
     import numpy as np
 
@@ -190,6 +192,7 @@ def process_image_depth(input_path: str, model_size: str, engine: str, precision
 
 
 def process_video_depth(input_path: str, model_size: str, engine: str, precision: str, colormap: str, invert: bool, encoder: str = "libx264", progress_hook=None):
+    """Processes a video to estimate depth frame by frame and encodes the output."""
     import cv2
     import numpy as np
 

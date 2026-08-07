@@ -3,36 +3,31 @@ import json
 from datetime import datetime, timedelta, timezone
 from bs4 import BeautifulSoup
 from utilities.util_network import better_get, get_image_cache
-from utilities.util_json import load_json
+from utilities.util_store import get_data, set_data
 
-CACHE_FOLDER = os.path.join("cache", "spotify")
-SPOTIFY_CONFIG = os.path.join(CACHE_FOLDER, "spotify_scrobbler.json")
-SPOTIFY_DATA = os.path.join(CACHE_FOLDER, "spotify_data.json")
+def _get_spotify_manager() -> dict:
+    return get_data("spotify_manager") or {}
 
-
-def get_default_cover_src():
-    cassette_url = "https://miro.medium.com/v2/resize:fit:720/format:webp/0*iODIlb6_lMPaOQoR"
-    cached_img_path = get_image_cache(cassette_url)
-    if cached_img_path:
-        return cached_img_path
-    return cassette_url
-
+def _set_spotify_manager(data: dict):
+    set_data("spotify_manager", data)
 
 def read_config_cache() -> dict:
+    """Reads the Spotify scrobbler configuration from store, setting defaults if necessary."""
     default_data = {
         "username": "", 
         "refresh_interval": 60,
         "timezone": "UTC+00:00",
         "fetch_method": "Scraping",
         "api_key": "",
-        "track_limit": 5  # <-- New Default Key
+        "track_limit": 5
     }
     
-    data = load_json(SPOTIFY_CONFIG, lambda: {})
+    data = _get_spotify_manager().get("config", {})
     if not data:
-        os.makedirs(os.path.dirname(SPOTIFY_CONFIG), exist_ok=True)
-        with open(SPOTIFY_CONFIG, 'w') as f:
-            json.dump(default_data, f, indent=4) 
+        data = default_data
+        manager = _get_spotify_manager()
+        manager["config"] = data
+        _set_spotify_manager(manager)
         return default_data
 
     for key, val in default_data.items():
@@ -40,47 +35,22 @@ def read_config_cache() -> dict:
             data[key] = val
     return data
 
-def read_data_cache() -> dict:
-    return load_json(SPOTIFY_DATA, lambda: {})
-
-
-def save_config_cache(data: dict):
-    """Saves the Spotify scrobbler config cache to disk."""
-    os.makedirs(os.path.dirname(SPOTIFY_CONFIG), exist_ok=True)
-    with open(SPOTIFY_CONFIG, 'w') as f:
-        json.dump(data, f, indent=4)
-
-
-def save_data_cache(data: dict):
-    os.makedirs(os.path.dirname(SPOTIFY_DATA), exist_ok=True)
-    with open(SPOTIFY_DATA, 'w') as f:
-        json.dump(data, f, indent=4)
-
+def save_config_cache(config_data: dict):
+    """Saves the Spotify scrobbler config to disk."""
+    manager = _get_spotify_manager()
+    manager["config"] = config_data
+    _set_spotify_manager(manager)
 
 def clean_text(element) -> str:
+    """Cleans up text extracted from BeautifulSoup elements."""
     if not element:
         return ""
     return " ".join(element.get_text(strip=True).replace("\xa0", " ").split())
 
-def get_album_cover(url: str) -> str | None:
-    if not url:
-        return None
-    song_website_response = better_get(url)
-    if song_website_response is None:
-        return None
-
-    song_website_page = BeautifulSoup(song_website_response.content, "lxml")
-    try:
-        album_cover = song_website_page.find("div", class_="source-album-art")
-        img_url = album_cover.find("img").get("src")
-        return get_image_cache(img_url)
-    except Exception:
-        return None
-
 # --- NEW: API Fetch Logic ---
 
-
 def check_lastfm_api(username: str, api_key: str, limit: int, tz_str: str) -> tuple[str | None, str | None, str | None, list]:
+    """Fetches Last.fm recent listening data via the official API."""
     # 1. Fetch User Info
     user_res = better_get(f"http://ws.audioscrobbler.com/2.0/?method=user.getinfo&user={username}&api_key={api_key}&format=json")
     if not user_res: 
@@ -155,6 +125,7 @@ def check_lastfm_api(username: str, api_key: str, limit: int, tz_str: str) -> tu
 
 # --- RENAMED: Scraping Fetch Logic ---
 def check_lastfm_scraping(username: str) -> tuple[str | None, str | None, str | None, list]:
+    """Fetches Last.fm recent listening data by scraping the user's profile page."""
     lastfm_response = better_get(
         f"https://www.last.fm/user/{username}", timeout=8, use_default_headers=False)
     if lastfm_response is None:
@@ -221,6 +192,7 @@ def check_lastfm_scraping(username: str) -> tuple[str | None, str | None, str | 
 
 
 def check_lastfm(username: str, fetch_method: str = "Scraping", api_key: str = "", limit: int = 5, tz_str: str = "UTC+00:00") -> tuple[str | None, str | None, str | None, list]:
+    """Main entry point for checking Last.fm data using the preferred method."""
     if not username:
         return None, None, None, []
         

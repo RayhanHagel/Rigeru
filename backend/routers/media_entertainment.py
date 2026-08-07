@@ -151,8 +151,8 @@ def add_manga_to_library(req: AddMangaRequest):
 def get_manga_pages(chapter_url: str, website: str):
     try:
         if website == "asurascans.com/":
-            # get_asura_images is async, so we need to run it in an event loop
-            image_urls = asyncio.run(get_asura_images(chapter_url))
+            # get_asura_images is synchronous now
+            image_urls = get_asura_images(chapter_url)
         elif website == "mangadex.org/":
             image_urls = get_mangadex_images(chapter_url)
         else:
@@ -221,6 +221,45 @@ def get_manga_local_pdf(title: str, chapter_url: str, website: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+from fastapi import Response
+
+@router.get("/manga-read/local-pages")
+def get_manga_local_pages(title: str, chapter_url: str, website: str):
+    try:
+        from utilities.util_manga import get_pdf_page_count
+        count = get_pdf_page_count(title, chapter_url, website)
+        if count == 0:
+            raise HTTPException(status_code=404, detail="Local PDF not found or empty.")
+        
+        import urllib.parse
+        encoded_title = urllib.parse.quote(title)
+        encoded_url = urllib.parse.quote(chapter_url)
+        encoded_website = urllib.parse.quote(website)
+        
+        images = [
+            f"/api/media-entertainment/manga-read/pdf-page?title={encoded_title}&chapter_url={encoded_url}&website={encoded_website}&page={i}"
+            for i in range(count)
+        ]
+        return {"images": images}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/manga-read/pdf-page")
+def get_manga_pdf_page(title: str, chapter_url: str, website: str, page: int):
+    try:
+        from utilities.util_manga import get_pdf_page_image
+        img_bytes = get_pdf_page_image(title, chapter_url, website, page)
+        if not img_bytes:
+            raise HTTPException(status_code=404, detail=f"Page {page} not found.")
+        
+        return Response(content=img_bytes, media_type="image/jpeg")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 from utilities.util_twitch import read_cache, save_config as twitch_save_config, get_all_live_statuses
 from typing import List, Optional
 
@@ -248,6 +287,45 @@ def get_twitch_live_status(req: TwitchConfigRequest):
     try:
         live_channels = get_all_live_statuses(tuple(req.channels))
         return {"live_channels": live_channels}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from utilities.util_twitch import check_streamlink_installed, install_streamlink, launch_streamlink
+
+@router.get("/twitch-watch/streamlink/status")
+def api_check_streamlink_installed():
+    try:
+        is_installed = check_streamlink_installed()
+        return {"installed": is_installed}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/twitch-watch/streamlink/install")
+def api_install_streamlink():
+    try:
+        success = install_streamlink()
+        if success:
+            return {"message": "Streamlink installed successfully."}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to install Streamlink.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class TwitchLaunchRequest(BaseModel):
+    channel: str
+
+@router.post("/twitch-watch/streamlink/launch")
+def api_launch_streamlink(req: TwitchLaunchRequest):
+    try:
+        success = launch_streamlink(req.channel)
+        if success:
+            return {"message": f"Launched streamlink for {req.channel}."}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to launch Streamlink.")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

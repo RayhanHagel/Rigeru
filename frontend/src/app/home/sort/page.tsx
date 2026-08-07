@@ -50,14 +50,14 @@ function SortableItem({ id, item, onDelete, onEdit }: { id: string, item: QuickC
     <div 
       ref={setNodeRef} 
       style={style} 
-      className={`bg-zinc-900/80 border rounded-xl overflow-hidden flex items-stretch transition-shadow mb-3 ${isDragging ? 'border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] opacity-80' : 'border-white/5 shadow-md'}`}
+      className={`bg-zinc-900/80 border rounded-xl overflow-hidden flex items-stretch transition-shadow mb-3 ${isDragging ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.4)] opacity-80' : 'border-white/5 shadow-md'}`}
     >
       <div 
         {...attributes} 
         {...listeners}
         className="bg-zinc-950 p-3 flex flex-col justify-center cursor-grab active:cursor-grabbing border-r border-white/5 group w-12 items-center shrink-0"
       >
-        <GripVertical size={20} className="text-zinc-600 group-hover:text-purple-400" />
+        <GripVertical size={20} className="text-zinc-600 group-hover:text-primary" />
       </div>
       
       <div className="p-4 flex flex-1 flex-col justify-center overflow-hidden">
@@ -67,7 +67,7 @@ function SortableItem({ id, item, onDelete, onEdit }: { id: string, item: QuickC
         <div className="text-sm text-zinc-300 font-mono bg-zinc-950 p-2 rounded border border-white/5 w-full">
           {item.map((w, i) => (
             <div key={i} className="mb-1 last:mb-0 border-b border-white/5 pb-1 last:border-0 last:pb-0 truncate flex gap-2 items-center">
-              <span className="text-[9px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1 py-0.5 rounded tracking-widest uppercase">{w.widget}</span>
+              <span className="text-[9px] font-bold bg-primary/10 text-primary border border-primary/20 px-1 py-0.5 rounded tracking-widest uppercase">{w.widget}</span>
               <span>{w.input.substring(0, 40).replace(/\n/g, " ") || "Empty"}</span>
             </div>
           ))}
@@ -75,7 +75,7 @@ function SortableItem({ id, item, onDelete, onEdit }: { id: string, item: QuickC
       </div>
 
       <div className="p-3 flex items-center justify-center border-l border-white/5 bg-zinc-950/50 shrink-0 gap-1">
-        <Button variant="secondary" onClick={() => onEdit(id)} className="p-2 h-auto text-zinc-500 hover:text-blue-400">
+        <Button variant="secondary" onClick={() => onEdit(id)} className="p-2 h-auto text-zinc-500 hover:text-secondary">
           <Pencil size={18} />
         </Button>
         <Button variant="secondary" onClick={() => onDelete(id)} className="p-2 h-auto text-zinc-500 hover:text-red-400">
@@ -106,11 +106,20 @@ export default function HomeSortPage() {
   const [newWidgetInput2, setNewWidgetInput2] = useState("");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/dashboard")
+    const token = localStorage.getItem("auth_token");
+    fetch("/api/dashboard", {
+      headers: {
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      }
+    })
       .then(res => res.json())
-      .then((data: QuickCard[]) => {
-        setCache(data);
-        setItems(data.map((_, i) => String(i)));
+      .then((data: any) => {
+        if (Array.isArray(data)) {
+          setCache(data as QuickCard[]);
+          setItems((data as QuickCard[]).map((_, i) => String(i)));
+        } else {
+          console.error("Dashboard API returned non-array:", data);
+        }
       })
       .catch(err => console.error(err))
       .finally(() => setIsLoading(false));
@@ -146,7 +155,7 @@ export default function HomeSortPage() {
     try {
       // Reconstruct the array based on the current items order
       const newCache = items.map(id => cache[parseInt(id)]);
-      const res = await fetch("http://127.0.0.1:8000/api/home/quick-cache/sort", {
+      const res = await fetch("/api/home/quick-cache/sort", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: newCache })
@@ -210,7 +219,7 @@ export default function HomeSortPage() {
     // Auto-save to backend
     try {
       const reconstructedCache = newItems.map(id => newCache[parseInt(id)]);
-      await fetch("http://127.0.0.1:8000/api/home/quick-cache/sort", {
+      await fetch("/api/home/quick-cache/sort", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: reconstructedCache })
@@ -240,19 +249,16 @@ export default function HomeSortPage() {
   };
 
   if (isLoading) {
-    return <div className="p-10 text-white">Loading dashboard cache...</div>;
+    return <div className="p-10 text-white">Loading dashboard cache</div>;
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-6 lg:p-10 animate-fade-in overflow-y-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="w-full h-full flex flex-col p-6 lg:p-10 animate-slide-up overflow-y-auto">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-purple-500/20 text-purple-500 rounded-xl">
-            <Home size={28} />
-          </div>
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Sort Quick Navigation</h1>
-            <p className="text-zinc-400 text-sm mt-1">Drag and drop to reorder dashboard cards, or delete them.</p>
+            <p className="text-zinc-400 text-sm">Drag and drop to reorder dashboard cards, or delete them.</p>
           </div>
         </div>
         
@@ -274,11 +280,9 @@ export default function HomeSortPage() {
       </div>
 
       {showAddPanel && (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 mb-8 animate-fade-in max-w-4xl shadow-xl shadow-black/20">
+        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 mb-8 animate-slide-up shadow-xl shadow-black/20 w-full h-full">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <LayoutDashboard size={18} className="text-purple-400" /> 
-              {editingCardId !== null ? `Editing Card ${parseInt(editingCardId) + 1}` : "New Card Builder"}
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">{editingCardId !== null ? `Editing Card ${parseInt(editingCardId) + 1}` : "New Card Builder"}
             </h2>
             {editingCardId !== null && (
               <Button variant="secondary" onClick={() => {
@@ -298,7 +302,7 @@ export default function HomeSortPage() {
                 {stagedWidgets.map((w, idx) => (
                   <div key={idx} className="flex items-center justify-between bg-zinc-900 p-2 rounded border border-white/5">
                     <div className="flex items-center gap-2 overflow-hidden flex-1">
-                      <span className="text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded tracking-widest shrink-0">{w.widget.toUpperCase()}</span>
+                      <span className="text-[10px] font-mono bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded tracking-widest shrink-0">{w.widget.toUpperCase()}</span>
                       <span className="text-sm text-zinc-300 truncate max-w-sm">{w.input}</span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -328,7 +332,7 @@ export default function HomeSortPage() {
               <select 
                 value={newWidgetType}
                 onChange={(e) => setNewWidgetType(e.target.value)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none"
+                className="w-full bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
               >
                 <option value="link button">Link Button</option>
                 <option value="image">Image</option>
@@ -343,69 +347,85 @@ export default function HomeSortPage() {
               <div className="flex gap-2 flex-col sm:flex-row">
                 {newWidgetType === 'link button' && (
                   <>
-                    <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Label (Optional)" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm" />
-                    <input type="text" value={newWidgetInput2} onChange={(e) => setNewWidgetInput2(e.target.value)} placeholder="URL" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
+                    <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Label (Optional)" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm" />
+                    <input type="text" value={newWidgetInput2} onChange={(e) => setNewWidgetInput2(e.target.value)} placeholder="URL" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
                   </>
                 )}
                 {newWidgetType === 'clickable image' && (
                   <>
-                    <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Image URL" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm" />
-                    <input type="text" value={newWidgetInput2} onChange={(e) => setNewWidgetInput2(e.target.value)} placeholder="Destination URL (Optional)" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
+                    <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Image URL" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm" />
+                    <input type="text" value={newWidgetInput2} onChange={(e) => setNewWidgetInput2(e.target.value)} placeholder="Destination URL (Optional)" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
                   </>
                 )}
                 {(newWidgetType === 'text' || newWidgetType === 'caption' || newWidgetType === 'image') && (
-                  <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Content" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
+                  <input type="text" value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} placeholder="Content" className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm" onKeyDown={(e) => { if (e.key === 'Enter') handleAddWidget(); }} />
                 )}
                 {newWidgetType === 'internal page' && (
-                  <select value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-purple-500 outline-none font-mono text-sm">
+                  <select value={newWidgetInput1} onChange={(e) => setNewWidgetInput1(e.target.value)} className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm">
                     <option value="">Select a page...</option>
                     
                     <optgroup label="Files & Documents">
-                      <option value="/files-documents/cv-builder">CV Builder</option>
-                      <option value="/files-documents/excel-cleaner">Excel Cleaner</option>
-                      <option value="/files-documents/expense-tracker">Expense Tracker</option>
-                      <option value="/files-documents/file-organizer">File Organizer</option>
-                      <option value="/files-documents/hash-integrity">Hash Integrity</option>
-                      <option value="/files-documents/link-cleaner">Link Cleaner</option>
-                      <option value="/files-documents/math-latex">Math LaTeX</option>
-                      <option value="/files-documents/pdf-studio">PDF Studio</option>
+                      <option value="/productivity-life/cv-builder">CV Builder</option>
+                      <option value="/documents-text/excel-cleaner">Excel Cleaner</option>
+                      <option value="/productivity-life/expense-tracker">Expense Tracker</option>
+                      <option value="/file-utils/everything-search">Everything Search</option>
+                      <option value="/file-utils/file-organizer">File Organizer</option>
+                      <option value="/file-utils/hash-integrity">Hash Integrity</option>
+                      <option value="/file-utils/link-cleaner">Link Cleaner</option>
+                      <option value="/documents-text/math-latex">Math LaTeX</option>
+                      <option value="/documents-text/pdf-studio">PDF Studio</option>
+                      <option value="/productivity-life/korean-study">Korean Study SRS</option>
+                      <option value="/productivity-life/whiteboard">Digital Whiteboard</option>
+                      <option value="/productivity-life/qr-code">QR Code Tools</option>
+                      <option value="/documents-text/chart-maker">Chart Maker</option>
                     </optgroup>
                     
                     <optgroup label="Media & Entertainment">
-                      <option value="/media-entertainment/malsync">MAL Sync</option>
-                      <option value="/media-entertainment/manga-library">Manga Library</option>
-                      <option value="/media-entertainment/manga-read">Manga Read</option>
-                      <option value="/media-entertainment/manga-search">Manga Search</option>
-                      <option value="/media-entertainment/manga-sort">Manga Sort</option>
-                      <option value="/media-entertainment/spotify-scrobbler">Spotify Scrobbler</option>
-                      <option value="/media-entertainment/twitch-watch">Twitch Watch</option>
+                      <option value="/entertainment-reading/malsync">MAL Sync</option>
+                      <option value="/entertainment-reading/manga-library">Manga Library</option>
+                      <option value="/entertainment-reading/manga-read">Manga Read</option>
+                      <option value="/entertainment-reading/manga-search">Manga Search</option>
+                      <option value="/entertainment-reading/manga-sort">Manga Sort</option>
+                      <option value="/entertainment-reading/spotify-scrobbler">Spotify Scrobbler</option>
+                      <option value="/entertainment-reading/twitch-watch">Twitch Watch</option>
                     </optgroup>
                     
-                    <optgroup label="Media & Vision Processing">
-                      <option value="/media-vision/background-remover">Background Remover</option>
-                      <option value="/media-vision-processing/code-to-image">Code to Image</option>
-                      <option value="/media-vision-processing/color-picker">Color Picker</option>
-                      <option value="/media-vision/compressor">Compressor</option>
-                      <option value="/media-vision-processing/depth-estimation">Depth Estimation</option>
-                      <option value="/media-vision-processing/face-blur">Face Blur</option>
-                      <option value="/media-vision-processing/image-upscaler">Image Upscaler</option>
-                      <option value="/media-vision-processing/media-compressor">Media Compressor</option>
-                      <option value="/media-vision-processing/object-detect">Object Detect</option>
-                      <option value="/media-vision-processing/translation">Translation</option>
-                      <option value="/media-vision-processing/vision-censor">Vision Censor</option>
+                    <optgroup label="Artificial Intelligence">
+                      <option value="/data-science/quickmachine">Visual ML Builder</option>
+                      <option value="/data-science/obsidian-builder">Obsidian AI Builder</option>
+                      <option value="/data-science/llm-chat">LLM Chat Bot</option>
+                      <option value="/data-science/translation">Local Translation</option>
+                    </optgroup>
+
+                    <optgroup label="Image & Vision">
+                      <option value="/image-vision/background-remover">Background Remover</option>
+                      <option value="/image-vision/code-to-image">Code to Image</option>
+                      <option value="/image-vision/color-picker">Color Picker</option>
+                      <option value="/audio-video/media-compressor">Compressor</option>
+                      <option value="/image-vision/depth-estimation">Depth Estimation</option>
+                      <option value="/image-vision/face-blur">Face Blur</option>
+                      <option value="/image-vision/image-upscaler">Image Upscaler</option>
+                      <option value="/audio-video/media-compressor">Media Compressor</option>
+                      <option value="/image-vision/object-detect">Object Detect</option>
+                      <option value="/image-vision/vision-censor">Vision Censor</option>
+                      <option value="/audio-video/voice-clone">Voice Cloning TTS</option>
+                      <option value="/image-vision/pinhole-photography">Pinhole Photography</option>
+                      <option value="/image-vision/fisheye">Fisheye Effect</option>
                     </optgroup>
                     
                     <optgroup label="Settings">
                       <option value="/settings/model-settings">Model Settings</option>
+                      <option value="/settings/configurations">Configurations</option>
+                      <option value="/settings/api-endpoints">API Endpoints</option>
                     </optgroup>
                     
                     <optgroup label="Subtitles & Metadata">
-                      <option value="/subtitles-metadata/exif-remover">EXIF Remover</option>
-                      <option value="/subtitles-metadata/file-timestamps">File Timestamps</option>
-                      <option value="/subtitles-metadata/media-tags">Media Tags</option>
-                      <option value="/subtitles-metadata/subtitle-fetcher">Subtitle Fetcher</option>
-                      <option value="/subtitles-metadata/subtitle-merger">Subtitle Merger</option>
-                      <option value="/subtitles-metadata/transcriber">Transcriber</option>
+                      <option value="/file-utils/exif-remover">EXIF Remover</option>
+                      <option value="/file-utils/file-timestamps">File Timestamps</option>
+                      <option value="/file-utils/media-tags">Media Tags</option>
+                      <option value="/audio-video/subtitle-fetcher">Subtitle Fetcher</option>
+                      <option value="/audio-video/subtitle-merger">Subtitle Merger</option>
+                      <option value="/audio-video/transcriber">Transcriber</option>
                     </optgroup>
                     
                     <optgroup label="System & Network">
@@ -415,16 +435,23 @@ export default function HomeSortPage() {
                       <option value="/system-network/ping-test">Ping Test</option>
                       <option value="/system-network/services">Services</option>
                       <option value="/system-network/system-monitor">System Monitor</option>
+                      <option value="/system-network/bluetooth-tracker">Bluetooth Tracker</option>
+                      <option value="/system-network/wifi-mapper">Wi-Fi Mapper</option>
+                      <option value="/system-network/lan-radar">Local Network Radar</option>
+                      <option value="/system-network/windows-tweaks">Windows Tweaks</option>
+                      <option value="/system-network/client-details">Web Client Details</option>
                     </optgroup>
                     
                     <optgroup label="Web & Downloads">
-                      <option value="/web-downloads/currency-view">Currency View</option>
-                      <option value="/web-downloads/price-monitor">Price Monitor</option>
-                      <option value="/web-downloads/rss">RSS Reader</option>
-                      <option value="/web-downloads/scraper">Visual Scraper</option>
-                      <option value="/web-downloads/spotify">Spotify Download</option>
-                      <option value="/web-downloads/youtube">YouTube Download</option>
-                      <option value="/web-downloads/youtube-rss">YouTube RSS</option>
+                      <option value="/productivity-life/currency-view">Currency View</option>
+                      <option value="/productivity-life/price-monitor">Price Monitor</option>
+                      <option value="/web-downloaders/rss">RSS Reader</option>
+                      <option value="/web-downloaders/scraper">Visual Scraper</option>
+                      <option value="/web-downloaders/image-scraper">Image Scraper</option>
+                      <option value="/web-downloaders/sitemap">Sitemap Generator</option>
+                      <option value="/web-downloaders/spotify">Spotify Download</option>
+                      <option value="/web-downloaders/youtube">YouTube Download</option>
+                      <option value="/web-downloaders/youtube-rss">YouTube RSS</option>
                     </optgroup>
                   </select>
                 )}
@@ -442,7 +469,7 @@ export default function HomeSortPage() {
           <p className="text-zinc-400">Your dashboard is empty. Add cards from the Dashboard first.</p>
         </div>
       ) : (
-        <div className="max-w-4xl">
+        <div className=" w-full h-full">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={items} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col pb-20">

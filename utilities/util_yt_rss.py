@@ -1,39 +1,35 @@
-import os
 import json
 import re
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
-from utilities.util_json import load_json
+from utilities.util_store import get_data, set_data
 
-folder_location = os.path.join("cache", "youtube")
-DB_FILE = os.path.join(folder_location, "yt_channels.json")
-CACHE_FILE = os.path.join(folder_location, "yt_feed_cache.json")
+def _get_yt_manager() -> dict:
+    return get_data("youtube_manager") or {}
 
-def _ensure_db():
-    os.makedirs(folder_location, exist_ok=True)
+def _set_yt_manager(data: dict):
+    set_data("youtube_manager", data)
 
 def load_tracked_channels() -> list:
-    """Loads tracked channels from the local JSON file."""
-    _ensure_db()
-    return load_json(DB_FILE, lambda: [])
+    """Loads tracked channels from the local store."""
+    return _get_yt_manager().get("channels", [])
 
 def save_tracked_channels(channels: list):
-    """Saves tracked channels to the local file."""
-    _ensure_db()
-    with open(DB_FILE, 'w') as f:
-        json.dump(channels, f, indent=4)
+    """Saves tracked channels to the local store."""
+    data = _get_yt_manager()
+    data["channels"] = channels
+    _set_yt_manager(data)
 
 def load_feed_cache() -> dict:
     """Loads the pre-fetched RSS data so the UI doesn't freeze on load."""
-    _ensure_db()
-    return load_json(CACHE_FILE, lambda: {})
+    return _get_yt_manager().get("cache", {})
 
-def save_feed_cache(data: dict):
-    """Saves the fully parsed feed data to JSON for instant loading."""
-    _ensure_db()
-    with open(CACHE_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
+def save_feed_cache(cache_data: dict):
+    """Saves the fully parsed feed data for instant loading."""
+    data = _get_yt_manager()
+    data["cache"] = cache_data
+    _set_yt_manager(data)
 
 def search_youtube_channel(query: str) -> tuple[str | None, str | None]:
     """Scrapes YouTube search results to find the first channel matching the query."""
@@ -52,6 +48,7 @@ def search_youtube_channel(query: str) -> tuple[str | None, str | None]:
     return None, None
 
 def add_channel(name: str, channel_id: str) -> tuple[bool, str]:
+    """Adds a single channel to the tracking list, verifying its RSS feed first."""
     channels = load_tracked_channels()
     clean_id = channel_id.split("channel/")[-1].split("?")[0].strip()
     
@@ -74,6 +71,7 @@ def add_channel(name: str, channel_id: str) -> tuple[bool, str]:
     return True, f"Successfully added {name}!"
 
 def delete_channel(channel_id: str):
+    """Removes a channel from the tracking list."""
     channels = load_tracked_channels()
     channels = [c for c in channels if c['id'] != channel_id]
     save_tracked_channels(channels)
@@ -125,6 +123,7 @@ def fetch_latest_videos(channel_id: str, limit: int = 15) -> tuple[bool, list | 
         return False, f"Error fetching feed: {str(e)}"
 
 def bulk_add_channels(new_channels: list[dict]) -> tuple[int, int]:
+    """Adds multiple channels to the tracking list at once, skipping duplicates."""
     channels = load_tracked_channels()
     existing_ids = {c['id'] for c in channels}
     

@@ -33,3 +33,28 @@ def apply_blur_fn(image, x: int, y: int, w: int, h: int, blur_fn):
         image[y:y2, x:x2] = blur_fn(image[y:y2, x:x2])
         
     return image
+
+def encode_cv2_image_to_bytes(cv2_img, format: str = ".jpg") -> bytes:
+    """
+    Encodes an OpenCV image (numpy array) to raw bytes.
+    Returns empty bytes on failure.
+    """
+    import cv2
+    is_success, buffer = cv2.imencode(format, cv2.cvtColor(cv2_img, cv2.COLOR_RGB2BGR))
+    if is_success:
+        return buffer.tobytes()
+    return b""
+
+def encode_cv2_image_to_base64(cv2_img, format: str = ".jpg") -> str:
+    """
+    Encodes an OpenCV image to a base64 string, formatted as a data URL.
+    Returns empty string on failure.
+    """
+    import cv2
+    import base64
+    is_success, buffer = cv2.imencode(format, cv2.cvtColor(cv2_img, cv2.COLOR_RGB2BGR))
+    if is_success:
+        b64 = base64.b64encode(buffer).decode("utf-8")
+        mime = "image/jpeg" if format.lower() in [".jpg", ".jpeg"] else "image/png"
+        return f"data:{mime};base64,{b64}"
+    return ""

@@ -3,7 +3,7 @@ import time
 import socket
 import threading
 import subprocess
-import requests
+import httpx
 import hashlib
 from PIL import Image, ImageOps, UnidentifiedImageError
 from io import BytesIO
@@ -27,6 +27,7 @@ DEFAULT_HEADERS = {
 _orig_create_connection = connection.create_connection
 
 def resolve_doh(hostname):
+    """Resolves a hostname to an IPv4 address using Cloudflare DNS-over-HTTPS."""
     if hostname.replace('.', '').isdigit():
         return hostname
     try:
@@ -45,6 +46,7 @@ def resolve_doh(hostname):
     return hostname
 
 def patched_create_connection(address, *args, **kwargs):
+    """Monkey-patched create_connection that resolves hostnames via DoH before connecting."""
     host, port = address
     ip = resolve_doh(host)
     return _orig_create_connection((ip, port), *args, **kwargs)
@@ -54,17 +56,25 @@ connection.create_connection = patched_create_connection
 
 from utilities.util_tor import is_tor_running, start_tor_background
 
-def better_get(url: str, params: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = False, force_tor: bool = False) -> requests.Response | None:
+def better_get(url: str, params: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = False, force_tor: bool = False) -> httpx.Response | None:
     """
     Robust GET request. Uses Cloudflare DoH natively to bypass DNS blocking.
     Falls back to Tor if DoH fails (e.g. SNI blocking by ISP).
     """
+    # Normalize protocol-relative URLs (e.g. //example.com/img.jpg)
+    if url and url.startswith("//"):
+        url = "https:" + url
+    # Skip URLs with no valid scheme
+    if not url or not url.startswith(("http://", "https://")):
+        print(f"[better_get] Skipping invalid URL: {url!r}")
+        return None
+
     req_headers = {**DEFAULT_HEADERS, **(headers or {})} if use_default_headers else (headers or {})
     
     if not force_tor:
         for attempt in range(retries):
             try:
-                response = requests.get(url, params=params, headers=req_headers, timeout=timeout)
+                response = httpx.get(url, params=params, headers=req_headers, timeout=timeout, follow_redirects=True)
                 if response.status_code == 200:
                     return response
                 elif response.status_code == 404:
@@ -75,10 +85,10 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
                     if response.status_code in (429, 500, 502, 503, 504, 600) and attempt < retries - 1:
                         time.sleep(2)
                     continue
-            except requests.exceptions.SSLError as e:
-                print(f"GET intercepted (SSL Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
+            except httpx.ConnectError as e:
+                print(f"GET intercepted (Connect Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
                 break
-            except requests.RequestException as e:
+            except httpx.RequestError as e:
                 print(f"GET threw an error (attempt {attempt + 1}/{retries}): {e}.")
                 if attempt < retries - 1:
                     time.sleep(2)
@@ -91,14 +101,11 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
         if not success:
             return None
 
-    proxies = {
-        'http': 'socks5h://127.0.0.1:9050',
-        'https': 'socks5h://127.0.0.1:9050'
-    }
+    proxy_url = "socks5h://127.0.0.1:9050"
 
     for attempt in range(retries):
         try:
-            response = requests.get(url, params=params, headers=req_headers, timeout=timeout + 5, proxies=proxies)
+            response = httpx.get(url, params=params, headers=req_headers, timeout=timeout + 5, proxy=proxy_url, follow_redirects=True)
             if response.status_code in (429, 500, 502, 503, 504, 600):
                 print(f"[Tor GET] Failed with status {response.status_code} (attempt {attempt + 1}/{retries})")
                 if attempt < retries - 1:
@@ -109,7 +116,7 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
             else:
                 print(f"[Tor GET] Returned status {response.status_code}")
             return response
-        except requests.RequestException as e:
+        except httpx.RequestError as e:
             print(f"[Tor GET] Threw an error (attempt {attempt + 1}/{retries}): {e}")
             if attempt < retries - 1:
                 time.sleep(2)
@@ -118,7 +125,7 @@ def better_get(url: str, params: dict = None, headers: dict = None, timeout: int
     return None
 
 
-def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = True) -> requests.Response | None:
+def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = None, headers: dict = None, timeout: int = 10, retries: int = 3, use_default_headers: bool = True) -> httpx.Response | None:
     """
     Robust POST request. Uses Cloudflare DoH natively to bypass DNS blocking.
     Falls back to Tor if DoH fails (e.g. SNI blocking by ISP).
@@ -127,7 +134,7 @@ def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = 
     
     for attempt in range(retries):
         try:
-            response = requests.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout)
+            response = httpx.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout, follow_redirects=True)
             if response.status_code == 200:
                 return response
             else:
@@ -135,10 +142,10 @@ def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = 
                 if response.status_code in (429, 500, 502, 503, 504, 600) and attempt < retries - 1:
                     time.sleep(2)
                 continue
-        except requests.exceptions.SSLError as e:
-            print(f"POST intercepted (SSL Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
+        except httpx.ConnectError as e:
+            print(f"POST intercepted (Connect Error) on attempt {attempt + 1}. ISP might be SNI blocking it. Failing over to Tor immediately.")
             break
-        except requests.RequestException as e:
+        except httpx.RequestError as e:
             print(f"POST threw an error (attempt {attempt + 1}/{retries}): {e}.")
             if attempt < retries - 1:
                 time.sleep(2)
@@ -151,14 +158,11 @@ def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = 
         if not success:
             return None
 
-    proxies = {
-        'http': 'socks5h://127.0.0.1:9050',
-        'https': 'socks5h://127.0.0.1:9050'
-    }
+    proxy_url = "socks5h://127.0.0.1:9050"
 
     for attempt in range(retries):
         try:
-            response = requests.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout + 5, proxies=proxies)
+            response = httpx.post(url, data=payload, json=json_data, headers=req_headers, timeout=timeout + 5, proxy=proxy_url, follow_redirects=True)
             if response.status_code in (429, 500, 502, 503, 504, 600):
                 print(f"[Tor POST] Failed with status {response.status_code} (attempt {attempt + 1}/{retries})")
                 if attempt < retries - 1:
@@ -169,7 +173,7 @@ def better_post(url: str, payload: dict | str | bytes = None, json_data: dict = 
             else:
                 print(f"[Tor POST] Returned status {response.status_code}")
             return response
-        except requests.RequestException as e:
+        except httpx.RequestError as e:
             print(f"[Tor POST] Threw an error (attempt {attempt + 1}/{retries}): {e}")
             if attempt < retries - 1:
                 time.sleep(2)
