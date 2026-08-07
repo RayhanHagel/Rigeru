@@ -3,6 +3,7 @@ import concurrent.futures
 
 
 def _process_single_image(args):
+    """Worker function for compressing a single image in a parallel process."""
     input_path, output_path, quality, max_width, max_height, fit_mode = args
     from PIL import Image, UnidentifiedImageError, ImageOps, ImageFilter
     

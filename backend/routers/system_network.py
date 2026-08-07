@@ -1,11 +1,34 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import List, Optional
+from fastapi.responses import StreamingResponse, PlainTextResponse
+import queue
+import threading
 
 from utilities.util_package_manager import load_local_cache, save_local_cache, fetch_all_fresh_data
 import utilities.util_package_scoop as scoop
 import utilities.util_package_winget as winget
 import utilities.util_package_choco as choco
+import utilities.windows_tweaks as tweaks
+from utilities.util_stream import current_log_queue
+
+def stream_generator(func, *args, **kwargs):
+    q = queue.Queue()
+    def worker():
+        current_log_queue.set(q)
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            q.put(f"Exception: {str(e)}\n")
+        finally:
+            q.put(None)
+    thread = threading.Thread(target=worker)
+    thread.start()
+    while True:
+        item = q.get()
+        if item is None:
+            break
+        yield item
 
 router = APIRouter(prefix="/api/system", tags=["System & Network"])
 
@@ -16,7 +39,7 @@ router = APIRouter(prefix="/api/system", tags=["System & Network"])
 @router.get("/static-storage/size")
 def get_static_storage_size():
     import os
-    static_dir = "static"
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
     if not os.path.exists(static_dir):
         return {"size_bytes": 0, "size_str": "0 B"}
     
@@ -45,7 +68,7 @@ def get_static_storage_size():
 def clear_static_storage():
     import os
     import shutil
-    static_dir = "static"
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
     if not os.path.exists(static_dir):
         return {"message": "Static folder is already empty."}
         
@@ -67,6 +90,60 @@ def clear_static_storage():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to clear static storage: {str(e)}")
 
+@router.get("/temp-storage/size")
+def get_temp_storage_size():
+    import os
+    temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "temp")
+    if not os.path.exists(temp_dir):
+        return {"size_bytes": 0, "size_str": "0 B"}
+    
+    total_size = 0
+    for dirpath, _, filenames in os.walk(temp_dir):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+                
+    # format size
+    size_str = f"{total_size} B"
+    if total_size > 1024 * 1024 * 1024:
+        size_str = f"{total_size / (1024 * 1024 * 1024):.2f} GB"
+    elif total_size > 1024 * 1024:
+        size_str = f"{total_size / (1024 * 1024):.2f} MB"
+    elif total_size > 1024:
+        size_str = f"{total_size / 1024:.2f} KB"
+        
+    return {"size_bytes": total_size, "size_str": size_str}
+
+@router.delete("/temp-storage/clear")
+def clear_temp_storage():
+    import os
+    import shutil
+    temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "temp")
+    if not os.path.exists(temp_dir):
+        return {"message": "Temp folder is already empty."}
+        
+    try:
+        deleted_count = 0
+        for dirpath, dirnames, filenames in os.walk(temp_dir, topdown=False):
+            for f in filenames:
+                file_path = os.path.join(dirpath, f)
+                try:
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                        deleted_count += 1
+                except Exception:
+                    pass
+            for d in dirnames:
+                dir_path = os.path.join(dirpath, d)
+                try:
+                    os.rmdir(dir_path)
+                except Exception:
+                    pass
+        return {"message": f"Cleared {deleted_count} temp files."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear temp storage: {str(e)}")
+
 # ==========================================
 # Package Manager Endpoints
 # ==========================================
@@ -78,15 +155,13 @@ def get_package_cache():
     return cache
 
 @router.post("/packages/revalidate")
-def revalidate_package_cache(background_tasks: BackgroundTasks):
-    """Triggers a background fetch of all packages and updates the local cache."""
-    def fetch_and_save():
+def revalidate_package_cache():
+    """Triggers a fetch of all packages and updates the local cache."""
+    def _do_revalidate():
         current_cache = load_local_cache()
         fresh_data = fetch_all_fresh_data(current_cache)
         save_local_cache(fresh_data)
-        
-    background_tasks.add_task(fetch_and_save)
-    return {"message": "Revalidation started in the background"}
+    return StreamingResponse(stream_generator(_do_revalidate), media_type="text/plain")
 
 class PackageSearchReq(BaseModel):
     query: str
@@ -124,18 +199,18 @@ def install_packages(pm_name: str, req: PackageActionReq):
     if not pkgs:
         raise HTTPException(status_code=400, detail="No packages provided")
         
-    if pm_name == "winget":
-        success, log = winget.install_packages(pkgs)
-    elif pm_name == "scoop":
-        success, log = scoop.install_packages(pkgs)
-    elif pm_name == "choco":
-        success, log = choco.install_packages(pkgs)
-    else:
-        raise HTTPException(status_code=400, detail="Unknown package manager")
-        
-    if not success:
-        raise HTTPException(status_code=500, detail=log)
-    return {"message": log}
+    def _do_install():
+        if pm_name == "winget":
+            winget.install_packages(pkgs)
+        elif pm_name == "scoop":
+            scoop.install_packages(pkgs)
+        elif pm_name == "choco":
+            choco.install_packages(pkgs)
+        else:
+            q = current_log_queue.get()
+            if q: q.put("Unknown package manager\n")
+            
+    return StreamingResponse(stream_generator(_do_install), media_type="text/plain")
 
 @router.post("/packages/{pm_name}/uninstall")
 def uninstall_packages(pm_name: str, req: PackageActionReq):
@@ -143,28 +218,19 @@ def uninstall_packages(pm_name: str, req: PackageActionReq):
     if not pkgs:
         raise HTTPException(status_code=400, detail="No packages provided")
         
-    # the util functions take a single package name for uninstall/update
-    log_messages = []
-    has_error = False
-    
-    for pkg in pkgs:
-        if pm_name == "winget":
-            success, log = winget.uninstall_package(pkg)
-        elif pm_name == "scoop":
-            success, log = scoop.uninstall_package(pkg)
-        elif pm_name == "choco":
-            success, log = choco.uninstall_package(pkg)
-        else:
-            raise HTTPException(status_code=400, detail="Unknown package manager")
+    def _do_uninstall():
+        for pkg in pkgs:
+            if pm_name == "winget":
+                winget.uninstall_package(pkg)
+            elif pm_name == "scoop":
+                scoop.uninstall_package(pkg)
+            elif pm_name == "choco":
+                choco.uninstall_package(pkg)
+            else:
+                q = current_log_queue.get()
+                if q: q.put("Unknown package manager\n")
             
-        log_messages.append(log)
-        if not success:
-            has_error = True
-            
-    combined_log = "\n".join(log_messages)
-    if has_error:
-        raise HTTPException(status_code=500, detail=combined_log)
-    return {"message": combined_log}
+    return StreamingResponse(stream_generator(_do_uninstall), media_type="text/plain")
 
 @router.post("/packages/{pm_name}/update")
 def update_packages(pm_name: str, req: PackageActionReq):
@@ -172,49 +238,40 @@ def update_packages(pm_name: str, req: PackageActionReq):
     if not pkgs:
         raise HTTPException(status_code=400, detail="No packages provided")
         
-    log_messages = []
-    has_error = False
-    
-    for pkg in pkgs:
-        if pm_name == "winget":
-            success, log = winget.update_package(pkg)
-        elif pm_name == "scoop":
-            success, log = scoop.update_package(pkg)
-        elif pm_name == "choco":
-            success, log = choco.update_package(pkg)
-        else:
-            raise HTTPException(status_code=400, detail="Unknown package manager")
+    def _do_update():
+        for pkg in pkgs:
+            if pm_name == "winget":
+                winget.update_package(pkg)
+            elif pm_name == "scoop":
+                scoop.update_package(pkg)
+            elif pm_name == "choco":
+                choco.update_package(pkg)
+            else:
+                q = current_log_queue.get()
+                if q: q.put("Unknown package manager\n")
             
-        log_messages.append(log)
-        if not success:
-            has_error = True
-            
-    combined_log = "\n".join(log_messages)
-    if has_error:
-        raise HTTPException(status_code=500, detail=combined_log)
-    return {"message": combined_log}
+    return StreamingResponse(stream_generator(_do_update), media_type="text/plain")
 
 @router.post("/packages/{pm_name}/upgrade-all")
 def upgrade_all_packages(pm_name: str):
-    if pm_name == "winget":
-        success, log = winget.upgrade_all()
-    elif pm_name == "scoop":
-        success, log = scoop.update_all()
-    elif pm_name == "choco":
-        success, log = choco.upgrade_all()
-    else:
-        raise HTTPException(status_code=400, detail="Unknown package manager")
-        
-    if not success:
-        raise HTTPException(status_code=500, detail=log)
-    return {"message": log}
+    def _do_upgrade():
+        if pm_name == "winget":
+            winget.upgrade_all()
+        elif pm_name == "scoop":
+            scoop.update_all()
+        elif pm_name == "choco":
+            choco.upgrade_all()
+        else:
+            q = current_log_queue.get()
+            if q: q.put("Unknown package manager\n")
+            
+    return StreamingResponse(stream_generator(_do_upgrade), media_type="text/plain")
 
 @router.post("/packages/scoop/update-manager")
 def update_scoop_manager():
-    success, log = scoop.update_scoop()
-    if not success:
-        raise HTTPException(status_code=500, detail=log)
-    return {"message": log}
+    def _do_update():
+        scoop.update_scoop()
+    return StreamingResponse(stream_generator(_do_update), media_type="text/plain")
 
 @router.post("/packages/scoop/cleanup")
 def cleanup_scoop_manager():
@@ -263,11 +320,41 @@ def container_action(container_id: str, action: str):
         raise HTTPException(status_code=500, detail=log)
     return {"message": log}
 
+@router.get("/docker/project/{project_name}")
+def get_docker_project_file(project_name: str):
+    success, data = util_docker.read_project_compose_file(project_name)
+    if not success:
+        raise HTTPException(status_code=404, detail=data)
+    return {"content": data}
+
+class ProjectConfigRequest(BaseModel):
+    content: str
+
+@router.post("/docker/project/{project_name}/config")
+def update_docker_project_file(project_name: str, req: ProjectConfigRequest):
+    success, msg = util_docker.save_project_compose_file(project_name, req.content)
+    if not success:
+        raise HTTPException(status_code=500, detail=msg)
+    return {"message": msg}
+
+@router.post("/docker/project/{project_name}/compose-up")
+def compose_up_project(project_name: str):
+    success, msg = util_docker.compose_up_no_recreate(project_name)
+    if not success:
+        raise HTTPException(status_code=500, detail=msg)
+    return {"message": msg}
+
+@router.post("/docker/project/{project_name}/compose-down")
+def compose_down_project(project_name: str):
+    success, msg = util_docker.compose_down_v(project_name)
+    if not success:
+        raise HTTPException(status_code=500, detail=msg)
+    return {"message": msg}
+
 # ==========================================
 # Environment Variables Endpoints
 # ==========================================
 import utilities.util_env as util_env
-from fastapi.responses import PlainTextResponse
 
 @router.get("/env/path")
 def get_env_paths():
@@ -378,3 +465,158 @@ def set_dns(req: SetDnsRequest):
     if not success:
         raise HTTPException(status_code=500, detail=log)
     return {"message": log}
+
+@router.get("/ports")
+def get_open_ports():
+    import psutil
+    import socket
+    ports = []
+    
+    try:
+        connections = psutil.net_connections(kind='inet')
+        for conn in connections:
+            # We are interested in listening ports and established ones, but let's stick to 'LISTEN' or open UDP
+            if conn.status == 'LISTEN' or conn.type == socket.SOCK_DGRAM:
+                app_name = "Unknown"
+                if conn.pid:
+                    try:
+                        process = psutil.Process(conn.pid)
+                        app_name = process.name()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        app_name = "Access Denied / Unknown"
+                
+                ports.append({
+                    "port": conn.laddr.port,
+                    "ip": conn.laddr.ip,
+                    "status": conn.status if conn.status else "OPEN",
+                    "type": "TCP" if conn.type == socket.SOCK_STREAM else "UDP",
+                    "pid": conn.pid,
+                    "app": app_name
+                })
+        
+        # Remove duplicates by port and type
+        unique_ports = { (p["port"], p["ip"], p["type"]): p for p in ports }.values()
+        sorted_ports = sorted(list(unique_ports), key=lambda x: x["port"])
+        return {"ports": sorted_ports}
+    except ImportError:
+        raise HTTPException(status_code=500, detail="psutil module is not installed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==========================================
+# Bluetooth Tracker Endpoints
+# ==========================================
+import utilities.bluetooth_tracker as util_bt
+
+@router.get("/bluetooth/status")
+def get_bluetooth_status():
+    return util_bt.get_status()
+
+@router.get("/bluetooth/devices")
+def get_bluetooth_devices():
+    return {"devices": util_bt.get_devices()}
+
+@router.get("/bluetooth/history/{mac}")
+def get_bluetooth_history(mac: str):
+    return {"history": util_bt.get_device_history(mac)}
+
+@router.post("/bluetooth/clear")
+def clear_bluetooth_history():
+    return util_bt.clear_devices()
+
+@router.post("/bluetooth/start")
+async def start_bluetooth_tracking():
+    return util_bt.start_tracking()
+
+@router.post("/bluetooth/stop")
+async def stop_bluetooth_tracking():
+    return util_bt.stop_tracking()
+
+
+class SetLocationRequest(BaseModel):
+    lat: float
+    lon: float
+
+@router.post("/bluetooth/set-location")
+def set_bluetooth_location(req: SetLocationRequest):
+    return util_bt.set_manual_location(req.lat, req.lon)
+
+from utilities.util_network import better_get
+import urllib.parse
+
+@router.get("/bluetooth/search-location")
+def search_location(q: str):
+    url = f"https://nominatim.openstreetmap.org/search?q={urllib.parse.quote(q)}&format=json&limit=5"
+    res = better_get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"})
+    if res and res.status_code == 200:
+        return res.json()
+    return []
+
+# ==========================================
+# Wi-Fi Mapper Endpoints
+# ==========================================
+import utilities.wifi_mapper as util_wifi
+
+@router.get("/wifi/status")
+def get_wifi_status():
+    return util_wifi.get_status()
+
+@router.get("/wifi/networks")
+def get_wifi_networks():
+    return {"networks": util_wifi.get_networks()}
+
+@router.get("/wifi/history/{bssid}")
+def get_wifi_history(bssid: str):
+    return {"history": util_wifi.get_network_history(bssid)}
+
+@router.post("/wifi/clear")
+def clear_wifi_history():
+    return util_wifi.clear_networks()
+
+@router.post("/wifi/start")
+async def start_wifi_tracking():
+    return util_wifi.start_tracking()
+
+@router.post("/wifi/stop")
+async def stop_wifi_tracking():
+    return util_wifi.stop_tracking()
+
+@router.post("/wifi/set-location")
+def set_wifi_location(req: SetLocationRequest):
+    return util_wifi.set_manual_location(req.lat, req.lon)
+
+# ==========================================
+# LAN Radar Endpoints
+# ==========================================
+import utilities.lan_radar as util_lan
+
+@router.get("/lan/status")
+def get_lan_status():
+    return util_lan.get_status()
+
+@router.get("/lan/devices")
+def get_lan_devices():
+    return {"devices": util_lan.get_devices()}
+
+@router.post("/lan/start")
+async def start_lan_tracking():
+    return util_lan.start_tracking()
+
+@router.post("/lan/stop")
+async def stop_lan_tracking():
+    return util_lan.stop_tracking()
+
+@router.post("/lan/clear")
+def clear_lan_devices():
+    import utilities.lan_radar as lr
+    lr.clear_devices()
+    return {"status": "cleared"}
+
+# ==========================================
+# Windows Tweaks
+# ==========================================
+
+@router.get("/tweaks")
+def get_windows_tweaks():
+    """Get the status of all Windows tweaks and their PowerShell scripts"""
+    return {"tweaks": tweaks.get_all_tweaks()}

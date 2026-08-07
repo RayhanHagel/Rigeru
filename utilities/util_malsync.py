@@ -2,39 +2,42 @@ import os
 import secrets
 import time
 import urllib.parse
-from utilities.util_json import load_json, save_json
 from utilities.util_network import better_get, better_post
-
-# Route the DB files to the cache folder
-CACHE_DIR = os.path.join(".", "cache", "malsync")
-os.makedirs(CACHE_DIR, exist_ok=True)
-DB_FILE = os.path.join(CACHE_DIR, "anime_tracking.json")
-MANGA_DB_FILE = os.path.join(CACHE_DIR, "manga_tracking.json") # <-- NEW
-OAUTH_FILE = os.path.join(CACHE_DIR, "mal_oauth.json")
-CRED_FILE = os.path.join(CACHE_DIR, "mal_credentials.json")
+from utilities.util_store import get_data, set_data
 
 REDIRECT_URI = "http://localhost:3000/media-entertainment/malsync"
 
+def _get_mal_sync() -> dict:
+    return get_data("mal_sync") or {}
+
+def _set_mal_sync(data: dict):
+    set_data("mal_sync", data)
 
 # ─────────────────────────────────────────────
 # Credentials Management
 # ─────────────────────────────────────────────
 def load_credentials() -> dict:
-    return load_json(CRED_FILE, default_factory=dict)
-
+    """Loads MAL API credentials (client ID & secret) from store."""
+    return _get_mal_sync().get("credentials", {})
 
 def save_credentials(client_id: str, client_secret: str):
-    save_json(CRED_FILE, {"client_id": client_id,
-              "client_secret": client_secret})
+    """Saves MAL API credentials to store."""
+    data = _get_mal_sync()
+    data["credentials"] = {"client_id": client_id, "client_secret": client_secret}
+    _set_mal_sync(data)
 
 # ─────────────────────────────────────────────
 # OAuth2 Flow (PKCE)
 # ─────────────────────────────────────────────
 def get_oauth_state() -> dict:
-    return load_json(OAUTH_FILE, default_factory=dict)
+    """Retrieves the current OAuth token state from store."""
+    return _get_mal_sync().get("oauth", {})
 
-def save_oauth_state(data: dict):
-    save_json(OAUTH_FILE, data)
+def save_oauth_state(oauth_data: dict):
+    """Persists the OAuth token state to store."""
+    data = _get_mal_sync()
+    data["oauth"] = oauth_data
+    _set_mal_sync(data)
 
 def generate_auth_url() -> str | None:
     """Generates the MAL authorization URL and saves the PKCE verifier locally."""
@@ -150,12 +153,17 @@ def get_valid_token() -> str | None:
 # Local Library Management (Anime)
 # ─────────────────────────────────────────────
 def load_anime_list() -> dict:
-    return load_json(DB_FILE, default_factory=dict)
+    """Loads the cached Anime tracking list."""
+    return _get_mal_sync().get("tracking", {})
 
-def save_anime_list(data: dict):
-    save_json(DB_FILE, data)
+def save_anime_list(tracking_data: dict):
+    """Saves the Anime tracking list to store."""
+    data = _get_mal_sync()
+    data["tracking"] = tracking_data
+    _set_mal_sync(data)
 
 def update_progress(mal_id: str, watched: int):
+    """Updates the watched episode count for a specific Anime in the local cache."""
     library = load_anime_list()
     if mal_id in library:
         total = library[mal_id].get("episodes_total", 0)
@@ -170,6 +178,7 @@ def update_progress(mal_id: str, watched: int):
         save_anime_list(library)
 
 def remove_from_library(mal_id: str):
+    """Removes an Anime from the local tracking cache."""
     library = load_anime_list()
     if mal_id in library:
         del library[mal_id]
@@ -179,12 +188,17 @@ def remove_from_library(mal_id: str):
 # Local Library Management (Manga) <-- NEW
 # ─────────────────────────────────────────────
 def load_manga_list() -> dict:
-    return load_json(MANGA_DB_FILE, default_factory=dict)
+    """Loads the cached Manga tracking list."""
+    return get_data("manga_manager").get("tracking", {}) if get_data("manga_manager") else {}
 
-def save_manga_list(data: dict):
-    save_json(MANGA_DB_FILE, data)
+def save_manga_list(tracking_data: dict):
+    """Saves the Manga tracking list to cache."""
+    manga_data = get_data("manga_manager") or {}
+    manga_data["tracking"] = tracking_data
+    set_data("manga_manager", manga_data)
 
 def update_manga_progress(mal_id: str, read: int):
+    """Updates the read chapter count for a specific Manga in the local cache."""
     library = load_manga_list()
     if mal_id in library:
         total = library[mal_id].get("chapters_total", 0)
@@ -199,6 +213,7 @@ def update_manga_progress(mal_id: str, read: int):
         save_manga_list(library)
 
 def remove_from_manga_library(mal_id: str):
+    """Removes a Manga from the local tracking cache."""
     library = load_manga_list()
     if mal_id in library:
         del library[mal_id]
@@ -214,6 +229,29 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
         return False, "Not authenticated."
 
     headers = {"Authorization": f"Bearer {token}"}
+    
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    mal_static_dir = os.path.join(base_dir, "static", "mal")
+    os.makedirs(mal_static_dir, exist_ok=True)
+    
+    def cache_image(url: str, mal_id: str, prefix: str) -> str:
+        if not url:
+            return ""
+        try:
+            resp = better_get(url)
+            if resp and resp.status_code == 200:
+                ext = ".jpg"
+                if "png" in resp.headers.get("Content-Type", ""): ext = ".png"
+                elif "webp" in resp.headers.get("Content-Type", ""): ext = ".webp"
+                
+                filename = f"{prefix}_{mal_id}{ext}"
+                filepath = os.path.join(mal_static_dir, filename)
+                with open(filepath, "wb") as f:
+                    f.write(resp.content)
+                return f"/static/mal/{filename}"
+        except:
+            pass
+        return url
     
     try:
         # --- SYNC ANIME ---
@@ -236,11 +274,14 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
             status_data = item.get("list_status", {})
             mal_id = str(node.get("id"))
             
+            raw_image_url = node.get("main_picture", {}).get("large") or node.get("main_picture", {}).get("medium", "")
+            cached_image_url = cache_image(raw_image_url, mal_id, "anime")
+            
             anime_library[mal_id] = {
                 "title": node.get("title"),
                 "episodes_total": node.get("num_episodes") or 0,
                 "episodes_watched": status_data.get("num_episodes_watched") or 0,
-                "image_url": node.get("main_picture", {}).get("large") or node.get("main_picture", {}).get("medium", ""),
+                "image_url": cached_image_url,
                 "url": f"https://myanimelist.net/anime/{mal_id}",
                 "status": anime_status_map.get(status_data.get("status"), "Unknown")
             }
@@ -268,11 +309,14 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
             status_data = item.get("list_status", {})
             mal_id = str(node.get("id"))
             
+            raw_image_url = node.get("main_picture", {}).get("large") or node.get("main_picture", {}).get("medium", "")
+            cached_image_url = cache_image(raw_image_url, mal_id, "manga")
+            
             manga_library[mal_id] = {
                 "title": node.get("title"),
                 "chapters_total": node.get("num_chapters") or 0,
                 "chapters_read": status_data.get("num_chapters_read") or 0,
-                "image_url": node.get("main_picture", {}).get("large") or node.get("main_picture", {}).get("medium", ""),
+                "image_url": cached_image_url,
                 "url": f"https://myanimelist.net/manga/{mal_id}",
                 "status": manga_status_map.get(status_data.get("status"), "Unknown")
             }

@@ -36,6 +36,7 @@ def _ensure_paths():
 
 
 def save_frame_cache(frame_cache: dict, input_path: str) -> str:
+    """Saves the extracted face embeddings and boxes for a video to disk to avoid re-scanning."""
     cache_path = input_path + ".facecache.pkl"
     with open(cache_path, "wb") as f:
         pickle.dump(frame_cache, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -165,10 +166,22 @@ def load_face_detector(rec_model: str = None, precision: str = "fp32", det_size:
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
 
         available_providers = ort.get_available_providers()
-        requested_providers = ['TensorrtExecutionProvider',
-                               'CUDAExecutionProvider', 'CPUExecutionProvider']
+        
+        device_pref = get_model_config("device_preference")
+        requested_providers = []
+        if device_pref != "CPU Only":
+            requested_providers.extend(['TensorrtExecutionProvider', 'CUDAExecutionProvider'])
+        requested_providers.append('CPUExecutionProvider')
+
         active_providers = [
             p for p in requested_providers if p in available_providers]
+
+        # Use global inference resolution if available
+        inf_res = get_model_config("inference_resolution")
+        if inf_res:
+            try:
+                det_size = int(inf_res)
+            except: pass
 
         app = FaceAnalysis(
             name=final_model_name,
@@ -243,6 +256,10 @@ def _match_cache_to_targets(frame_cache: dict, targets_normed: np.ndarray, match
 def scan_faces(input_path: str, rec_model: str = None, precision: str = "fp32",
                sample_fps: float = 1.0, clustering_method: str = "Global", cluster_threshold: float = _CLUSTER_SIM_THRESHOLD,
                det_size: int = 640, progress_hook=None):
+    """
+    Scans an image or video for faces, extracting their bounding boxes and embeddings.
+    Optionally clusters identical faces across frames.
+    """
     from utilities.util_config import get_model_config
     det_model = get_model_config("face_blur")
     import cv2
@@ -454,11 +471,21 @@ def scan_faces(input_path: str, rec_model: str = None, precision: str = "fp32",
                         (10, 10, 3), dtype=np.uint8)
                     cap.release()
 
+                occurrences = []
+                for idx in cluster_indices:
+                    face_entry = all_extracted_faces[idx]
+                    occurrences.append({
+                        "frame": face_entry['frame'],
+                        "box": face_entry['box']
+                    })
+
                 face_data.append({
                     "id": unique_id,
                     "box": rep_box,
                     "crop": _padded_crop(rgb_frame, rep_box),
-                    "embedding": centroid
+                    "embedding": centroid,
+                    "_emb_count": len(cluster_indices),
+                    "occurrences": occurrences
                 })
                 unique_id += 1
 
@@ -478,6 +505,10 @@ def process_media_blur(input_path: str, blur_intensity: int = 50, blur_type: str
                        selected_faces: list = None, scan_fps: float = 5.0, drop_limit_sec: float = 1.0,
                        match_threshold: float = _MATCH_SIM_THRESHOLD, encoder: str = "libx264",
                        output_method: str = "reencode", frame_cache=None, progress_hook=None) -> tuple:
+    """
+    Applies a blur effect to the selected faces in an image or video.
+    For videos, uses interpolation to smooth tracking between sampled frames.
+    """
     import cv2
     _ensure_paths()
     if not selected_faces:

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Network, Activity, Settings, RefreshCw, Server, Terminal } from "lucide-react";
-import { STHeader } from "@/components/streamlit/STHeader";
-import { STContainer } from "@/components/streamlit/STContainer";
+import { Header } from "@/components/ui/Header";
+import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
 type DnsSpeed = {
@@ -30,7 +30,7 @@ export default function PingTestPage() {
 
   const fetchInterfaces = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/ping/interfaces");
+      const res = await fetch("/api/system/ping/interfaces");
       const data = await res.json();
       setInterfaces(data.interfaces || []);
       if (data.interfaces && data.interfaces.length > 0) {
@@ -43,7 +43,7 @@ export default function PingTestPage() {
 
   const fetchDnsPresets = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/ping/dns-presets");
+      const res = await fetch("/api/system/ping/dns-presets");
       const data = await res.json();
       setDnsPresetsList(data.presets || []);
       setSelectedDnsPresets(data.presets || []);
@@ -61,7 +61,7 @@ export default function PingTestPage() {
     setIsPinging(true);
     setPingLog(`Pinging ${target}...\n`);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/ping/run", {
+      const res = await fetch("/api/system/ping/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ host: target, count, ipv6 })
@@ -79,7 +79,7 @@ export default function PingTestPage() {
   const handleCheckDns = async () => {
     setIsCheckingDns(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/ping/dns-speeds", {
+      const res = await fetch("/api/system/ping/dns-speeds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ preset_names: selectedDnsPresets })
@@ -97,7 +97,7 @@ export default function PingTestPage() {
     setIsSettingDns(true);
     try {
       const [primary, secondary] = dnsPreset.split(",");
-      const res = await fetch("http://127.0.0.1:8000/api/system/ping/set-dns", {
+      const res = await fetch("/api/system/ping/set-dns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ interface_name: selectedIface, primary: primary.trim(), secondary: secondary?.trim() || "" })
@@ -113,23 +113,18 @@ export default function PingTestPage() {
   };
 
   const formatLatency = (ms: number) => {
-    if (ms === Infinity) return <span className="text-red-400">Timeout</span>;
+    if (ms === Infinity || ms === -1) return <span className="animate-slide-up text-red-400">Timeout</span>;
     const color = ms < 50 ? "text-emerald-400" : ms < 100 ? "text-amber-400" : "text-red-400";
     return <span className={color}>{ms.toFixed(1)} ms</span>;
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 animate-in fade-in">
-      <div>
-        <STHeader title="📡 Ping & DNS Test" />
-        <p className="text-zinc-400 mt-2">
-          Test network latency and configure DNS settings.
-        </p>
-      </div>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <Header title="Ping & DNS Test" subtitle="Test network latency and configure DNS settings." />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slide-up">
         <div className="space-y-6">
-          <STContainer title="Standard Ping Test" icon={<Terminal size={18} className="text-blue-400" />}>
+          <Container title="Standard Ping Test" icon={<Terminal size={18} className="text-secondary" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Target Host / IP</label>
@@ -138,10 +133,10 @@ export default function PingTestPage() {
                     type="text" 
                     value={target}
                     onChange={e => setTarget(e.target.value)}
-                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary"
                   />
                   <select
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 max-w-[150px]"
+                    className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary max-w-[150px]"
                     onChange={e => {
                       if(e.target.value) setTarget(e.target.value);
                     }}
@@ -163,18 +158,18 @@ export default function PingTestPage() {
                     type="number" 
                     value={count}
                     onChange={e => setCount(parseInt(e.target.value) || 4)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary"
                   />
                 </div>
                 <div className="flex items-end">
                   <label className="flex items-center gap-2 text-sm text-zinc-300 pb-3">
-                    <input type="checkbox" checked={ipv6} onChange={e => setIpv6(e.target.checked)} className="rounded border-zinc-800 bg-zinc-900 text-blue-500" />
+                    <input type="checkbox" checked={ipv6} onChange={e => setIpv6(e.target.checked)} className="rounded border-zinc-800 bg-zinc-900 text-secondary" />
                     Use IPv6
                   </label>
                 </div>
               </div>
               <Button variant="primary" onClick={handlePing} disabled={isPinging || !target} className="w-full">
-                {isPinging ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Pinging...</> : <><Activity size={16} className="mr-2" /> Start Ping</>}
+                {isPinging ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Pinging</> : <><Activity size={16} className="mr-2" /> Start Ping</>}
               </Button>
 
               {pingLog && (
@@ -183,9 +178,9 @@ export default function PingTestPage() {
                 </div>
               )}
             </div>
-          </STContainer>
+          </Container>
 
-          <STContainer title="DNS Settings Override (Windows)" icon={<Settings size={18} className="text-emerald-400" />}>
+          <Container title="DNS Settings Override (Windows)" icon={<Settings size={18} className="text-emerald-400" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Network Interface</label>
@@ -214,11 +209,11 @@ export default function PingTestPage() {
                 Set DNS Server (Requires Admin)
               </Button>
             </div>
-          </STContainer>
+          </Container>
         </div>
 
         <div>
-          <STContainer title="DNS Latency Benchmark" icon={<Server size={18} className="text-purple-400" />}>
+          <Container title="DNS Latency Benchmark" icon={<Server size={18} className="text-primary" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Select DNS Providers</label>
@@ -235,7 +230,7 @@ export default function PingTestPage() {
                             setSelectedDnsPresets(selectedDnsPresets.filter(p => p !== preset));
                           }
                         }}
-                        className="rounded border-zinc-800 bg-zinc-900 text-purple-500 focus:ring-purple-500"
+                        className="rounded border-zinc-800 bg-zinc-900 text-primary focus:ring-primary"
                       />
                       {preset}
                     </label>
@@ -244,7 +239,7 @@ export default function PingTestPage() {
               </div>
 
               <Button variant="secondary" onClick={handleCheckDns} disabled={isCheckingDns || selectedDnsPresets.length === 0} className="w-full">
-                {isCheckingDns ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Benchmarking...</> : "Run Benchmark"}
+                {isCheckingDns ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Benchmarking</> : "Run Benchmark"}
               </Button>
 
               {Object.keys(dnsSpeeds).length > 0 && (
@@ -270,7 +265,7 @@ export default function PingTestPage() {
                 </div>
               )}
             </div>
-          </STContainer>
+          </Container>
         </div>
       </div>
     </div>

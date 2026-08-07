@@ -14,6 +14,7 @@ def merge_ass_files(base_path: str, overlay_path: str) -> tuple[bool, str]:
             overlay_content = f.read()
 
         def get_res(content):
+            """Extracts PlayResX and PlayResY resolution values from ASS file content."""
             rx = int(re.search(r"^PlayResX:\s*(\d+)", content, re.M|re.I).group(1)) if re.search(r"^PlayResX:\s*(\d+)", content, re.M|re.I) else 1920
             ry = int(re.search(r"^PlayResY:\s*(\d+)", content, re.M|re.I).group(1)) if re.search(r"^PlayResY:\s*(\d+)", content, re.M|re.I) else 1080
             return rx, ry

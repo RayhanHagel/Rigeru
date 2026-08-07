@@ -99,3 +99,57 @@ def get_available_encoders():
         return available
     except Exception:
         return ["libx264 (CPU Standard)"]
+
+def convert_video_to_gif(input_path: str, output_path: str, fps: int = 15, scale: int = 480) -> tuple[bool, str]:
+    """
+    Converts a video to a high-quality GIF with palette generation.
+    Returns: (Success Boolean, Status/Error Message)
+    """
+    if not os.path.isfile(input_path):
+        return False, "Input video file does not exist."
+        
+    vf_param = f"fps={fps},scale={scale}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse"
+    
+    cmd = [
+        "ffmpeg", "-y", "-i", input_path,
+        "-vf", vf_param,
+        "-loop", "0", output_path
+    ]
+    
+    try:
+        process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if process.returncode != 0:
+            err_msg = process.stderr.decode('utf-8', errors='ignore')
+            return False, f"FFmpeg failed to convert video: {err_msg}"
+        return True, output_path
+    except Exception as e:
+        return False, str(e)
+
+def trim_audio(input_path: str, output_path: str, start: float, end: float) -> tuple[bool, str]:
+    """
+    Trims an audio file using FFmpeg.
+    Returns: (Success Boolean, Status/Error Message)
+    """
+    if not os.path.isfile(input_path):
+        return False, "Input audio file does not exist."
+        
+    cmd = [
+        "ffmpeg", "-y", "-i", input_path,
+        "-ss", str(start),
+        "-to", str(end),
+        output_path
+    ]
+    
+    try:
+        process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if process.returncode != 0:
+            err_msg = process.stderr.decode('utf-8', errors='ignore')
+            return False, f"FFmpeg failed to trim audio: {err_msg}"
+            
+        if not os.path.exists(output_path):
+            return False, f"FFmpeg succeeded but output file {output_path} was not created."
+            
+        return True, output_path
+    except Exception as e:
+        return False, str(e)
+

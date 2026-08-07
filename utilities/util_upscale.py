@@ -10,6 +10,7 @@ _MODEL_CONFIG = {
 
 @lru_cache(maxsize=4)
 def _load_upscale_model(scale: int, device: str):
+    """Loads the Real-ESRGAN model, downloading weights if necessary, and caches it in memory."""
     import torch
     import urllib.request
     import sys
@@ -27,7 +28,7 @@ def _load_upscale_model(scale: int, device: str):
     from realesrgan import RealESRGANer
 
     cfg = _MODEL_CONFIG.get(scale)
-    weights_path = os.path.join(os.path.abspath("cache"), "weights", cfg["weights"])
+    weights_path = os.path.join(os.path.abspath("cache"), "models", cfg["weights"])
     os.makedirs(os.path.dirname(weights_path), exist_ok=True)
 
     if not os.path.exists(weights_path):
@@ -43,14 +44,24 @@ def _load_upscale_model(scale: int, device: str):
 
     return RealESRGANer(
         scale=model_scale, model_path=weights_path, model=model, 
-        tile=0, tile_pad=10, pre_pad=0, half=(device != "cpu"), device=torch.device(device)
+        tile=400, tile_pad=10, pre_pad=0, half=(device != "cpu"), device=torch.device(device)
     )
 
 
-def upscale_image(image_path: str, scale: int = 4, device: str = "cpu"):
+def upscale_image(image_path: str, scale: int = 4, device: str = None):
+    """Upscales an image by a factor (2, 4, or 8) using Real-ESRGAN."""
     try:
+        from utilities.util_config import get_model_config
         import cv2
         from PIL import Image
+
+        if device is None:
+            device_pref = get_model_config("device_preference")
+            device = "cpu"
+            if device_pref != "CPU Only":
+                import torch
+                if torch.cuda.is_available():
+                    device = "cuda"
 
         img_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
         if img_bgr is None:
@@ -69,14 +80,11 @@ def upscale_image(image_path: str, scale: int = 4, device: str = "cpu"):
         return False, str(e)
 
 
-def check_model_downloaded(scale: int) -> bool:
-    cfg = _MODEL_CONFIG.get(scale)
-    if not cfg:
-        return False
-    return os.path.exists(os.path.join(os.path.abspath("cache"), "weights", cfg["weights"]))
+# check_model_downloaded removed as it was unused
 
 
 def get_compute_device() -> list[str]:
+    """Detects available compute devices (CUDA vs CPU)."""
     try:
         import torch
         if torch.cuda.is_available():

@@ -1,8 +1,6 @@
 import os
-import json
 from functools import lru_cache
-
-CONFIG_FILE = os.path.join(".", "cache", "models_config.json")
+from utilities.util_store import get_data, set_data
 
 # Default global configurations
 DEFAULT_CONFIG = {
@@ -14,34 +12,39 @@ DEFAULT_CONFIG = {
     "face_blur": "buffalo_l",
     "background_removal": "u2net",
     "device_preference": "Auto-Detect",
-    "hardware_optimization": "PyTorch (Standard)"
+    "hardware_optimization": "PyTorch (Standard)",
+    "obsidian_provider": "Hugging Face API",
+    "obsidian_ollama_model": "llama3:8b-instruct-q4_K_M",
+    "obsidian_scraper_max_urls": "2",
+    "obsidian_context_length": "8192",
+    "obsidian_embedding_model": "nomic-embed-text",
+    "obsidian_summarize_searches": "false",
+    "voice_cloning_tts": "k2-fsa/OmniVoice"
 }
 
 def load_all_config() -> dict:
-    if not os.path.exists(CONFIG_FILE):
+    """
+    Loads all configurations from the ai_settings models namespace.
+    Merges saved configurations with default values.
+    """
+    ai_settings = get_data("ai_settings") or {}
+    data = ai_settings.get("models", {})
+    if not data:
         return DEFAULT_CONFIG.copy()
         
-    try:
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            # Merge with defaults to ensure all keys exist
-            merged = DEFAULT_CONFIG.copy()
-            merged.update(data)
-            return merged
-    except Exception:
-        return DEFAULT_CONFIG.copy()
+    merged = DEFAULT_CONFIG.copy()
+    merged.update(data)
+    return merged
 
 def save_all_config(config: dict):
-    os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+    """
+    Saves the provided configuration dictionary to the ai_settings namespace.
+    """
+    ai_settings = get_data("ai_settings") or {}
+    ai_settings["models"] = config
+    set_data("ai_settings", ai_settings)
 
 def get_model_config(key: str) -> str:
     """Returns the current model selected for the given feature key."""
     config = load_all_config()
     return config.get(key, DEFAULT_CONFIG.get(key, ""))
-
-def set_model_config(key: str, val: str):
-    config = load_all_config()
-    config[key] = val
-    save_all_config(config)

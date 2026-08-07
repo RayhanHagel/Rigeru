@@ -149,3 +149,103 @@ def resize_pdf_pages(pdf_bytes: bytes, target_size: str) -> tuple[bool, bytes | 
         return True, output_stream.getvalue()
     except Exception as e:
         return False, f"Resize failed: {str(e)}"
+
+def rotate_pages(pdf_bytes: bytes, degrees: int, pages: str = "all") -> tuple[bool, bytes | str]:
+    '''Rotates all or specific pages. degrees should be 90, 180, or 270.'''
+    try:
+        import fitz
+    except ImportError:
+        return False, "Missing dependency: pymupdf"
+        
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        
+        target_pages = []
+        if pages.strip().lower() == "all":
+            target_pages = list(range(len(doc)))
+        else:
+            for p in pages.split(","):
+                try:
+                    p_idx = int(p.strip()) - 1
+                    if 0 <= p_idx < len(doc):
+                        target_pages.append(p_idx)
+                except ValueError:
+                    pass
+                    
+        if not target_pages:
+            doc.close()
+            return False, "No valid pages selected for rotation."
+            
+        for i in target_pages:
+            page = doc[i]
+            page.set_rotation((page.rotation + degrees) % 360)
+            
+        import io
+        output_stream = io.BytesIO()
+        doc.save(output_stream)
+        doc.close()
+        
+        return True, output_stream.getvalue()
+    except Exception as e:
+        return False, f"Rotate failed: {str(e)}"
+
+
+def crop_pdf(pdf_bytes: bytes, margin_pt: float) -> tuple[bool, bytes | str]:
+    '''Crops a margin from all sides of the PDF.'''
+    try:
+        import fitz
+    except ImportError:
+        return False, "Missing dependency: pymupdf"
+        
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        
+        for i in range(len(doc)):
+            page = doc[i]
+            rect = page.rect
+            new_rect = fitz.Rect(
+                rect.x0 + margin_pt,
+                rect.y0 + margin_pt,
+                rect.x1 - margin_pt,
+                rect.y1 - margin_pt
+            )
+            if new_rect.is_valid and not new_rect.is_empty:
+                page.set_cropbox(new_rect)
+                
+        import io
+        output_stream = io.BytesIO()
+        doc.save(output_stream)
+        doc.close()
+        
+        return True, output_stream.getvalue()
+    except Exception as e:
+        return False, f"Crop failed: {str(e)}"
+
+
+def organize_pdf(pdf_bytes: bytes, page_order: list[int]) -> tuple[bool, bytes | str]:
+    '''Reorders pages according to page_order (1-indexed list).'''
+    try:
+        import fitz
+    except ImportError:
+        return False, "Missing dependency: pymupdf"
+        
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        
+        # 0-indexed and bounds checking
+        valid_indices = [p - 1 for p in page_order if 0 <= p - 1 < len(doc)]
+        
+        if not valid_indices:
+            doc.close()
+            return False, "No valid pages to organize."
+            
+        doc.select(valid_indices)
+        
+        import io
+        output_stream = io.BytesIO()
+        doc.save(output_stream)
+        doc.close()
+        
+        return True, output_stream.getvalue()
+    except Exception as e:
+        return False, f"Organize failed: {str(e)}"

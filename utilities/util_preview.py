@@ -12,6 +12,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 
 def extract_video_frame(file_path: str, output_path: str) -> bool:
+    """Extracts a single frame from a video file to use as a preview."""
     import cv2
     try:
         cap = cv2.VideoCapture(file_path)
@@ -35,6 +36,7 @@ def extract_video_frame(file_path: str, output_path: str) -> bool:
 
 
 def extract_office_thumbnail(file_path: str, output_path: str) -> bool:
+    """Extracts the embedded thumbnail from an Office Open XML document (e.g. docx, pptx)."""
     try:
         with zipfile.ZipFile(file_path, 'r') as z:
             if 'docProps/thumbnail.jpeg' in z.namelist():
@@ -47,6 +49,7 @@ def extract_office_thumbnail(file_path: str, output_path: str) -> bool:
 
 
 def extract_epub_cover(file_path: str, output_path: str) -> bool:
+    """Extracts the cover image from an EPUB file."""
     try:
         with zipfile.ZipFile(file_path, 'r') as z:
             container_root = ET.fromstring(z.read('META-INF/container.xml'))
@@ -76,6 +79,7 @@ def extract_epub_cover(file_path: str, output_path: str) -> bool:
 
 
 def extract_audio_cover(file_path: str, output_path: str) -> bool:
+    """Extracts the embedded album art from an audio file."""
     import mutagen
     try:
         audio = mutagen.File(file_path)
@@ -98,6 +102,7 @@ def extract_audio_cover(file_path: str, output_path: str) -> bool:
 
 
 def extract_text_preview(file_path: str, output_path: str) -> bool:
+    """Generates an image preview of syntax-highlighted source code or text."""
     from pygments import highlight
     from pygments.lexers import get_lexer_for_filename, guess_lexer
     from pygments.formatters import ImageFormatter
@@ -119,6 +124,7 @@ def extract_text_preview(file_path: str, output_path: str) -> bool:
 
 
 def extract_3d_preview(file_path: str, output_path: str) -> bool:
+    """Renders a 3D model into a static 2D preview image."""
     import trimesh
     import matplotlib.pyplot as plt
     try:
@@ -143,6 +149,7 @@ def extract_3d_preview(file_path: str, output_path: str) -> bool:
 
 
 def get_image_preview(file_path: str) -> str | None:
+    """Main entry point: Generates or retrieves a cached preview image for a given file."""
     if not file_path or not os.path.exists(file_path):
         return None
 

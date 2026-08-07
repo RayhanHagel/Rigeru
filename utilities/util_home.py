@@ -1,14 +1,12 @@
 import os
-from utilities.util_json import load_json, save_json
+from utilities.util_store import get_data, set_data
 
 def get_quick_cache_data() -> list:
     """Returns the quick cache data for the dashboard."""
-    path = "./cache/quick_navigation.json"
-    if not os.path.exists(path):
-        return []
-    return load_json(path, default_factory=list)
+    return get_data("frontend_preferences").get("quick_navigation", []) if get_data("frontend_preferences") else []
 
 def save_quick_cache_data(items: list) -> None:
     """Updates the quick cache order."""
-    path = "./cache/quick_navigation.json"
-    save_json(path, items)
+    data = get_data("frontend_preferences") or {}
+    data["quick_navigation"] = items
+    set_data("frontend_preferences", data)

@@ -21,7 +21,7 @@ from utilities.util_audio import (
 from utilities.util_huggingface import load_hf_token
 
 router = APIRouter(prefix="/api/subtitles", tags=["Subtitles & Metadata"])
-CACHE_DIR = os.path.join(".", "cache", "temp")
+CACHE_DIR = os.path.join(".", "uploads")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 class TranscribeRequest(BaseModel):
@@ -37,18 +37,18 @@ class ExportRequest(BaseModel):
     style_preset: str = "Cinema Black"
 
 @router.post("/upload")
-async def upload_media(file: UploadFile = File(...)):
-    if not file.filename:
+async def upload_media(file_hash: str = Form(...)):
+    if not file_hash:
         raise HTTPException(status_code=400, detail="No file selected")
     
-    file_id = str(uuid.uuid4()) + "_" + file.filename
-    temp_path = os.path.join(CACHE_DIR, file_id)
+    file_id = file_hash
+    temp_path = os.path.join(".", "uploads", file_hash)
     
     try:
-        with open(temp_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        if not os.path.exists(temp_path):
+            raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
             
-        return {"file_id": file_id, "filename": file.filename}
+        return {"file_id": file_id, "filename": file_hash}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -59,14 +59,14 @@ def get_preview_frame(file_id: str):
         raise HTTPException(status_code=404, detail="File not found")
         
     try:
-        import cv2
         frame = extract_video_frame(temp_path)
         if frame is None:
             raise HTTPException(status_code=400, detail="Could not extract frame")
             
         rgb_frame = bgr_frame_to_rgb(frame)
-        ret, buffer = cv2.imencode('.jpg', cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR))
-        img_b64 = base64.b64encode(buffer).decode('utf-8')
+        from utilities.util_image_fx import encode_cv2_image_to_base64
+        b64 = encode_cv2_image_to_base64(rgb_frame, format=".jpg")
+        img_b64 = b64.split(",")[-1] if "," in b64 else b64
         return {"image_base64": img_b64}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -96,6 +96,135 @@ def transcribe_media(req: TranscribeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+import datetime
+import json
+import time
+from fastapi.responses import FileResponse
+
+DICTATIONS_DIR = os.path.join(".", "cache", "dictations")
+os.makedirs(DICTATIONS_DIR, exist_ok=True)
+
+@router.get("/dictations")
+def list_dictations():
+    dictations = []
+    for f in os.listdir(DICTATIONS_DIR):
+        if f.endswith(".json"):
+            try:
+                with open(os.path.join(DICTATIONS_DIR, f), "r") as file:
+                    dictations.append(json.load(file))
+            except: pass
+    dictations.sort(key=lambda x: x.get("date", 0), reverse=True)
+    return {"dictations": dictations}
+
+@router.post("/dictations")
+async def save_dictation(file_hash: str = Form(...)):
+    if not file_hash:
+        raise HTTPException(status_code=400, detail="No file selected")
+    
+    dict_id = str(uuid.uuid4())
+    audio_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.webm")
+    json_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.json")
+    
+    try:
+        pass # File already in cache
+        audio_path = os.path.join(".", "uploads", file_hash)
+        if not os.path.exists(audio_path):
+            raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
+            
+        metadata = {
+            "id": dict_id,
+            "name": f"Recording {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "date": time.time(),
+            "transcript": None,
+            "is_transcribed": False
+        }
+        with open(json_path, "w") as f:
+            json.dump(metadata, f)
+            
+        return metadata
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.patch("/dictations/{dict_id}")
+def rename_dictation(dict_id: str, payload: dict):
+    new_name = payload.get("name")
+    if not new_name:
+        raise HTTPException(400, "Name required")
+    json_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.json")
+    if not os.path.exists(json_path):
+        raise HTTPException(404, "Dictation not found")
+        
+    with open(json_path, "r") as f:
+        metadata = json.load(f)
+        
+    metadata["name"] = new_name
+    with open(json_path, "w") as f:
+        json.dump(metadata, f)
+        
+    return metadata
+
+@router.delete("/dictations/{dict_id}")
+def delete_dictation(dict_id: str):
+    audio_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.webm")
+    json_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.json")
+    try: os.remove(audio_path)
+    except: pass
+    try: os.remove(json_path)
+    except: pass
+    return {"success": True}
+
+@router.post("/dictations/{dict_id}/transcribe")
+def transcribe_dictation(dict_id: str):
+    audio_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.webm")
+    json_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.json")
+    if not os.path.exists(json_path) or not os.path.exists(audio_path):
+        raise HTTPException(404, "Dictation not found")
+        
+    try:
+        segments = run_transcription_pipeline(
+            audio_path=audio_path,
+            model_name="base", 
+            hf_token="",
+            do_diarize=False,
+            speaker_mapping={}
+        )
+        
+        text = " ".join([s["text"].strip() for s in segments])
+        
+        with open(json_path, "r") as f:
+            metadata = json.load(f)
+            
+        metadata["transcript"] = text
+        metadata["is_transcribed"] = True
+        
+        with open(json_path, "w") as f:
+            json.dump(metadata, f)
+            
+        return metadata
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/dictations/{dict_id}/clean")
+def clean_dictation_audio(dict_id: str):
+    audio_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.webm")
+    json_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.json")
+    if not os.path.exists(json_path) or not os.path.exists(audio_path):
+        raise HTTPException(404, "Dictation not found")
+        
+    try:
+        from utilities.util_noise_reduction import apply_ai_noise_reduction
+        apply_ai_noise_reduction(audio_path)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/dictations/{dict_id}/audio")
+def get_dictation_audio(dict_id: str):
+    audio_path = os.path.join(DICTATIONS_DIR, f"{dict_id}.webm")
+    if not os.path.exists(audio_path):
+        raise HTTPException(404, "Audio not found")
+    return FileResponse(audio_path, media_type="audio/webm")
+
 @router.get("/speaker-thumbnail/{file_id}")
 def get_speaker_thumbnail(file_id: str, start: float):
     temp_path = os.path.join(CACHE_DIR, file_id)
@@ -103,13 +232,13 @@ def get_speaker_thumbnail(file_id: str, start: float):
         raise HTTPException(status_code=404, detail="File not found")
         
     try:
-        import cv2
         thumb = extract_speaker_thumbnail(temp_path, start)
         if thumb is None:
             return {"image_base64": None}
             
-        ret, buffer = cv2.imencode('.jpg', cv2.cvtColor(thumb, cv2.COLOR_RGB2BGR))
-        img_b64 = base64.b64encode(buffer).decode('utf-8')
+        from utilities.util_image_fx import encode_cv2_image_to_base64
+        b64 = encode_cv2_image_to_base64(thumb, format=".jpg")
+        img_b64 = b64.split(",")[-1] if "," in b64 else b64
         return {"image_base64": img_b64}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -210,28 +339,22 @@ import tempfile
 
 @router.post("/merger/merge")
 async def api_subtitle_merger_merge(
-    base_file: UploadFile = File(...),
-    overlay_file: UploadFile = File(...)
+    base_file_hash: str = Form(...),
+    overlay_file_hash: str = Form(...)
 ):
-    if not base_file.filename or not overlay_file.filename:
+    if not base_file_hash or not overlay_file_hash:
         raise HTTPException(status_code=400, detail="Must provide both base and overlay files")
         
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".ass") as base_tmp:
-            base_content = await base_file.read()
-            base_tmp.write(base_content)
-            base_path = base_tmp.name
+        base_path = os.path.join(".", "uploads", base_file_hash)
+        if not os.path.exists(base_path):
+            raise HTTPException(status_code=400, detail="Base file not found in cache.")
             
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".ass") as overlay_tmp:
-            overlay_content = await overlay_file.read()
-            overlay_tmp.write(overlay_content)
-            overlay_path = overlay_tmp.name
+        overlay_path = os.path.join(".", "uploads", overlay_file_hash)
+        if not os.path.exists(overlay_path):
+            raise HTTPException(status_code=400, detail="Overlay file not found in cache.")
             
         success, result_path = merge_ass_files(base_path, overlay_path)
-        
-        # Cleanup temp files
-        os.unlink(base_path)
-        os.unlink(overlay_path)
         
         if not success:
             raise HTTPException(status_code=500, detail=result_path)
@@ -331,11 +454,15 @@ def api_save_timestamps(req: TimestampsRequest):
 from utilities.util_exif import get_exif_data, strip_exif
 
 @router.post("/exif/read")
-async def api_read_exif(file: UploadFile = File(...)):
-    if not file.filename:
+async def api_read_exif(file_hash: str = Form(...)):
+    if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
-        content = await file.read()
+        tmp_path = os.path.join(".", "uploads", file_hash)
+        if not os.path.exists(tmp_path):
+            raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
+        with open(tmp_path, "rb") as f:
+            content = f.read()
         success, exif_dict = get_exif_data(content)
         if not success:
             raise HTTPException(status_code=400, detail=str(exif_dict))
@@ -344,20 +471,24 @@ async def api_read_exif(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/exif/strip")
-async def api_strip_exif(file: UploadFile = File(...)):
-    if not file.filename:
+async def api_strip_exif(file_hash: str = Form(...)):
+    if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
-        content = await file.read()
+        tmp_path = os.path.join(".", "uploads", file_hash)
+        if not os.path.exists(tmp_path):
+            raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
+        with open(tmp_path, "rb") as f:
+            content = f.read()
         success, clean_bytes = strip_exif(content)
         if not success:
             raise HTTPException(status_code=500, detail=str(clean_bytes))
         
-        safe_filename = "clean_" + file.filename.encode('ascii', 'ignore').decode('ascii')
+        safe_filename = "clean_" + file_hash.encode('ascii', 'ignore').decode('ascii')
         
         return Response(
             content=clean_bytes,
-            media_type=file.content_type or "application/octet-stream",
+            media_type="application/octet-stream",
             headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
         )
     except Exception as e:

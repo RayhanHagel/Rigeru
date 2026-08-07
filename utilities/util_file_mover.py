@@ -13,6 +13,10 @@ from send2trash import send2trash
 
 
 def get_target_files(source_path: str) -> list:
+    """
+    Retrieves a list of non-ignored files from the given source directory.
+    Ignores common system files like desktop.ini, .ds_store, and thumbs.db.
+    """
     if not os.path.isdir(source_path):
         return []
     ignored_files = {'desktop.ini', '.ds_store', 'thumbs.db'}
@@ -23,6 +27,10 @@ def get_target_files(source_path: str) -> list:
 
 
 def perform_move(src_file_path: str, dest_dir: str, current_file: str, rename_value: str) -> tuple[bool, str, str, str]:
+    """
+    Moves (and optionally renames) a file to a destination directory.
+    Handles filename conflicts by appending a counter suffix if needed.
+    """
     ext = os.path.splitext(current_file)[1]
     new_name = rename_value.strip() if rename_value and rename_value.strip() else ""
     if new_name and new_name != os.path.splitext(current_file)[0]:
@@ -49,6 +57,9 @@ def perform_move(src_file_path: str, dest_dir: str, current_file: str, rename_va
 
 
 def perform_delete(src_file_path: str) -> tuple[bool, str]:
+    """
+    Safely deletes a file by moving it to the OS trash instead of permanent deletion.
+    """
     try:
         clean_path = src_file_path.replace('\\\\?\\', '').replace('//?/', '')
         send2trash(clean_path)
@@ -58,6 +69,10 @@ def perform_delete(src_file_path: str) -> tuple[bool, str]:
 
 
 def perform_undo(last_action: dict, source_path: str, dest_base_path: str) -> tuple[bool, str]:
+    """
+    Undoes a previous file operation (move, rename, or skip).
+    For moves/renames, it restores the file to its original location.
+    """
     if last_action["action"] in ("move", "rename"):
         src_restore = os.path.join(
             dest_base_path, last_action["target"] or "", last_action["dest_file"])

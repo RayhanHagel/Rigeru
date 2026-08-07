@@ -7,7 +7,7 @@ import time
 
 # Import shared utilities
 from utilities.util_network import better_get, better_post
-from utilities.util_json import load_json, save_json
+from utilities.util_store import get_data, set_data
 
 def refresh_library_standalone(cache: dict) -> tuple[dict, list]:
     """Standalone version of refresh_library that doesn't depend on st.session_state.
@@ -36,6 +36,7 @@ def refresh_library_standalone(cache: dict) -> tuple[dict, list]:
 
 
 def asura_get_chapter(chapter_url: str, website: str) -> dict | None:
+    """Scrapes AsuraScans for chapter details and images."""
     from bs4 import BeautifulSoup
     from utilities.util_network import get_image_cache
     
@@ -164,6 +165,7 @@ def mangadex_get_chapter(chapter_url: str, website: str) -> dict | None:
 
 
 def search_titles(websites: list, title: str) -> list:
+    """Searches across selected manga websites for a specific title."""
     search_results = []
     combined_results = {}
 
@@ -185,6 +187,7 @@ def search_titles(websites: list, title: str) -> list:
     return search_results
 
 def search_titles_asura(title: str) -> dict | None:
+    """Searches AsuraScans API for manga titles."""
     response = better_get(f"https://api.asurascans.com/api/search?q={title}", timeout=8)
     if response is None:
         return None
@@ -274,10 +277,14 @@ def search_titles_mangadex(title: str) -> dict | None:
         return None
 
 def read_cache() -> dict:
-    path = "./cache/reading_library.json"
-    return load_json(path, default_factory=dict)
+    """Reads the current manga reading library from the store."""
+    manager = get_data("manga_manager")
+    if manager:
+        return manager.get("library", {})
+    return {}
 
 def download_single_image(args: tuple) -> bool:
+    """Downloads a single image file for a manga chapter, reporting stats if it's from MangaDex."""
     url, image_path = args
     
     start_time = time.time()
@@ -322,7 +329,7 @@ def download_single_image(args: tuple) -> bool:
     return success
 
 
-async def get_asura_images(url: str) -> list:
+def get_asura_images(url: str) -> list:
     """Uses centralized Playwright utility to scroll, then BeautifulSoup to extract image URLs."""
     from bs4 import BeautifulSoup
     from utilities.util_scraper import _run_node_scraper
@@ -332,7 +339,7 @@ async def get_asura_images(url: str) -> list:
             "action": "manga_asura",
             "url": url
         }
-        res = await asyncio.to_thread(_run_node_scraper, payload)
+        res = _run_node_scraper(payload)
         
         if not res.get("success"):
             print(f"Scraping Error: {res.get('error')}")
@@ -363,6 +370,7 @@ async def get_asura_images(url: str) -> list:
 
 
 def get_mangadex_images(api_url: str, use_data_saver: bool = False) -> list:
+    """Fetches image URLs for a MangaDex chapter via their API."""
     if "/chapter-" in api_url:
         api_url = api_url.split("/chapter-")[0]
         
@@ -392,6 +400,7 @@ def get_mangadex_images(api_url: str, use_data_saver: bool = False) -> list:
 
 
 def download_chapter(title: str, chapter_key: str, chapter_url: str, website_type: str) -> bool:
+    """Downloads all images for a chapter and compiles them into a PDF."""
     from PIL import Image
     
     if website_type not in ["asurascans.com/", "mangadex.org/"]:
@@ -404,9 +413,7 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
     if website_type == "mangadex.org/":
         image_urls = get_mangadex_images(chapter_url)
     else:
-        if os.name == 'nt':
-            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-        image_urls = asyncio.run(get_asura_images(chapter_url))
+        image_urls = get_asura_images(chapter_url)
     if not image_urls:
         return False
     
@@ -430,19 +437,20 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
         return False
 
     try:
-        pil_images = []
-        for img_path in image_files:
-            try:
-                img = Image.open(img_path).convert("RGB")
-                pil_images.append(img)
-            except Exception:
-                continue
+        def get_images():
+            for img_path in image_files[1:]:
+                try:
+                    yield Image.open(img_path).convert("RGB")
+                except Exception:
+                    continue
 
-        if not pil_images:
+        try:
+            first_img = Image.open(image_files[0]).convert("RGB")
+        except Exception:
             return False
 
-        pil_images[0].save(
-            pdf_path, save_all=True, append_images=pil_images[1:]
+        first_img.save(
+            pdf_path, save_all=True, append_images=get_images()
         )
     except Exception:
         return False
@@ -456,7 +464,9 @@ def download_chapter(title: str, chapter_key: str, chapter_url: str, website_typ
         downloaded.append(chapter_url)
         cache_entry["chapter_downloaded"] = downloaded
         cache[title] = cache_entry
-        save_json("./cache/reading_library.json", cache)
+        manager = get_data("manga_manager") or {}
+        manager["library"] = cache
+        set_data("manga_manager", manager)
 
     return True
 
@@ -481,7 +491,9 @@ def sort_manga_library_data(keys: list[str]) -> dict:
     """Reorders the manga library based on the provided list of keys."""
     cache = read_cache()
     reordered = {k: cache[k] for k in keys if k in cache}
-    save_json("./cache/reading_library.json", reordered)
+    manager = get_data("manga_manager") or {}
+    manager["library"] = reordered
+    set_data("manga_manager", manager)
     return reordered
 
 def update_manga_library_progress(title: str, chapter_read: int) -> int:
@@ -492,7 +504,9 @@ def update_manga_library_progress(title: str, chapter_read: int) -> int:
     
     new_progress = max(0, chapter_read)
     cache[title]["chapter_read"] = new_progress
-    save_json("./cache/reading_library.json", cache)
+    manager = get_data("manga_manager") or {}
+    manager["library"] = cache
+    set_data("manga_manager", manager)
     return new_progress
 
 def delete_manga_from_library_data(title: str) -> None:
@@ -500,6 +514,57 @@ def delete_manga_from_library_data(title: str) -> None:
     cache = read_cache()
     if title in cache:
         del cache[title]
-        save_json("./cache/reading_library.json", cache)
+        manager = get_data("manga_manager") or {}
+        manager["library"] = cache
+        set_data("manga_manager", manager)
     else:
         raise ValueError("Title not found.")
+
+def get_chapter_key_from_url(chapter_url: str, website: str) -> str:
+    chapter_key = chapter_url.split("/")[-1]
+    if website == "mangadex.org/":
+        import re
+        match = re.search(r'chapter-([0-9.]+)', chapter_url)
+        if match:
+            chapter_key = match.group(1)
+    elif website == "asurascans.com/":
+        parts = chapter_url.split("-chapter-")
+        if len(parts) > 1:
+            chapter_key = parts[1].replace("/", "")
+    return str(chapter_key)
+
+def get_pdf_page_count(title: str, chapter_url: str, website: str) -> int:
+    import fitz
+    import os
+    chapter_key = get_chapter_key_from_url(chapter_url, website)
+    pdf_path = os.path.join(".", "cache", "library", title, f"Chapter {chapter_key.zfill(2)}.pdf")
+    if not os.path.exists(pdf_path):
+        return 0
+    try:
+        doc = fitz.open(pdf_path)
+        count = len(doc)
+        doc.close()
+        return count
+    except Exception as e:
+        print(f"Error reading PDF page count: {e}")
+        return 0
+
+def get_pdf_page_image(title: str, chapter_url: str, website: str, page_index: int) -> bytes | None:
+    import fitz
+    chapter_key = get_chapter_key_from_url(chapter_url, website)
+    pdf_path = os.path.join(".", "cache", "library", title, f"Chapter {chapter_key.zfill(2)}.pdf")
+    if not os.path.exists(pdf_path):
+        return None
+    try:
+        doc = fitz.open(pdf_path)
+        if page_index < 0 or page_index >= len(doc):
+            doc.close()
+            return None
+        page = doc[page_index]
+        pix = page.get_pixmap(dpi=150)
+        img_bytes = pix.tobytes("jpeg")
+        doc.close()
+        return img_bytes
+    except Exception as e:
+        print(f"Error extracting PDF page {page_index}: {e}")
+        return None

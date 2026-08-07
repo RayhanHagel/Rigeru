@@ -2,18 +2,146 @@ import os
 import uuid
 import asyncio
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
+from PIL import Image, UnidentifiedImageError
+from io import BytesIO
 
 from utilities.util_yt import search_youtube, download_youtube
+from utilities.util_crawler import stream_crawl
 
 router = APIRouter(
     prefix="/api/web-downloads",
     tags=["Web & Downloads"]
 )
 
+@router.get("/sitemap/stream")
+async def sitemap_stream(url: str, max_pages: int = 100, max_depth: int = 3):
+    return StreamingResponse(stream_crawl(url, max_pages, max_depth), media_type="text/event-stream")
+
+from utilities.util_network import better_get
+import json
+import concurrent.futures
+from urllib.parse import urlparse
+
 # In-memory store for background task statuses (For pilot purposes)
 download_tasks = {}
+
+async def _download_searx_images(query: str, count: int, output_dir: str):
+
+    from utilities.util_ai_tools import ensure_searxng_running
+    
+    yield f"data: {json.dumps({'type': 'status', 'message': 'Starting SearxNG...'})}\n\n"
+    ensure_searxng_running()
+    
+    yield f"data: {json.dumps({'type': 'status', 'message': f'Searching for {query}...'})}\n\n"
+    try:
+        # SearxNG image search
+        res = better_get("http://127.0.0.1:8080/search", params={"q": query, "format": "json", "categories": "images"}, timeout=15)
+        if res is None: raise Exception("Request failed")
+        res.raise_for_status()
+        data = res.json()
+        results = data.get("results", [])
+    except Exception as e:
+        yield f"data: {json.dumps({'type': 'error', 'message': f'Search failed: {str(e)}'})}\n\n"
+        return
+        
+    image_urls = [r.get("img_src", "") for r in results if r.get("img_src")]
+    image_urls = image_urls[:count]
+    
+    if not image_urls:
+        yield f"data: {json.dumps({'type': 'error', 'message': 'No images found.'})}\n\n"
+        return
+        
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        
+    yield f"data: {json.dumps({'type': 'status', 'message': f'Found {len(image_urls)} images. Starting download...'})}\n\n"
+    
+    completed = 0
+    failed = 0
+    
+    def download_img(url, index):
+        nonlocal completed, failed
+        try:
+            resp = better_get(url)
+            if resp and resp.status_code == 200:
+                content = resp.content
+                # Determine extension from content-type
+                ext = ".jpg"
+                ctype = resp.headers.get("Content-Type", "")
+                if "png" in ctype: ext = ".png"
+                elif "webp" in ctype: ext = ".webp"
+                elif "gif" in ctype: ext = ".gif"
+
+                # Validate image integrity before saving
+                try:
+                    img = Image.open(BytesIO(content))
+                    img.verify()  # Detect truncated/corrupted files
+                except (UnidentifiedImageError, OSError, Exception):
+                    return False, None  # Corrupted — skip
+
+                fname = f"{query.replace(' ', '_')}_{uuid.uuid4().hex[:6]}{ext}"
+                filepath = os.path.join(output_dir, fname)
+                with open(filepath, "wb") as f:
+                    f.write(content)
+                return True, filepath
+        except:
+            pass
+        return False, None
+
+    # Queue of (success, filepath) results for streaming
+    result_queue = asyncio.Queue()
+
+    # Download in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        loop = asyncio.get_running_loop()
+        futures = [loop.run_in_executor(executor, download_img, url, i) for i, url in enumerate(image_urls)]
+
+        for f in asyncio.as_completed(futures):
+            success, filepath = await f
+            if success:
+                completed += 1
+                yield f"data: {json.dumps({'type': 'image', 'path': filepath})}\n\n"
+            else:
+                failed += 1
+
+            yield f"data: {json.dumps({'type': 'progress', 'completed': completed, 'failed': failed, 'total': len(image_urls)})}\n\n"
+
+    yield f"data: {json.dumps({'type': 'done', 'message': f'Downloaded {completed}/{len(image_urls)} images to {output_dir}'})}\n\n"
+
+@router.get("/bulk-images/stream")
+async def bulk_images_stream(q: str, count: int = 10, dir: str = ""):
+    if not dir:
+        dir = os.path.join(os.path.expanduser('~'), 'Downloads', 'images')
+    return StreamingResponse(_download_searx_images(q, count, dir), media_type="text/event-stream")
+
+@router.get("/bulk-images/preview")
+async def bulk_images_preview(path: str):
+    """Serve a locally-saved image file to the browser by its absolute path."""
+    from fastapi.responses import FileResponse
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path)
+
+class DeleteImagesRequest(BaseModel):
+    paths: list[str]
+
+@router.post("/bulk-images/delete")
+def delete_bulk_images(req: DeleteImagesRequest):
+    """Permanently delete image files from disk by their absolute paths."""
+    deleted = []
+    failed = []
+    for path in req.paths:
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+                deleted.append(path)
+            else:
+                failed.append(path)
+        except Exception as e:
+            failed.append(path)
+    return {"deleted": deleted, "failed": failed}
 
 class DownloadRequest(BaseModel):
     url: str
@@ -34,7 +162,7 @@ def search_yt(q: str, max_results: int = 5):
 
 def _run_yt_download(task_id: str, req: DownloadRequest):
     """Background runner for youtube download"""
-    download_tasks[task_id] = {"status": "downloading", "message": "Download started..."}
+    download_tasks[task_id] = {"status": "downloading", "message": "Download started"}
     try:
         # Default fallback to user downloads if none specified
         output_dir = req.output_dir if req.output_dir else os.path.join(os.path.expanduser('~'), 'Downloads')
@@ -76,7 +204,7 @@ class SpotifyDownloadRequest(BaseModel):
     bitrate: str = "320k"
 
 def _run_spotify_download(task_id: str, req: SpotifyDownloadRequest):
-    download_tasks[task_id] = {"status": "downloading", "message": "Spotify download started..."}
+    download_tasks[task_id] = {"status": "downloading", "message": "Spotify download started"}
     try:
         output_dir = req.output_dir if req.output_dir else os.path.join(os.path.expanduser('~'), 'Music')
         success = download_playlist_cli(
@@ -211,6 +339,27 @@ def bulk_add_yt_rss_channels(req: YTRssBulkRequest):
     added, skipped = bulk_add_channels(req.channels)
     return {"added": added, "skipped": skipped, "message": f"Import complete! Added {added} channels. (Skipped {skipped} duplicates)"}
 
+class YTRssImportRequest(BaseModel):
+    file_hash: str
+
+@router.post("/youtube-rss/channels/import-csv")
+def import_yt_rss_csv(req: YTRssImportRequest):
+    tmp_path = os.path.join(".", "uploads", req.file_hash)
+    if not os.path.exists(tmp_path):
+        raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
+        
+    with open(tmp_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+        
+    from utilities.util_yt import parse_youtube_takeout_csv
+    success, result = parse_youtube_takeout_csv(content)
+    
+    if not success:
+        raise HTTPException(status_code=400, detail=result)
+        
+    added, skipped = bulk_add_channels(result)
+    return {"added": added, "skipped": skipped, "message": f"Import complete! Added {added} channels. (Skipped {skipped} duplicates)"}
+
 @router.delete("/youtube-rss/channels/{channel_id}")
 def delete_yt_rss_channel(channel_id: str):
     delete_channel(channel_id)
@@ -267,20 +416,30 @@ async def refresh_yt_rss_feed():
 from utilities.util_scraper import get_page_preview_image, run_headless_scraper
 
 class ScraperPreviewRequest(BaseModel):
-    url: str
+    urls: list[str]
     
 @router.post("/scraper/preview")
 async def get_scraper_preview(req: ScraperPreviewRequest):
-    # Run sync playwright in a thread
     def _run_preview():
         from utilities.util_scraper import get_page_preview_image
-        return get_page_preview_image(req.url)
+        images = []
+        for idx, url in enumerate(req.urls): # No cap
+            success, result = get_page_preview_image(url)
+            if success:
+                # result is the absolute path to the screenshot. We need to copy it or rename it
+                # to prevent overwriting if multiple urls are previewed in succession
+                import shutil
+                ext = os.path.splitext(result)[1]
+                new_path = result.replace("preview_screenshot", f"preview_screenshot_{idx}")
+                shutil.move(result, new_path)
+                images.append(f"/temp/preview_screenshot_{idx}{ext}?t={uuid.uuid4().hex}")
+        return images
         
-    success, result = await asyncio.to_thread(_run_preview)
-    if success:
-        return {"image_url": f"/static/temp/preview_screenshot.png?t={uuid.uuid4().hex}"} # Add cache buster
-    else:
-        raise HTTPException(status_code=400, detail=result)
+    try:
+        images = await asyncio.to_thread(_run_preview)
+        return {"image_urls": images}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/scraper/proxy")
 async def scraper_proxy(url: str):
@@ -305,15 +464,13 @@ class ScraperStartRequest(BaseModel):
     headless: bool = True
 
 def _run_scraper_task(task_id: str, req: ScraperStartRequest):
-    download_tasks[task_id] = {"status": "running", "message": "Scraping in progress..."}
+    download_tasks[task_id] = {"status": "running", "message": "Scraping in progress"}
     try:
-        success, result_df = run_headless_scraper(req.links, req.css_selector, req.headless)
+        success, results = run_headless_scraper(req.links, req.css_selector, req.headless)
         if success:
-            # result_df is a pandas DataFrame, convert to dict records
-            records = result_df.to_dict(orient="records")
-            download_tasks[task_id] = {"status": "completed", "message": "Scraping completed!", "result": records}
+            download_tasks[task_id] = {"status": "completed", "message": "Scraping completed!", "result": results}
         else:
-            download_tasks[task_id] = {"status": "failed", "message": str(result_df)}
+            download_tasks[task_id] = {"status": "failed", "message": str(results)}
     except Exception as e:
         download_tasks[task_id] = {"status": "failed", "message": str(e)}
 

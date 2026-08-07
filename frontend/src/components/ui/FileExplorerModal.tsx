@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import { 
   Folder, 
@@ -38,7 +39,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
     setIsLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/files-documents/utils/explore-dir?path=${encodeURIComponent(path)}&include_files=${selectionMode === "file"}`);
+      const res = await fetch(`/api/files-documents/utils/explore-dir?path=${encodeURIComponent(path)}&include_files=${selectionMode === "file"}`);
       if (!res.ok) {
         throw new Error("Failed to load directory");
       }
@@ -60,9 +61,12 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
         
@@ -123,7 +127,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
               <Loader2 size={32} className="animate-spin text-blue-500" />
-              <span>Loading folders...</span>
+              <span>Loading folders</span>
             </div>
           ) : folders.length === 0 ? (
             <div className="w-full h-full flex items-center justify-center text-zinc-500">
@@ -191,6 +195,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

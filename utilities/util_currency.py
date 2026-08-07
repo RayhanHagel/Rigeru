@@ -1,34 +1,39 @@
 import os
-import json
 import concurrent.futures
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from utilities.util_network import better_get
-from utilities.util_json import load_json
-
-# UPDATED: New cache directory paths
-CACHE_DIR = "./cache/currency/"
-CACHE_FILE_CURRENCIES = os.path.join(CACHE_DIR, "currency_feed.json")
+from utilities.util_store import get_data, set_data
 
 _executor = ThreadPoolExecutor(max_workers=4)
 
+def _get_currency_manager() -> dict:
+    return get_data("currency_trends") or {}
+
+def _set_currency_manager(data: dict):
+    set_data("currency_trends", data)
+
+
 def fetch_url(url: str) -> dict:
+    """Fetches JSON data from the provided URL."""
     response = better_get(url)
     if response and response.status_code == 200:
         return response.json()
     raise Exception(f"Failed to fetch data from {url}")
 
 def _revalidate_currencies():
+    """Background task: fetches the latest currency list and updates the cache."""
     try:
         data = fetch_url("https://api.frankfurter.app/currencies")
-        os.makedirs(CACHE_DIR, exist_ok=True)
-        with open(CACHE_FILE_CURRENCIES, 'w') as f:
-            json.dump(data, f)
+        manager = _get_currency_manager()
+        manager["feed"] = data
+        _set_currency_manager(manager)
     except Exception as e:
         print(f"Currency SWR background revalidation failed: {e}")
 
 def get_available_currencies() -> tuple[bool, dict | str]:
-    data = load_json(CACHE_FILE_CURRENCIES, lambda: None)
+    """Retrieves a list of available currencies, prioritizing cache and triggering background update."""
+    data = _get_currency_manager().get("feed")
             
     _executor.submit(_revalidate_currencies)
 
@@ -37,14 +42,15 @@ def get_available_currencies() -> tuple[bool, dict | str]:
         
     try:
         data = fetch_url("https://api.frankfurter.app/currencies")
-        os.makedirs(CACHE_DIR, exist_ok=True)
-        with open(CACHE_FILE_CURRENCIES, 'w') as f:
-            json.dump(data, f)
+        manager = _get_currency_manager()
+        manager["feed"] = data
+        _set_currency_manager(manager)
         return True, data
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
 def convert_currency(amount: float, base: str, target: str) -> tuple[bool, float | str]:
+    """Converts a specific amount from one currency to another using the latest rates."""
     if base == target:
         return True, amount
     try:
@@ -55,19 +61,25 @@ def convert_currency(amount: float, base: str, target: str) -> tuple[bool, float
     except Exception as e:
         return False, f"Network error: {str(e)}"
 
-def _revalidate_trend(url: str, cache_file: str):
+def _revalidate_trend(url: str, key: str):
     """Background task: fetches data and automatically updates the cache."""
     try:
         data = fetch_url(url)
         data['_cached_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        os.makedirs(CACHE_DIR, exist_ok=True)
-        with open(cache_file, 'w') as f:
-            json.dump(data, f)
+        manager = _get_currency_manager()
+        if "trends" not in manager:
+            manager["trends"] = {}
+        manager["trends"][key] = data
+        _set_currency_manager(manager)
             
     except Exception as e:
         print(f"Trend SWR background revalidation failed: {e}")
 
 def get_historical_trend(base: str, target: str, days: int = 30, forecast_days: int = 7) -> tuple[bool, any, str]:
+    """
+    Fetches historical exchange rates for a given period and extrapolates a short-term trend.
+    Returns a success boolean, a pandas DataFrame with historical and predicted rates, and the cache timestamp.
+    """
     if base == target:
         return False, "Same currency selected.", ""
         
@@ -76,30 +88,33 @@ def get_historical_trend(base: str, target: str, days: int = 30, forecast_days: 
     
     start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
     url = f"https://api.frankfurter.app/{start_date}..?from={base}&to={target}"
-    # The cache_file will now automatically build into ./cache/currency/trend_BASE_TARGET.json
-    cache_file = os.path.join(CACHE_DIR, f"trend_{base}_{target}.json")
+    key = f"{base}_{target}"
     
     api_data = None
     cached_time = None
     
-    if os.path.exists(cache_file):
-        try:
-            cache_data = load_json(cache_file, lambda: None)
-            if cache_data:
-                api_data = cache_data
-                cached_time = api_data.get('_cached_at', 'Unknown Time')
-        except Exception:
-            pass 
+    try:
+        manager = _get_currency_manager()
+        trends = manager.get("trends", {})
+        if key in trends:
+            api_data = trends[key]
+            cached_time = api_data.get('_cached_at', 'Unknown Time')
+    except Exception:
+        pass 
             
-    _executor.submit(_revalidate_trend, url, cache_file)
+    _executor.submit(_revalidate_trend, url, key)
     
     if not api_data:
         try:
             api_data = fetch_url(url)
             api_data['_cached_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            os.makedirs(CACHE_DIR, exist_ok=True)
-            with open(cache_file, 'w') as f:
-                json.dump(api_data, f)
+            
+            manager = _get_currency_manager()
+            if "trends" not in manager:
+                manager["trends"] = {}
+            manager["trends"][key] = api_data
+            _set_currency_manager(manager)
+            
             cached_time = "Just now"
         except Exception as e:
             return False, f"Network error: {str(e)}", ""

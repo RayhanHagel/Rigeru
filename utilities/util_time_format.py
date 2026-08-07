@@ -1,4 +1,5 @@
 def format_srt_time(seconds: float) -> str:
+    """Formats a duration in seconds into an SRT timestamp string (HH:MM:SS,mmm)."""
     h  = int(seconds // 3600)
     m  = int((seconds % 3600) // 60)
     s  = int(seconds % 60)
@@ -7,6 +8,7 @@ def format_srt_time(seconds: float) -> str:
 
 
 def format_ass_time(seconds: float) -> str:
+    """Formats a duration in seconds into an ASS timestamp string (H:MM:SS.cs)."""
     h  = int(seconds // 3600)
     m  = int((seconds % 3600) // 60)
     s  = int(seconds % 60)

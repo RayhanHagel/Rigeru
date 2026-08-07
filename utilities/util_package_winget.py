@@ -1,25 +1,10 @@
 import subprocess
 import os
-
-
-def run_winget_cmd(cmd: str) -> str:
-    """Runs a winget command silently and returns stdout."""
-    startupinfo = None
-    if os.name == 'nt':
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-    try:
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True,
-            startupinfo=startupinfo, encoding='utf-8', errors='ignore'
-        )
-        return result.stdout.strip()
-    except Exception:
-        return ""
+from utilities.util_stream import run_cmd_single as run_winget_cmd
 
 
 def is_winget_installed() -> bool:
+    """Checks whether winget is available on the system PATH."""
     out = run_winget_cmd("winget --version")
     return bool(out and "v" in out.lower())
 
@@ -118,6 +103,7 @@ def search_winget(query: str) -> tuple[bool, list]:
 
 
 def install_package(pkg_id: str) -> tuple[bool, str]:
+    """Installs a single winget package by ID, accepting all agreements."""
     result = run_winget_cmd(
         f'winget install --id "{pkg_id}" -e --accept-package-agreements --accept-source-agreements'
     )
@@ -139,6 +125,7 @@ def install_packages(pkg_ids: list[str]) -> tuple[bool, str]:
 
 
 def uninstall_package(pkg_id: str) -> tuple[bool, str]:
+    """Uninstalls a winget package by ID."""
     result = run_winget_cmd(f'winget uninstall --id "{pkg_id}" -e')
     if "Successfully uninstalled" in result:
         return True, result
@@ -155,6 +142,7 @@ def update_package(pkg_id: str) -> tuple[bool, str]:
 
 
 def upgrade_all() -> tuple[bool, str]:
+    """Upgrades all eligible installed winget packages to their latest versions."""
     result = run_winget_cmd(
         "winget upgrade --all --accept-package-agreements --accept-source-agreements"
     )
