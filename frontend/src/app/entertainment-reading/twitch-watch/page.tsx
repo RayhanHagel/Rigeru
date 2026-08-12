@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useEffect, useState, useRef } from "react";
-import { Tv, Settings, MonitorPlay, Plus, GripVertical, Trash2, RefreshCw, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { ModernTabs } from "@/components/ui/ModernTabs";
+import { Icon } from "@/lib/utils";
 
 interface StreamlinkStatus {
     installed: boolean;
@@ -200,8 +201,8 @@ export default function TwitchWatch() {
       <div className="mb-6 border-b border-white/10 pb-4 shrink-0 overflow-x-auto custom-scrollbar">
         <ModernTabs 
           tabs={[
-            { id: "config", label: "Configuration", icon: <Settings size={18} /> },
-            { id: "watch", label: "Watch Stream", icon: <Tv size={18} /> }
+            { id: "config", label: "Configuration", icon: <Icon name="settings" size={18} /> },
+            { id: "watch", label: "Watch Stream", icon: <Icon name="tv" size={18} /> }
           ]}
           activeTab={mode}
           setActiveTab={(id) => {
@@ -216,7 +217,7 @@ export default function TwitchWatch() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4">
           <div className="bg-zinc-950/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm space-y-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Settings size={20} className="text-zinc-400" /> General Settings
+              <Icon name="settings" size={20} className="text-zinc-400" /> General Settings
             </h2>
             
             <div className="space-y-4">
@@ -247,7 +248,7 @@ export default function TwitchWatch() {
           <div className="bg-zinc-950/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[500px]">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Tv size={20} className="text-primary" /> Manage Channels
+                <Icon name="tv" size={20} className="text-primary" /> Manage Channels
               </h2>
               {isSaving && <span className="text-xs text-primary animate-pulse bg-primary/10 px-2 py-1 rounded-md">Saving...</span>}
             </div>
@@ -262,7 +263,7 @@ export default function TwitchWatch() {
                 className="flex-1 bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-primary outline-none focus:ring-1 focus:ring-primary/50 transition-all"
               />
               <Button variant="primary" onClick={handleAddChannel} className="bg-primary hover:bg-primary/90 h-[50px] px-6 rounded-xl">
-                <Plus size={20} /> Add
+                <Icon name="add" size={20} /> Add
               </Button>
             </div>
 
@@ -284,11 +285,11 @@ export default function TwitchWatch() {
                       className={`flex items-center justify-between p-3 rounded-xl border transition-all ${draggedIdx === idx ? 'bg-primary/10 border-primary/40 opacity-50' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <GripVertical size={16} className="text-zinc-600 cursor-grab active:cursor-grabbing" />
+                        <Icon name="drag_indicator" size={16} className="text-zinc-600 cursor-grab active:cursor-grabbing" />
                         <span className="text-zinc-200 font-medium">{channel}</span>
                       </div>
                       <button onClick={() => handleRemoveChannel(channel)} className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                        <Trash2 size={16} />
+                        <Icon name="delete" size={16} />
                       </button>
                     </div>
                   ))}
@@ -314,7 +315,7 @@ export default function TwitchWatch() {
                   disabled={isSyncing}
                   className={`text-zinc-400 hover:text-white transition-colors p-1.5 rounded-md hover:bg-white/5 ${isSyncing ? 'animate-spin opacity-50' : ''}`}
                 >
-                  <RefreshCw size={14} />
+                  <Icon name="refresh" size={14} />
                 </button>
               </div>
               
@@ -323,7 +324,7 @@ export default function TwitchWatch() {
                   <div className="text-center p-4 text-xs text-zinc-500">No channels configured.</div>
                 ) : isSyncing && liveChannels.length === 0 ? (
                   <div className="text-center p-4 text-xs text-zinc-500 flex items-center justify-center gap-2">
-                    <RefreshCw size={12} className="animate-spin" /> Checking status...
+                    <Icon name="refresh" size={12} className="animate-spin" /> Checking status...
                   </div>
                 ) : liveChannels.length === 0 ? (
                   <div className="text-center p-4 text-xs text-zinc-500">None of your tracked channels are live.</div>
@@ -351,15 +352,15 @@ export default function TwitchWatch() {
 
             <div className="bg-zinc-950/50 border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
               <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
-                <MonitorPlay size={16} className="text-primary" /> Open in Streamlink
+                <Icon name="smart_display" size={16} className="text-primary" /> Open in Streamlink
               </h3>
               
               {!streamlinkStatus ? (
-                <div className="text-xs text-zinc-500 flex items-center gap-2"><RefreshCw size={12} className="animate-spin" /> Checking streamlink...</div>
+                <div className="text-xs text-zinc-500 flex items-center gap-2"><Icon name="refresh" size={12} className="animate-spin" /> Checking streamlink...</div>
               ) : !streamlinkStatus.installed ? (
                 <div className="space-y-2">
                   <div className="text-[11px] text-red-400 bg-red-400/10 p-2 rounded-lg border border-red-400/20 flex items-start gap-2">
-                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                    <Icon name="error" size={14} className="shrink-0 mt-0.5" />
                     <span>Streamlink is not installed or not in PATH. Required to open streams externally.</span>
                   </div>
                   <Button 
@@ -382,7 +383,7 @@ export default function TwitchWatch() {
                     onClick={launchStreamlink}
                     disabled={!selectedChannel || isLaunchingStreamlink}
                   >
-                    {isLaunchingStreamlink ? <RefreshCw size={16} className="animate-spin" /> : <MonitorPlay size={16} />}
+                    {isLaunchingStreamlink ? <Icon name="refresh" size={16} className="animate-spin" /> : <Icon name="smart_display" size={16} />}
                     {isLaunchingStreamlink ? "Launching..." : "Launch External Player"}
                   </Button>
                 </div>
@@ -394,7 +395,7 @@ export default function TwitchWatch() {
           <div className="flex-1 bg-black rounded-2xl border border-white/10 overflow-hidden relative shadow-2xl flex flex-col min-h-[400px]">
             {!selectedChannel ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-600 gap-4">
-                <Tv size={48} className="opacity-20" />
+                <Icon name="tv" size={48} className="opacity-20" />
                 <p>Select a live channel from the sidebar to start watching</p>
               </div>
             ) : (

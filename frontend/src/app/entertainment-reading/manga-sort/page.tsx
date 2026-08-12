@@ -19,8 +19,9 @@ import {
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { BookOpen, Save, ArrowLeft, GripHorizontal } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type MangaData = {
   main_url: string;
@@ -69,7 +70,7 @@ function SortableItem({ id, item }: { id: string, item: MangaData }) {
         className="bg-zinc-950 p-2 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-white/5 group"
       >
         <span className="text-xs font-semibold text-zinc-400 truncate pr-2" title={cleanTitle}>{cleanTitle}</span>
-        <GripHorizontal size={14} className="text-zinc-600 group-hover:text-primary" />
+        <Icon name="drag_handle" size={14} className="text-zinc-600 group-hover:text-primary" />
       </div>
       
       <div className="p-3 flex gap-3 flex-1">
@@ -161,10 +162,10 @@ export default function MangaSortPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")} icon={<ArrowLeft size={16} />}>
+          <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")} icon={<Icon name="arrow_back" size={16} />}>
             Back to Library
           </Button>
-          <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Save size={16} />}>
+          <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Icon name="save" size={16} />}>
             Save Order
           </Button>
         </div>

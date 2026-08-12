@@ -3,9 +3,12 @@ import { Header } from "@/components/ui/Header";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, Video as VideoIcon, Play, Pause, Upload, Settings2, Radio, Eye, EyeOff, AlertTriangle, Download } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
+import { VirtualCameraBroadcast } from "@/components/ui/VirtualCameraBroadcast";
+import { Icon } from "@/lib/utils";
 
 export default function RgbShutterPage() {
   const [sourceType, setSourceType] = useState<"camera" | "video">("camera");
@@ -27,19 +30,11 @@ export default function RgbShutterPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   
-  // Virtual Camera State
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const isBroadcastingRef = useRef(false); // ref so processFrame closure always sees latest value
-  const [hideCanvas, setHideCanvas] = useState(false);
-  const [showObsWarning, setShowObsWarning] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
-  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   const requestRef = useRef<number | null>(null);
   const prevVideoTimeRef = useRef(-1); // used to detect video loop-backs
-  const lastBroadcastTimeRef = useRef(0); // rate-limits OBS sends to ~30fps
   // Worker refs — all heavy pixel work runs off the main thread
   const workerRef = useRef<Worker | null>(null);
   const workerBusyRef = useRef(false);
@@ -49,8 +44,6 @@ export default function RgbShutterPage() {
   useEffect(() => { redDelayRef.current = redDelay; }, [redDelay]);
   useEffect(() => { greenDelayRef.current = greenDelay; }, [greenDelay]);
   useEffect(() => { blueDelayRef.current = blueDelay; }, [blueDelay]);
-  // Keep broadcasting ref in sync so processFrame closure always sees the latest value
-  useEffect(() => { isBroadcastingRef.current = isBroadcasting; }, [isBroadcasting]);
 
   // Initialise the Web Worker that handles all pixel compositing off the main thread
   useEffect(() => {
@@ -66,12 +59,6 @@ export default function RgbShutterPage() {
         const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
         if (ctx) ctx.putImageData(new ImageData(output, width, height), 0, 0);
       }
-
-      // Forward packed RGB frame to OBS (if worker decided to include it)
-      if (rgbBuffer && wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(rgbBuffer);
-        lastBroadcastTimeRef.current = performance.now();
-      }
     };
 
     return () => { worker.terminate(); workerRef.current = null; };
@@ -80,63 +67,10 @@ export default function RgbShutterPage() {
   useEffect(() => {
     return () => {
       stopMedia();
-      stopBroadcast();
       stopRecording();
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
-
-  const stopBroadcast = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    setIsBroadcasting(false);
-  };
-
-  const startBroadcast = async () => {
-    if (!canvasRef.current) return;
-    
-    // Check if OBS Virtual Camera is available
-    try {
-      const token = localStorage.getItem("auth_token") || "";
-      const res = await fetch("http://localhost:8000/api/virtual-camera/status", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (!data.available) {
-        setShowObsWarning(true);
-        return;
-      }
-    } catch (err) {
-      console.error("Failed to check OBS status", err);
-      alert("Backend not reachable.");
-      return;
-    }
-
-    setShowObsWarning(false);
-    const ws = new WebSocket("ws://localhost:8000/api/virtual-camera/stream");
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ 
-        width: canvasRef.current!.width || 1280, 
-        height: canvasRef.current!.height || 720, 
-        fps: 30 
-      }));
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.status === "ready") {
-        setIsBroadcasting(true);
-      }
-    };
-    
-    ws.onclose = () => {
-      setIsBroadcasting(false);
-    };
-  };
 
   const stopMedia = () => {
     if (videoRef.current) {
@@ -259,13 +193,8 @@ export default function RgbShutterPage() {
           offCtx.drawImage(videoRef.current, 0, 0, vw, vh);
           const frameData = offCtx.getImageData(0, 0, vw, vh);
 
-          // Decide OBS send eligibility before posting (rate-limit + backpressure check)
-          const now = performance.now();
-          const sendToObs =
-            isBroadcastingRef.current &&
-            wsRef.current?.readyState === WebSocket.OPEN &&
-            (wsRef.current?.bufferedAmount ?? 0) === 0 &&
-            now - lastBroadcastTimeRef.current >= 33;
+          // Disable worker OBS sending since VirtualCameraBroadcast handles it
+          const sendToObs = false;
 
           workerBusyRef.current = true;
           workerRef.current.postMessage(
@@ -292,7 +221,25 @@ export default function RgbShutterPage() {
 
   return (
     <div className="w-full h-full p-4 lg:p-6 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <Header title="RGB Shutter Lag" subtitle="Real-time color channel separation and temporal delay effects." />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">RGB Shutter Lag</h1>
+          <p className="text-[var(--theme-text)] text-sm font-medium">Real-time color channel separation and temporal delay effects.</p>
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+          <ModernTabs 
+            tabs={[
+              { id: "camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> },
+              { id: "video", label: "Video File", icon: <Icon name="movie" size={18} /> }
+            ]} 
+            activeTab={sourceType} 
+            setActiveTab={(tab) => {
+              stopMedia();
+              setSourceType(tab as "camera" | "video");
+            }} 
+          />
+        </div>
+      </div>
 
       <div className="flex flex-col gap-8 w-full mt-4">
         {/* SECTION 1: INPUT & CONTROLS */}
@@ -301,92 +248,111 @@ export default function RgbShutterPage() {
             <SectionHeader title="Upload media" />
             
             <div className="space-y-4">
-              {sourceType === "camera" && isPlaying ? (
-                <Button 
-                  variant="primary" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white" 
-                  onClick={stopMedia}
-                  icon={<Camera size={16} />}
-                >
-                  Stop Camera
-                </Button>
+              {sourceType === "camera" ? (
+                isPlaying ? (
+                  <Button 
+                    variant="primary" 
+                    className="w-full h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
+                    style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
+                    onClick={stopMedia}
+                    icon={<Icon name="photo_camera" size={16} />}
+                  >
+                    Stop Camera
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="primary" 
+                    className="w-full h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
+                    style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
+                    onClick={startCamera}
+                    icon={<Icon name="photo_camera" size={16} />}
+                  >
+                    Use Web Camera
+                  </Button>
+                )
               ) : (
-                <Button 
-                  variant="primary" 
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white" 
-                  onClick={startCamera}
-                  icon={<Camera size={16} />}
-                >
-                  Use Web Camera
-                </Button>
+                <div className="relative">
+                  <DirectUploadBox
+                    accept="video/*"
+                    label="Upload Video"
+                    onUploadComplete={(hash) => {
+                      stopMedia();
+                      setSourceType("video");
+                      const fileUrl = `/api/files/download/${hash}`;
+                      if (videoRef.current) {
+                        videoRef.current.src = fileUrl;
+                        videoRef.current.loop = isLooping;
+                        videoRef.current.onended = () => {
+                          stopRecording();
+                        };
+                        videoRef.current.play();
+                        setIsPlaying(true);
+                        setIsVideoPaused(false);
+                        workerRef.current?.postMessage({ type: 'reset' });
+                        startProcessing();
+                      }
+                    }}
+                    onClear={() => {}}
+                    defaultFileName=""
+                  />
+                </div>
               )}
-              
-              <div className="relative">
-                <DirectUploadBox
-                  accept="video/*"
-                  label="Upload Video"
-                  onUploadComplete={(hash) => {
-                    stopMedia();
-                    setSourceType("video");
-                    const fileUrl = `/api/files/download/${hash}`;
-                    if (videoRef.current) {
-                      videoRef.current.src = fileUrl;
-                      videoRef.current.loop = isLooping;
-                      videoRef.current.onended = () => {
-                        stopRecording();
-                      };
-                      videoRef.current.play();
-                      setIsPlaying(true);
-                      setIsVideoPaused(false);
-                      workerRef.current?.postMessage({ type: 'reset' });
-                      startProcessing();
-                    }
-                  }}
-                  onClear={() => {}}
-                  defaultFileName=""
-                />
-              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-2 mt-8">
             <SectionHeader title="Configuration" />
             
-            <div className="flex flex-col gap-2">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-red-400">Red Delay</label>
-                  <span className="text-xs text-zinc-500 font-mono">{redDelay} frames</span>
+            <div className="grid grid-cols-1 gap-6 mt-2">
+              {/* CARD 1: Color Channel Delays */}
+              <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
+                <div className="flex items-center gap-2 font-medium pb-2 border-b" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+                  <h3 className="text-[var(--theme-heading)]">Color Channel Delays</h3>
                 </div>
-                <input 
-                  type="range" min="0" max="60" value={redDelay}
-                  onChange={(e) => setRedDelay(parseInt(e.target.value))}
-                  className="w-full accent-red-500"
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-green-400">Green Delay</label>
-                  <span className="text-xs text-zinc-500 font-mono">{greenDelay} frames</span>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-[var(--theme-heading)]">Red Delay</label>
+                      <span className="text-xs font-mono text-red-400 bg-[var(--theme-bg)] px-2 py-1 rounded-md border" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+                        {redDelay} frames
+                      </span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="60" value={redDelay}
+                      onChange={(e) => setRedDelay(parseInt(e.target.value))}
+                      className="w-full accent-red-500 bg-white/10 h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-[var(--theme-heading)]">Green Delay</label>
+                      <span className="text-xs font-mono text-green-400 bg-[var(--theme-bg)] px-2 py-1 rounded-md border" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+                        {greenDelay} frames
+                      </span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="60" value={greenDelay}
+                      onChange={(e) => setGreenDelay(parseInt(e.target.value))}
+                      className="w-full accent-green-500 bg-white/10 h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-[var(--theme-heading)]">Blue Delay</label>
+                      <span className="text-xs font-mono text-blue-400 bg-[var(--theme-bg)] px-2 py-1 rounded-md border" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+                        {blueDelay} frames
+                      </span>
+                    </div>
+                    <input 
+                      type="range" min="0" max="60" value={blueDelay}
+                      onChange={(e) => setBlueDelay(parseInt(e.target.value))}
+                      className="w-full accent-blue-500 bg-white/10 h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
                 </div>
-                <input 
-                  type="range" min="0" max="60" value={greenDelay}
-                  onChange={(e) => setGreenDelay(parseInt(e.target.value))}
-                  className="w-full accent-green-500"
-                />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-blue-400">Blue Delay</label>
-                  <span className="text-xs text-zinc-500 font-mono">{blueDelay} frames</span>
-                </div>
-                <input 
-                  type="range" min="0" max="60" value={blueDelay}
-                  onChange={(e) => setBlueDelay(parseInt(e.target.value))}
-                  className="w-full accent-blue-500"
-                />
               </div>
             </div>
           </div>
@@ -402,7 +368,7 @@ export default function RgbShutterPage() {
                     variant="secondary" 
                     size="sm"
                     onClick={togglePlayPause}
-                    icon={isVideoPaused ? <Play size={16} /> : <Pause size={16} />}
+                    icon={isVideoPaused ? <Icon name="play_arrow" size={16} /> : <Icon name="pause" size={16} />}
                   >
                     {isVideoPaused ? "Play" : "Pause"}
                   </Button>
@@ -410,19 +376,18 @@ export default function RgbShutterPage() {
                     <Button 
                       variant="primary" 
                       size="sm"
-                      className="bg-red-600 hover:bg-red-700 text-white" 
+                      className="bg-red-600 hover:bg-red-700 text-[var(--theme-heading)]" 
                       onClick={startRecording}
-                      icon={<Radio size={16} />}
+                      icon={<Icon name="radio" size={16} />}
                     >
                       Record
                     </Button>
                   ) : (
-                    <Button 
-                      variant="primary" 
+                    <Button variant="primary" 
                       size="sm"
-                      className="bg-zinc-800 hover:bg-zinc-700 text-red-400 animate-pulse" 
+                      className="bg-zinc-800 hover:bg-zinc-700 text-red-400 animate-pulse border-none !shadow-none !ring-0 !outline-none transition-colors" 
                       onClick={stopRecording}
-                      icon={<Download size={16} />}
+                      icon={<Icon name="download" size={16} />}
                     >
                       Stop & Save
                     </Button>
@@ -431,7 +396,7 @@ export default function RgbShutterPage() {
               )}
             </div>
 
-            <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[300px] flex items-center justify-center p-2">
+            <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[300px] flex items-center justify-center p-2">
               <video 
                 ref={videoRef} 
                 className="hidden" 
@@ -440,71 +405,28 @@ export default function RgbShutterPage() {
                 loop={sourceType === "video"} 
               />
               {!isPlaying && (
-                <div className="flex flex-col items-center justify-center text-zinc-600 gap-4">
-                  <Camera size={48} className="opacity-30" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--theme-text)] gap-4">
+                  <Icon name="photo_camera" size={48} className="opacity-30" />
                   <p>Select an input source to begin processing.</p>
                 </div>
               )}
               <canvas 
                 ref={canvasRef} 
-                className={`max-w-full max-h-full object-contain ${hideCanvas ? 'opacity-0' : 'opacity-100'}`}
+                className="max-w-full max-h-full object-contain transition-opacity duration-300"
                 style={{ 
                   transform: sourceType === "camera" ? "scaleX(-1)" : "none" // Mirror camera
                 }}
               />
             </div>
-
-            {/* Virtual Camera Options */}
-            <div className="pt-2 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-zinc-300">OBS Virtual Camera</span>
-                <button 
-                  onClick={() => setHideCanvas(!hideCanvas)}
-                  className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-2 ${hideCanvas ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                >
-                  {hideCanvas ? <EyeOff size={14} /> : <Eye size={14} />}
-                  {hideCanvas ? "Preview Hidden" : "Hide Preview"}
-                </button>
-              </div>
-              
-              {isBroadcasting ? (
-                <Button 
-                  variant="primary" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white h-10" 
-                  onClick={stopBroadcast}
-                  icon={<Radio size={18} />}
-                >
-                  Stop Broadcast
-                </Button>
-              ) : (
-                <Button 
-                  variant="primary" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white h-10" 
-                  onClick={startBroadcast}
-                  disabled={!isPlaying}
-                  icon={<Radio size={18} />}
-                >
-                  Start Broadcast to OBS
-                </Button>
-              )}
-
-              {showObsWarning && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm text-amber-200 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
-                    <p>OBS Virtual Camera is not detected on your system.</p>
-                  </div>
-                  <Button 
-                    variant="secondary"
-                    className="w-full text-xs"
-                    onClick={() => window.open("https://obsproject.com/", "_blank")}
-                    icon={<Download size={14} />}
-                  >
-                    Download OBS Studio
-                  </Button>
-                </div>
-              )}
-            </div>
+            
+            {isPlaying && (
+              <VirtualCameraBroadcast 
+                sourceRef={canvasRef} 
+                isStreamActive={isPlaying}
+                width={1280}
+                height={720}
+              />
+            )}
         </div>
       </div>
     </div>

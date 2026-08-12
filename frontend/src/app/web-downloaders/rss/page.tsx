@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Rss, Plus, Trash2, ExternalLink, RefreshCw, AlertCircle, FileText, Settings2 } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 export default function RssManager() {
   const [activeTab, setActiveTab] = useState("feed");
@@ -121,8 +122,8 @@ export default function RssManager() {
             activeTab={activeTab}
             setActiveTab={setActiveTab as (id: string) => void}
             tabs={[
-              { id: "feed", label: "Feed Reader", icon: <FileText size={16} /> },
-              { id: "subs", label: "Manage Subscriptions", icon: <Settings2 size={16} /> }
+              { id: "feed", label: "Feed Reader", icon: <Icon name="description" size={16} /> },
+              { id: "subs", label: "Manage Subscriptions", icon: <Icon name="tune" size={16} /> }
             ]}
           />
         </div>
@@ -133,7 +134,7 @@ export default function RssManager() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-bold text-white">Latest Articles</h2>
-                      <Button variant="secondary" icon={<RefreshCw size={16} />} onClick={() => fetchFeeds(true)} isLoading={loadingFeeds}>
+                      <Button variant="secondary" icon={<Icon name="refresh" size={16} />} onClick={() => fetchFeeds(true)} isLoading={loadingFeeds}>
                         Refresh
                       </Button>
                     </div>
@@ -158,7 +159,7 @@ export default function RssManager() {
                           >
                             <div className="flex justify-between items-start gap-4 mb-2">
                               <h3 className="text-lg font-bold text-white group-hover:text-[var(--theme-heading)] transition-colors">{article.title}</h3>
-                              <ExternalLink size={16} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                              <Icon name="open_in_new" size={16} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                             </div>
                             <div className="flex gap-3 text-xs font-medium mb-3">
                               <span className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] px-2 py-1 rounded-md">{article.source}</span>
@@ -197,7 +198,7 @@ export default function RssManager() {
                         </div>
                       </div>
                       <div className="mt-6 flex justify-end">
-                        <Button variant="primary" icon={<Plus size={16} />} onClick={handleAddSub} isLoading={loadingSubs} className="bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] border-none">
+                        <Button variant="primary" icon={<Icon name="add" size={16} />} onClick={handleAddSub} isLoading={loadingSubs} className="bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] border-none">
                           Subscribe
                         </Button>
                       </div>
@@ -219,7 +220,7 @@ export default function RssManager() {
                               className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
                               title="Remove Subscription"
                             >
-                              <Trash2 size={18} />
+                              <Icon name="delete" size={18} />
                             </button>
                           </div>
                         ))}

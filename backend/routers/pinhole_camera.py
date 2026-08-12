@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+import asyncio
 from fastapi import APIRouter, Form, HTTPException
 from utilities.util_pinhole import generate_pinhole_photography
 
@@ -31,7 +32,7 @@ async def process_pinhole_video(file_hash: str = Form(...)):
     
     try:
         # Process video and save image to TEMP_DIR
-        output_filename = generate_pinhole_photography(video_path, TEMP_DIR)
+        output_filename = await asyncio.to_thread(generate_pinhole_photography, video_path, TEMP_DIR)
         
         # URL for the frontend to access the generated image
         image_url = f"/temp/{output_filename}"
@@ -66,7 +67,7 @@ async def api_pinhole_batch(hashes: str = Form(...)):
             if not os.path.exists(video_path):
                 continue
                 
-            output_filename = generate_pinhole_photography(video_path, out_dir)
+            output_filename = await asyncio.to_thread(generate_pinhole_photography, video_path, out_dir)
             out_path = os.path.join(out_dir, output_filename)
             
             # Also copy to TEMP_DIR directly so it's accessible at /temp/

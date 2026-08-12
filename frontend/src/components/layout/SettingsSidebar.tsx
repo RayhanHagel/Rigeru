@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Settings2, X, Save, HardDrive, Trash2, Palette } from "lucide-react";
+
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Slider } from "@/components/ui/Slider";
 import { Button } from "@/components/ui/Button";
 import { APP_THEMES } from "@/lib/themes";
+import { Icon } from "@/lib/utils";
 
 export function SettingsSidebar() {
   const pathname = usePathname();
@@ -21,6 +22,8 @@ export function SettingsSidebar() {
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [authMsg, setAuthMsg] = useState({ text: "", type: "" });
   const [isSavingAuth, setIsSavingAuth] = useState(false);
@@ -171,7 +174,7 @@ export function SettingsSidebar() {
   const inputStyle: React.CSSProperties = {
     borderColor: "var(--theme-ui-border)",
   };
-  const inputFocusClass = "w-full bg-zinc-950 border rounded-lg p-2 text-white outline-none text-sm transition-colors";
+  const inputFocusClass = "w-full bg-[var(--theme-ui-bg)] border rounded-lg p-2 text-[var(--theme-text)] outline-none text-sm transition-colors";
 
   // Determine what settings to show based on the current route
   const renderSettings = () => {
@@ -287,7 +290,7 @@ export function SettingsSidebar() {
           )}
           
           <Button variant="primary" onClick={handleSaveSpotifyConfig} isLoading={isSavingSpotify} className="w-full mt-2">
-            {isSavingSpotify ? null : <Save size={16} />} Save Settings
+            {isSavingSpotify ? null : <Icon name="save" size={16} />} Save Settings
           </Button>
         </div>
       );
@@ -333,7 +336,7 @@ export function SettingsSidebar() {
             onClick={() => setSettingsCollapsed(true)} 
             className="p-1 rounded-md text-zinc-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <Icon name="close" size={20} />
           </button>
         </div>
         <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-8">
@@ -352,7 +355,7 @@ export function SettingsSidebar() {
                       key={name}
                       onClick={() => setTheme(name)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                        isActive ? "ring-1" : "hover:bg-white/5"
+                        isActive ? "ring-1" : "hover:bg-[var(--theme-ui-bg)]"
                       }`}
                       style={{
                         backgroundColor: isActive ? "color-mix(in srgb, var(--theme-heading) 15%, transparent)" : undefined,
@@ -362,10 +365,13 @@ export function SettingsSidebar() {
                         "--tw-ring-color": isActive ? "var(--theme-heading)" : undefined,
                       }}
                     >
-                      <div
-                        className="w-4 h-4 rounded-full border border-white/20 flex-shrink-0"
-                        style={{ backgroundColor: colors.HEADING }}
-                      />
+                      <div className="flex rounded overflow-hidden border border-[var(--theme-ui-border)] flex-shrink-0 h-4 w-10">
+                        <div className="flex-1 h-full" style={{ backgroundColor: colors.BG }} />
+                        <div className="flex-1 h-full" style={{ backgroundColor: colors.UI_BG }} />
+                        <div className="flex-1 h-full" style={{ backgroundColor: colors.GLOW_1 }} />
+                        <div className="flex-1 h-full" style={{ backgroundColor: colors.TEXT }} />
+                        <div className="flex-1 h-full" style={{ backgroundColor: colors.HEADING }} />
+                      </div>
                       <span className={isActive ? "" : "text-zinc-400"}>{name.replace(" (Default)", "")}</span>
                     </button>
                   );
@@ -385,7 +391,7 @@ export function SettingsSidebar() {
             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Account Settings</h3>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Username</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">Username</label>
                 <input 
                   type="text" 
                   value={newUsername}
@@ -397,36 +403,60 @@ export function SettingsSidebar() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Current Password</label>
-                <input 
-                  type="password" 
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className={inputFocusClass}
-                  style={inputStyle}
-                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
-                />
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">Current Password</label>
+                <div className="relative">
+                  <input 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className={`${inputFocusClass} pr-10`}
+                    style={inputStyle}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[var(--theme-heading)] transition-colors flex items-center justify-center h-full"
+                  >
+                    <Icon name={showCurrentPassword ? "visibility_off" : "visibility"} size={18} />
+                  </button>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">New Password</label>
-                <input 
-                  type="password" 
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className={inputFocusClass}
-                  style={inputStyle}
-                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
-                />
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">New Password</label>
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? "text" : "password"} 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={`${inputFocusClass} pr-10`}
+                    style={inputStyle}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "var(--theme-ui-border)"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[var(--theme-heading)] transition-colors flex items-center justify-center h-full"
+                  >
+                    <Icon name={showNewPassword ? "visibility_off" : "visibility"} size={18} />
+                  </button>
+                </div>
               </div>
               {authMsg.text && (
                 <div className={`p-2 rounded text-xs text-center ${authMsg.type === "error" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"}`}>
                   {authMsg.text}
                 </div>
               )}
-              <Button variant="primary" onClick={handleChangePassword} isLoading={isSavingAuth} className="w-full">
-                {isSavingAuth ? null : <Save size={16} />} Update Credentials
+              <Button 
+                variant="primary" 
+                onClick={handleChangePassword} 
+                isLoading={isSavingAuth} 
+                className="w-full border-none !shadow-none !ring-0 !outline-none transition-colors"
+                style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
+              >
+                {isSavingAuth ? null : <Icon name="save" size={16} />} Update Credentials
               </Button>
             </div>
           </div>
@@ -435,7 +465,7 @@ export function SettingsSidebar() {
         {/* Storage Footer */}
         <div className="p-6 border-t mt-auto" style={{ borderColor: "var(--theme-ui-border)" }}>
           <div className="flex flex-col gap-3">
-            <div className="bg-zinc-950/50 border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
+            <div className="bg-[var(--theme-ui-bg)] border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
                   <span>Static Images</span>
@@ -448,12 +478,12 @@ export function SettingsSidebar() {
                 disabled={!isMounted || isClearing || staticSize === "0 B"}
                 className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 size={12} />
+                <Icon name="delete" size={12} />
                 {isClearing ? "Clearing" : "Clear Static Images"}
               </button>
             </div>
             
-            <div className="bg-zinc-950/50 border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
+            <div className="bg-[var(--theme-ui-bg)] border rounded-lg p-3" style={{ borderColor: "var(--theme-ui-border)" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
                   <span>Temp Files</span>
@@ -466,7 +496,7 @@ export function SettingsSidebar() {
                 disabled={!isMounted || isClearingTemp || tempSize === "0 B"}
                 className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 size={12} />
+                <Icon name="delete" size={12} />
                 {isClearingTemp ? "Clearing" : "Clear Temp Files"}
               </button>
             </div>
@@ -483,7 +513,7 @@ export function SettingsSidebar() {
           borderColor: "var(--theme-ui-border)",
         }}
       >
-        <Settings2 size={24} />
+        <Icon name="tune" size={24} />
       </button>
     )}
     </>

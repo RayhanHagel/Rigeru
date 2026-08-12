@@ -2,10 +2,9 @@
 import { Header } from "@/components/ui/Header";
 
 import { useState, useEffect } from "react";
-import { 
-  Globe, Search, Download, Play, Eye, AlertCircle, CheckCircle2, Clock, Plus, Trash2
-} from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type ScrapedResult = {
   "Target URL": string;
@@ -173,7 +172,7 @@ export default function WebScraperPage() {
                     onClick={() => setUrls(urls.filter((_, i) => i !== index))}
                     className="px-3"
                   >
-                    <Trash2 size={16} className="text-zinc-400 hover:text-red-400 transition-colors" />
+                    <Icon name="delete" size={16} className="text-zinc-400 hover:text-red-400 transition-colors" />
                   </Button>
                 )}
               </div>
@@ -181,10 +180,10 @@ export default function WebScraperPage() {
           </div>
 
           <div className="mt-auto pt-4 border-t border-white/5 flex gap-4">
-            <Button variant="secondary" onClick={() => setUrls([...urls, ""])} icon={<Plus size={16} />}>
+            <Button variant="secondary" onClick={() => setUrls([...urls, ""])} icon={<Icon name="add" size={16} />}>
               Add URL
             </Button>
-            <Button variant="secondary" onClick={handlePreview} isLoading={isPreviewing} icon={<Eye size={16} />} disabled={urls.every(u => !u.trim()) || isInteractiveMode}>
+            <Button variant="secondary" onClick={handlePreview} isLoading={isPreviewing} icon={<Icon name="visibility" size={16} />} disabled={urls.every(u => !u.trim()) || isInteractiveMode}>
               Preview Image
             </Button>
             <Button 
@@ -193,7 +192,7 @@ export default function WebScraperPage() {
                 setIsInteractiveMode(!isInteractiveMode);
                 setPreviewImages([]);
               }} 
-              icon={<Search size={16} />} 
+              icon={<Icon name="search" size={16} />} 
               disabled={urls.every(u => !u.trim())}
             >
               Interactive Selector
@@ -227,7 +226,7 @@ export default function WebScraperPage() {
             variant="primary" 
             onClick={handleStartScraping} 
             isLoading={isScraping}
-            icon={<Play size={16} />}
+            icon={<Icon name="play_arrow" size={16} />}
             className="w-full mt-6"
             disabled={urls.every(u => !u.trim()) || !cssSelector.trim()}
           >
@@ -273,14 +272,14 @@ export default function WebScraperPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               {isScraping ? (
-                <><Clock size={18} className="text-secondary animate-spin-slow" /> Scraping in Progress</>
+                <><Icon name="schedule" size={18} className="text-secondary animate-spin-slow" /> Scraping in Progress</>
               ) : (
-                <><CheckCircle2 size={18} className="text-green-400" /> Scraping Completed</>
+                <><Icon name="check_circle" size={18} className="text-green-400" /> Scraping Completed</>
               )}
             </h2>
             
             {results.length > 0 && (
-              <Button variant="secondary" onClick={handleDownloadCsv} icon={<Download size={16} />}>
+              <Button variant="secondary" onClick={handleDownloadCsv} icon={<Icon name="download" size={16} />}>
                 Download CSV
               </Button>
             )}

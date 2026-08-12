@@ -2,10 +2,11 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Trash2, Link as LinkIcon, RefreshCw, Library, MonitorPlay, BookOpen, Settings2, Plus, Minus, Search, ExternalLink, AlertCircle, CheckCircle2, LogIn, Save, Link2 } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { Icon } from "@/lib/utils";
 
 type MalItem = {
   title: string;
@@ -256,7 +257,7 @@ function MalSyncContent() {
 
       {isAuthLoading && (
         <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-3 text-purple-300">
-          <RefreshCw size={20} className="animate-spin" />
+          <Icon name="refresh" size={20} className="animate-spin" />
           <span>Exchanging code for access token...</span>
         </div>
       )}
@@ -274,18 +275,18 @@ function MalSyncContent() {
                           className={`px-6 py-1.5 text-sm rounded-sm transition-colors flex items-center gap-2 ${mediaType === "anime" ? "bg-primary/20 text-primary font-medium" : "text-zinc-400 hover:text-white"}`}
                           onClick={() => { setMediaType("anime"); setFilterStatus("All Titles"); }}
                         >
-                          <MonitorPlay size={16} /> Anime
+                          <Icon name="smart_display" size={16} /> Anime
                         </button>
                         <button 
                           className={`px-6 py-1.5 text-sm rounded-sm transition-colors flex items-center gap-2 ${mediaType === "manga" ? "bg-primary/20 text-primary font-medium" : "text-zinc-400 hover:text-white"}`}
                           onClick={() => { setMediaType("manga"); setFilterStatus("All Titles"); }}
                         >
-                          <BookOpen size={16} /> Manga
+                          <Icon name="menu_book" size={16} /> Manga
                         </button>
                       </div>
                       
                       <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+                        <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
                         <input
                           type="text"
                           placeholder="Search Title..."
@@ -310,12 +311,12 @@ function MalSyncContent() {
 
                     {Object.keys(library).length === 0 ? (
                       <div className="bg-zinc-900/50 border border-secondary/30 text-blue-300 p-4 rounded-md flex items-start gap-3 mt-4">
-                        <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                        <Icon name="error" size={20} className="shrink-0 mt-0.5" />
                         <p>Your {mediaType} library is empty. Go to the Sync tab to pull your data!</p>
                       </div>
                     ) : libItems.length === 0 ? (
                       <div className="bg-zinc-900/50 border border-amber-500/30 text-amber-300 p-4 rounded-md flex items-start gap-3 mt-4">
-                        <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                        <Icon name="error" size={20} className="shrink-0 mt-0.5" />
                         <p>No titles found matching your search or filter criteria.</p>
                       </div>
                     ) : (
@@ -336,7 +337,7 @@ function MalSyncContent() {
                                   className="absolute top-2 left-2 p-1.5 bg-black/60 backdrop-blur-md rounded-md text-zinc-400 hover:text-red-400 hover:bg-red-500/20 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
                                   title="Remove from Library"
                                 >
-                                  <Trash2 size={14} />
+                                  <Icon name="delete" size={14} />
                                 </button>
 
                                 {/* Status Badge */}
@@ -359,7 +360,7 @@ function MalSyncContent() {
                                     className="p-1 rounded-md text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                                     title="Decrease progress"
                                   >
-                                    <Minus size={14} />
+                                    <Icon name="remove" size={14} />
                                   </button>
                                   <span className="text-xs font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded-md whitespace-nowrap text-center overflow-hidden text-ellipsis flex-1">
                                     {currentProg} / {totalProg > 0 ? totalProg : "?"}
@@ -369,7 +370,7 @@ function MalSyncContent() {
                                     className="p-1 rounded-md text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                                     title="Increase progress"
                                   >
-                                    <Plus size={14} />
+                                    <Icon name="add" size={14} />
                                   </button>
                                 </div>
                               </div>
@@ -394,23 +395,23 @@ function MalSyncContent() {
                       <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">Sync via OAuth</h2>
                       {!clientId ? (
                         <div className="bg-zinc-900/50 border border-amber-500/30 text-amber-300 p-4 rounded-md flex items-start gap-3">
-                          <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                          <Icon name="error" size={20} className="shrink-0 mt-0.5" />
                           <p>Please configure your MyAnimeList Client ID below first.</p>
                         </div>
                       ) : !isLoggedIn ? (
                         <div className="text-center">
                           <div className="bg-zinc-900/50 border border-amber-500/30 text-amber-300 p-4 rounded-md flex justify-center items-center gap-3 mb-6 mx-auto w-fit">
-                            <Link2 size={20} className="shrink-0" />
+                            <Icon name="link" size={20} className="shrink-0" />
                             <p>You are not connected to MyAnimeList.</p>
                           </div>
-                          <Button variant="primary" onClick={handleLogin} icon={<LogIn size={18} />} className="w-full max-w-md py-6 text-lg">
+                          <Button variant="primary" onClick={handleLogin} icon={<Icon name="login" size={18} />} className="w-full max-w-md py-6 text-lg">
                             Login with MyAnimeList
                           </Button>
                         </div>
                       ) : (
                         <div className="text-center">
                           <div className="bg-zinc-900/50 border border-emerald-500/30 text-emerald-400 p-4 rounded-md flex justify-center items-center gap-3 mb-6 mx-auto w-fit">
-                            <Link2 size={20} className="shrink-0" />
+                            <Icon name="link" size={20} className="shrink-0" />
                             <p>Linked to MyAnimeList via OAuth2.</p>
                           </div>
                           <p className="text-zinc-300 mb-6">Pull your latest Anime and Manga lists directly from your account.</p>
@@ -421,7 +422,7 @@ function MalSyncContent() {
                             </div>
                           )}
                           
-                          <Button variant="primary" onClick={handleSync} isLoading={isSyncing} icon={<RefreshCw size={18} />} className="w-full max-w-md py-6 text-lg">
+                          <Button variant="primary" onClick={handleSync} isLoading={isSyncing} icon={<Icon name="refresh" size={18} />} className="w-full max-w-md py-6 text-lg">
                             Sync Data from MAL
                           </Button>
                         </div>
@@ -460,7 +461,7 @@ function MalSyncContent() {
                           />
                         </div>
                         
-                        <Button variant="primary" onClick={saveCredentials} isLoading={isSavingCreds} icon={<Save size={18} />} className="w-full py-4 text-base">
+                        <Button variant="primary" onClick={saveCredentials} isLoading={isSavingCreds} icon={<Icon name="save" size={18} />} className="w-full py-4 text-base">
                           Save Credentials
                         </Button>
                       </div>

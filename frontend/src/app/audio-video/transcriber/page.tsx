@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Film, Upload, Settings2, Play, Users, Palette, Download, Mic, CheckCircle2, AlertTriangle, FileVideo } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 interface Segment {
   start: number;
@@ -253,9 +254,9 @@ export default function TranscriberPage() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             tabs={[
-              { id: "transcribe", label: "Transcribe", icon: <Mic size={16} /> },
-              { id: "speakers", label: "Speakers", icon: <Users size={16} /> },
-              { id: "export", label: "Export", icon: <Download size={16} /> }
+              { id: "transcribe", label: "Transcribe", icon: <Icon name="mic" size={16} /> },
+              { id: "speakers", label: "Speakers", icon: <Icon name="group" size={16} /> },
+              { id: "export", label: "Export", icon: <Icon name="download" size={16} /> }
             ]}
           />
         </div>
@@ -305,10 +306,10 @@ export default function TranscriberPage() {
                                       <div className="w-full space-y-4">
                                         <div className="flex items-center justify-between bg-zinc-900 p-3 rounded-lg border border-white/5">
                                           <div className="flex items-center gap-3 overflow-hidden">
-                                            <FileVideo className="text-secondary shrink-0" size={24} />
+                                            <Icon name="video_file" className="text-secondary shrink-0" size={24} />
                                             <span className="text-zinc-200 font-medium truncate">{filename}</span>
                                           </div>
-                                          <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />
+                                          <Icon name="check_circle" className="text-emerald-500 shrink-0" size={20} />
                                         </div>
                                         
                                         {previewFrame && (
@@ -372,7 +373,7 @@ export default function TranscriberPage() {
                                     
                                     <Button 
                                       variant="primary" 
-                                      icon={isTranscribing ? undefined : <Play size={18} />} 
+                                      icon={isTranscribing ? undefined : <Icon name="play_arrow" size={18} />} 
                                       onClick={handleTranscribe}
                                       disabled={isTranscribing || !fileId}
                                       className="w-full"
@@ -393,7 +394,7 @@ export default function TranscriberPage() {
                                 
                                 {rawSpeakerIds.length === 0 ? (
                                   <div className="p-8 bg-zinc-950/50 border border-white/5 rounded-xl text-center">
-                                    <Users className="mx-auto text-zinc-600 mb-4" size={48} />
+                                    <Icon name="group" className="mx-auto text-zinc-600 mb-4" size={48} />
                                     <h3 className="text-lg font-medium text-zinc-300">No Speakers Detected</h3>
                                     <p className="text-zinc-500">Run transcription with Diarization enabled to detect speakers.</p>
                                   </div>
@@ -408,7 +409,7 @@ export default function TranscriberPage() {
                                           {speakerThumbnails[sid] ? (
                                             <img src={speakerThumbnails[sid]} alt={sid} className={`w-full h-full object-cover transition-all ${playingSpeakerId === sid ? 'scale-110 opacity-75' : 'group-hover:opacity-75'}`} />
                                           ) : (
-                                            <Mic className="text-zinc-500" size={24} />
+                                            <Icon name="mic" className="text-zinc-500" size={24} />
                                           )}
                                           
                                           {/* Play Overlay */}
@@ -420,7 +421,7 @@ export default function TranscriberPage() {
                                                 <div className="w-1 h-2 bg-primary animate-pulse delay-150"></div>
                                               </div>
                                             ) : (
-                                              <Play className="text-white fill-white" size={20} />
+                                              <Icon name="play_arrow" className="text-white fill-white" size={20} />
                                             )}
                                           </div>
                                         </div>
@@ -494,7 +495,7 @@ export default function TranscriberPage() {
                                       )}
                                       
                                       <div className="pt-4">
-                                        <Button variant="primary" icon={<Download size={18} />} onClick={handleExport} className="w-full" disabled={segments.length === 0}>
+                                        <Button variant="primary" icon={<Icon name="download" size={18} />} onClick={handleExport} className="w-full" disabled={segments.length === 0}>
                                           Download {exportFormat.toUpperCase()}
                                         </Button>
                                       </div>

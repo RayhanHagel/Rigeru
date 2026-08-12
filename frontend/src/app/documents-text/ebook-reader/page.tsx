@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useRef } from "react";
-import { BookOpen, Upload, Play, Pause, Square, Settings, Volume2, FastForward, Rewind, AlertCircle, Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 export default function EbookReaderPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -194,14 +195,14 @@ export default function EbookReaderPage() {
                   disabled={!text}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${!text ? "opacity-50 bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed" : "bg-secondary hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20"}`}
                 >
-                  {isPlaying ? <Pause size={18} className="fill-white" /> : <Play size={18} className="fill-white translate-x-[1px]" />}
+                  {isPlaying ? <Icon name="pause" size={18} className="fill-white" /> : <Icon name="play_arrow" size={18} className="fill-white translate-x-[1px]" />}
                 </button>
                 <button 
                   onClick={stopText}
                   disabled={!text || (!isPlaying && !isPaused)}
                   className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center transition-colors disabled:opacity-50"
                 >
-                  <Square size={16} className="fill-current" />
+                  <Icon name="stop" size={16} className="fill-current" />
                 </button>
               </div>
               <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -212,12 +213,12 @@ export default function EbookReaderPage() {
             <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar relative">
               {isExtracting ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 gap-4">
-                  <Loader2 size={48} className="animate-spin text-secondary" />
+                  <Icon name="progress_activity" size={48} className="animate-spin text-secondary" />
                   <p>Extracting text from document</p>
                 </div>
               ) : errorMsg ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 gap-4 p-8 text-center">
-                  <AlertCircle size={48} />
+                  <Icon name="error" size={48} />
                   <p>{errorMsg}</p>
                 </div>
               ) : text ? (
@@ -229,7 +230,7 @@ export default function EbookReaderPage() {
                 </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-600 gap-4">
-                  <BookOpen size={64} className="opacity-20" />
+                  <Icon name="menu_book" size={64} className="opacity-20" />
                   <p className="text-lg font-medium">No document loaded</p>
                   <p className="text-sm">Upload a PDF, DOCX, or TXT file to start reading.</p>
                 </div>

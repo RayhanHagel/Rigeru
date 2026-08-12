@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ShieldCheck, Archive, ShieldAlert, Upload, ScanLine, FileJson, CheckCircle2, AlertTriangle, FileQuestion, PlusCircle, FolderOpen, History, Clock, Trash2, Loader2, Play, FileText, Download, XCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { FileExplorerModal } from "@/components/ui/FileExplorerModal";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 interface VerificationResults {
   ok: string[];
@@ -232,7 +233,7 @@ export default function HashIntegrityPage() {
                                               className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-secondary transition-colors"
                                             />
                                             <Button variant="secondary" onClick={() => openExplorer("snap")} className="px-4 shrink-0">
-                                              <FolderOpen size={18} />
+                                              <Icon name="folder_open" size={18} />
                                             </Button>
                                           </div>
                                           <p className="text-xs text-zinc-500">
@@ -242,7 +243,7 @@ export default function HashIntegrityPage() {
 
                                         {snapError && (
                                           <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                                            <ShieldAlert className="text-red-400 shrink-0 mt-0.5" size={16} />
+                                            <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
                                             <p className="text-sm text-red-400">{snapError}</p>
                                           </div>
                                         )}
@@ -255,7 +256,7 @@ export default function HashIntegrityPage() {
                                         >
                                           {isSnapping ? "Calculating hashes... (may take a while)" : (
                                             <span className="flex items-center gap-2">
-                                              <Archive size={18} />
+                                              <Icon name="archive" size={18} />
                                               Generate Fingerprint
                                             </span>
                                           )}
@@ -270,7 +271,7 @@ export default function HashIntegrityPage() {
                                         <div className="flex-1 bg-zinc-950 border border-white/10 rounded-xl overflow-hidden flex flex-col">
                                           {pastSnapshots.length === 0 ? (
                                             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-50">
-                                              <Archive size={24} className="text-zinc-500 mb-2" />
+                                              <Icon name="archive" size={24} className="text-zinc-500 mb-2" />
                                               <p className="text-sm text-zinc-400">No past snapshots found.</p>
                                             </div>
                                           ) : (
@@ -284,7 +285,7 @@ export default function HashIntegrityPage() {
                                                     <p className="text-xs font-semibold text-white truncate" title={snap.root_dir}>{snap.root_dir}</p>
                                                     <div className="flex items-center gap-4 text-xs text-zinc-500">
                                                       <span className="flex items-center gap-1 font-mono">
-                                                        <Clock size={12} />
+                                                        <Icon name="schedule" size={12} />
                                                         {new Date(snap.timestamp).toLocaleString()}
                                                       </span>
                                                       <span>{formatBytes(snap.size_bytes)}</span>
@@ -296,7 +297,7 @@ export default function HashIntegrityPage() {
                                                     className="p-2 bg-red-500/10 text-red-400 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 shrink-0"
                                                     title="Delete snapshot"
                                                   >
-                                                    <Trash2 size={16} />
+                                                    <Icon name="delete" size={16} />
                                                   </button>
                                                 </div>
                                               ))}
@@ -306,7 +307,7 @@ export default function HashIntegrityPage() {
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="flex flex-col gap-6 animate-slide-up max-w-2xl mx-auto">
+                                    <div className="flex flex-col gap-6 animate-slide-up w-full mx-auto">
                                       <div className="flex flex-col gap-2">
                                         <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
                                           Target Folder (To Verify)
@@ -320,7 +321,7 @@ export default function HashIntegrityPage() {
                                             className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-secondary transition-colors"
                                           />
                                           <Button variant="secondary" onClick={() => openExplorer("verify")} className="px-4 shrink-0">
-                                            <FolderOpen size={18} />
+                                            <Icon name="folder_open" size={18} />
                                           </Button>
                                         </div>
                                       </div>
@@ -340,7 +341,7 @@ export default function HashIntegrityPage() {
 
                                       {verifyError && (
                                         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                                          <ShieldAlert className="text-red-400 shrink-0 mt-0.5" size={16} />
+                                          <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
                                           <p className="text-sm text-red-400">{verifyError}</p>
                                         </div>
                                       )}
@@ -353,7 +354,7 @@ export default function HashIntegrityPage() {
                                       >
                                         {isVerifying ? "Verifying hashes" : (
                                           <span className="flex items-center gap-2">
-                                            <ScanLine size={18} />
+                                            <Icon name="document_scanner" size={18} />
                                             Run Integrity Scan
                                           </span>
                                         )}
@@ -367,25 +368,25 @@ export default function HashIntegrityPage() {
                                           
                                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             <div className="bg-zinc-950 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <CheckCircle2 className="text-emerald-400 mb-2" size={24} />
+                                              <Icon name="check_circle" className="text-emerald-400 mb-2" size={24} />
                                               <p className="text-3xl font-bold text-emerald-400">{results.ok.length}</p>
                                               <p className="text-xs text-zinc-400 uppercase tracking-wider">Verified OK</p>
                                             </div>
                                             
                                             <div className="bg-zinc-950 border border-amber-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <AlertTriangle className="text-amber-400 mb-2" size={24} />
+                                              <Icon name="warning" className="text-amber-400 mb-2" size={24} />
                                               <p className="text-3xl font-bold text-amber-400">{results.modified.length}</p>
                                               <p className="text-xs text-zinc-400 uppercase tracking-wider">Modified</p>
                                             </div>
                                             
                                             <div className="bg-zinc-950 border border-red-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <FileQuestion className="text-red-400 mb-2" size={24} />
+                                              <Icon name="help_center" className="text-red-400 mb-2" size={24} />
                                               <p className="text-3xl font-bold text-red-400">{results.missing.length}</p>
                                               <p className="text-xs text-zinc-400 uppercase tracking-wider">Missing</p>
                                             </div>
                                             
                                             <div className="bg-zinc-950 border border-secondary/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <PlusCircle className="text-secondary mb-2" size={24} />
+                                              <Icon name="add_circle" className="text-secondary mb-2" size={24} />
                                               <p className="text-3xl font-bold text-secondary">{results.new.length}</p>
                                               <p className="text-xs text-zinc-400 uppercase tracking-wider">New Files</p>
                                             </div>

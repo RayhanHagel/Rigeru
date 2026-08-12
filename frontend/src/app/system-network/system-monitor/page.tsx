@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Activity, Cpu, HardDrive, Network, Layers, Thermometer } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 
 type HardwareStats = {
   cpu_percent: number;
@@ -112,10 +113,10 @@ export default function SystemMonitorPage() {
 
       {stats.hardware && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {renderMetric(<Cpu size={18} />, "CPU Load", stats.hardware.cpu_percent, "Overall CPU Utilization")}
-          {renderMetric(<Layers size={18} />, "Memory", stats.hardware.mem_percent, stats.hardware.mem_text)}
-          {renderMetric(<HardDrive size={18} />, "Disk", stats.hardware.disk_percent, stats.hardware.disk_text)}
-          {renderMetric(<Activity size={18} />, "GPU Load", stats.hardware.gpu_percent, stats.hardware.gpu_text)}
+          {renderMetric(<Icon name="memory" size={18} />, "CPU Load", stats.hardware.cpu_percent, "Overall CPU Utilization")}
+          {renderMetric(<Icon name="layers" size={18} />, "Memory", stats.hardware.mem_percent, stats.hardware.mem_text)}
+          {renderMetric(<Icon name="hard_drive" size={18} />, "Disk", stats.hardware.disk_percent, stats.hardware.disk_text)}
+          {renderMetric(<Icon name="monitoring" size={18} />, "GPU Load", stats.hardware.gpu_percent, stats.hardware.gpu_text)}
         </div>
       )}
 

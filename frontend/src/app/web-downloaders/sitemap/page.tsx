@@ -2,8 +2,9 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Link2, Network, Search, Loader2, Globe, FileText, Activity, ChevronRight, ChevronDown, CheckCircle2, Download } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type NodeData = {
   url: string;
@@ -143,7 +144,7 @@ export default function SitemapPage() {
                     placeholder="https://example.com"
                     className="w-full bg-zinc-950/50 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-primary transition-colors"
                   />
-                  <Search size={16} className="absolute left-3 top-3 text-zinc-500" />
+                  <Icon name="search" size={16} className="absolute left-3 top-3 text-zinc-500" />
                 </div>
               </div>
               
@@ -178,7 +179,7 @@ export default function SitemapPage() {
               >
                 {isCrawling ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin" /> Crawling
+                    <Icon name="progress_activity" size={16} className="animate-spin" /> Crawling
                   </span>
                 ) : "Start Mapping"}
               </Button>
@@ -188,7 +189,7 @@ export default function SitemapPage() {
                 disabled={nodesCount === 0}
                 className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-medium flex items-center gap-2"
               >
-                <Download size={16} /> Save as JSON
+                <Icon name="download" size={16} /> Save as JSON
               </Button>
             </div>
           </div>
@@ -196,7 +197,7 @@ export default function SitemapPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-5 shadow-lg">
               <div className="flex items-center gap-2 text-zinc-500 mb-2">
-                <FileText size={16} />
+                <Icon name="description" size={16} />
                 <span className="text-xs font-medium">Pages Found</span>
               </div>
               <div className="text-3xl font-bold text-zinc-200">{nodesCount}</div>
@@ -204,7 +205,7 @@ export default function SitemapPage() {
             
             <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-5 shadow-lg">
               <div className="flex items-center gap-2 text-zinc-500 mb-2">
-                <Activity size={16} />
+                <Icon name="monitoring" size={16} />
                 <span className="text-xs font-medium">Max Depth</span>
               </div>
               <div className="text-3xl font-bold text-zinc-200">{maxDepthReached}</div>
@@ -213,11 +214,11 @@ export default function SitemapPage() {
           
           <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-4 shadow-lg flex items-center gap-3">
             {isCrawling ? (
-              <Loader2 size={18} className="text-primary animate-spin shrink-0" />
+              <Icon name="progress_activity" size={18} className="text-primary animate-spin shrink-0" />
             ) : statusMsg.includes("Finished") ? (
-              <CheckCircle2 size={18} className="text-green-400 shrink-0" />
+              <Icon name="check_circle" size={18} className="text-green-400 shrink-0" />
             ) : (
-              <Globe size={18} className="text-zinc-500 shrink-0" />
+              <Icon name="language" size={18} className="text-zinc-500 shrink-0" />
             )}
             <span className="text-sm text-zinc-400 line-clamp-2 leading-tight">
               {statusMsg || "Ready to crawl. Enter a URL above."}
@@ -236,7 +237,7 @@ export default function SitemapPage() {
                 <TreeNode node={rootNode} isRoot />
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-3">
-                  <Network size={48} className="opacity-20" />
+                  <Icon name="hub" size={48} className="opacity-20" />
                   <p className="text-sm">The website structure will appear here.</p>
                 </div>
               )}
@@ -263,13 +264,13 @@ const TreeNode = ({ node, isRoot = false }: { node: NodeData, isRoot?: boolean }
       >
         <div className="shrink-0 w-4 h-4 flex items-center justify-center text-zinc-500">
           {hasChildren ? (
-            expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
+            expanded ? <Icon name="expand_more" size={14} /> : <Icon name="chevron_right" size={14} />
           ) : (
             <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
           )}
         </div>
         
-        <Link2 size={14} className={isRoot ? "text-primary" : "text-zinc-500 group-hover:text-primary transition-colors"} />
+        <Icon name="link" size={14} className={isRoot ? "text-primary" : "text-zinc-500 group-hover:text-primary transition-colors"} />
         
         <a
           href={node.url}

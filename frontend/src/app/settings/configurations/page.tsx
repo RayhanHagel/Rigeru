@@ -2,8 +2,9 @@
 import { Header } from "@/components/ui/Header";
 
 import { useState, useEffect } from "react";
-import { Settings2, Save, Search, Trash2, Edit, Code, List, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type ConfigItem = {
   key: string;
@@ -17,7 +18,7 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
         <div className="border-l-2 border-primary/20 pl-3 py-2 my-1 bg-black/10 rounded-r-lg">
           <div className="flex items-center justify-between text-xs text-zinc-400 mb-2 font-mono">
              <span className="font-semibold text-purple-300">{name} <span className="text-zinc-500 font-normal">[Array]</span></span>
-             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Trash2 size={12} /></button>}
+             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
           </div>
           <div className="flex flex-col gap-1">
             {value.map((item, idx) => (
@@ -34,7 +35,7 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
             ))}
           </div>
           <button onClick={() => onChange([...value, ""])} className="text-[10px] uppercase font-bold tracking-wider text-primary hover:text-purple-300 flex items-center gap-1 mt-2 bg-primary/10 px-2 py-1 rounded transition-colors">
-            <Plus size={12} /> Add Item
+            <Icon name="add" size={12} /> Add Item
           </button>
         </div>
       );
@@ -43,7 +44,7 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
         <div className="border-l-2 border-secondary/20 pl-3 py-2 my-1 bg-black/10 rounded-r-lg">
           <div className="flex items-center justify-between text-xs text-zinc-400 mb-2 font-mono">
              <span className="font-semibold text-indigo-300">{name} <span className="text-zinc-500 font-normal">{'{Object}'}</span></span>
-             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Trash2 size={12} /></button>}
+             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
           </div>
           <div className="flex flex-col gap-1">
             {Object.entries(value).map(([k, v]) => (
@@ -66,7 +67,7 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
                 onChange({ ...value, [newKey]: "" });
               }
             }} className="text-[10px] uppercase font-bold tracking-wider text-secondary hover:text-indigo-300 flex items-center gap-1 bg-secondary/10 px-2 py-1 rounded transition-colors">
-              <Plus size={12} /> Add Key
+              <Icon name="add" size={12} /> Add Key
             </button>
           </div>
         </div>
@@ -89,7 +90,7 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
       )}
       {onDelete && (
         <button onClick={onDelete} className="p-1.5 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors shrink-0 opacity-0 group-hover:opacity-100">
-          <Trash2 size={14} />
+          <Icon name="delete" size={14} />
         </button>
       )}
     </div>
@@ -204,7 +205,7 @@ export default function ConfigurationsPage() {
       <div className="flex flex-col gap-6 w-full flex-1 min-h-0 animate-slide-up">
         <div className="w-full flex flex-col gap-4 overflow-hidden h-64 shrink-0">
           <div className="relative shrink-0">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input 
               type="text" 
               placeholder="Search configurations..." 
@@ -233,7 +234,7 @@ export default function ConfigurationsPage() {
                         onClick={(e) => { e.stopPropagation(); handleDelete(config.key); }}
                         className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
                       >
-                        <Trash2 size={14} />
+                        <Icon name="delete" size={14} />
                       </button>
                     </div>
                     <div className="text-xs text-zinc-500 font-mono truncate">
@@ -251,7 +252,7 @@ export default function ConfigurationsPage() {
             <div className="flex flex-col h-full overflow-hidden">
               <div className="p-4 border-b border-white/10 flex items-center justify-between bg-zinc-950/80 shrink-0">
                 <div className="flex items-center gap-3 text-zinc-300 font-medium">
-                  {isAdvancedMode ? <Code size={18} className="text-amber-400" /> : <List size={18} className="text-primary" />}
+                  {isAdvancedMode ? <Icon name="code" size={18} className="text-amber-400" /> : <Icon name="list" size={18} className="text-primary" />}
                   Editing: <span className="text-white font-mono text-sm px-2 py-1 bg-white/5 rounded">{selectedConfig.key}</span>
                 </div>
                 
@@ -288,7 +289,7 @@ export default function ConfigurationsPage() {
                   
                   <div className="w-px h-6 bg-white/10"></div>
                   
-                  <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Save size={16} />}>
+                  <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Icon name="save" size={16} />}>
                     Save
                   </Button>
                 </div>
@@ -322,7 +323,7 @@ export default function ConfigurationsPage() {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-zinc-600 gap-4">
               <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-                <Settings2 size={32} className="opacity-50" />
+                <Icon name="tune" size={32} className="opacity-50" />
               </div>
               <p className="text-sm">Select a configuration to view and edit its data.</p>
             </div>

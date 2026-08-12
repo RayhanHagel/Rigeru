@@ -56,3 +56,5 @@ yt-dlp==2026.6.9
 bleak==3.0.2
 winsdk==1.0.0b10
 geocoder==1.38.1
+arq==0.28.0
+redis==5.3.1

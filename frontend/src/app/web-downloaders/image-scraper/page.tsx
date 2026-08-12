@@ -4,13 +4,10 @@ import { Header } from "@/components/ui/Header";
 import React, { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
-import {
-  Search, Download, Folder, CheckCircle, AlertCircle, X,
-  Image as ImageIcon, ShieldAlert, Trash2, ZoomIn, ZoomOut,
-  ChevronLeft, ChevronRight, MousePointerClick,
-} from "lucide-react";
+
 import { FileExplorerModal } from "@/components/ui/FileExplorerModal";
 import { TextInput } from "@/components/ui/TextInput";
+import { Icon } from "@/lib/utils";
 
 interface DownloadedImage {
   path: string;
@@ -75,7 +72,7 @@ function ImagePreviewModal({
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
               title="Zoom Out (-)"
             >
-              <ZoomOut size={16} />
+              <Icon name="zoom_out" size={16} />
             </button>
             <span className="text-xs text-zinc-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
             <button
@@ -83,7 +80,7 @@ function ImagePreviewModal({
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
               title="Zoom In (+)"
             >
-              <ZoomIn size={16} />
+              <Icon name="zoom_in" size={16} />
             </button>
             <button
               onClick={() => setZoom(1)}
@@ -92,7 +89,7 @@ function ImagePreviewModal({
               Reset
             </button>
             <button onClick={onClose} className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 text-white transition-colors ml-2">
-              <X size={16} />
+              <Icon name="close" size={16} />
             </button>
           </div>
         </div>
@@ -116,7 +113,7 @@ function ImagePreviewModal({
               disabled={index === 0}
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white transition-colors"
             >
-              <ChevronLeft size={20} />
+              <Icon name="chevron_left" size={20} />
             </button>
             <span className="text-sm text-zinc-400">{index + 1} / {images.length}</span>
             <button
@@ -124,7 +121,7 @@ function ImagePreviewModal({
               disabled={index === images.length - 1}
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white transition-colors"
             >
-              <ChevronRight size={20} />
+              <Icon name="chevron_right" size={20} />
             </button>
           </div>
         )}
@@ -178,12 +175,12 @@ function ImageGridItem({
           ${isSelected ? "bg-[var(--theme-heading)] border-[var(--theme-heading)]" : "bg-black/50 border-white/50"}`}
         onClick={e => { e.stopPropagation(); onSelect(); }}
       >
-        {isSelected && <CheckCircle size={12} className="text-black fill-black" />}
+        {isSelected && <Icon name="check_circle" size={12} className="text-black fill-black" />}
       </div>
 
       {failed ? (
         <div className="flex flex-col items-center gap-1 text-zinc-600 p-2 text-center">
-          <ImageIcon size={24} />
+          <Icon name="image" size={24} />
           <span className="text-xs truncate w-full">{img.filename}</span>
         </div>
       ) : (
@@ -349,7 +346,7 @@ export default function ImageScraperPage() {
       {isSearxngUp === false && (
         <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ShieldAlert className="text-red-400" size={24} />
+            <Icon name="gpp_maybe" className="text-red-400" size={24} />
             <div>
               <h3 className="text-red-200 font-bold">SearXNG is not running!</h3>
               <p className="text-red-300 text-sm">Image scraping requires the SearXNG docker container to be active.</p>
@@ -368,7 +365,7 @@ export default function ImageScraperPage() {
             placeholder="e.g., cyberpunk city, nature landscape..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            icon={<Search size={18} />}
+            icon={<Icon name="search" size={18} />}
           />
         </div>
         <div className="w-full lg:w-48">
@@ -387,7 +384,7 @@ export default function ImageScraperPage() {
               placeholder="Leave empty for default Downloads"
               value={outputDir}
               onChange={(e) => setOutputDir(e.target.value)}
-              icon={<Folder size={18} />}
+              icon={<Icon name="folder" size={18} />}
             />
           </div>
           <Button
@@ -414,7 +411,7 @@ export default function ImageScraperPage() {
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              <Download size={20} />
+              <Icon name="download" size={20} />
               Start Bulk Download
             </span>
           )}
@@ -422,20 +419,20 @@ export default function ImageScraperPage() {
 
         {errorMsg && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center gap-3 backdrop-blur-md">
-            <AlertCircle size={20} />
+            <Icon name="error" size={20} />
             <p className="text-sm font-medium flex-1">{errorMsg}</p>
             <button onClick={() => setErrorMsg("")} className="hover:text-red-300">
-              <X size={18} />
+              <Icon name="close" size={18} />
             </button>
           </div>
         )}
 
         {successMsg && (
           <div className="bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl flex items-center gap-3 backdrop-blur-md">
-            <CheckCircle size={20} />
+            <Icon name="check_circle" size={20} />
             <p className="text-sm font-medium flex-1">{successMsg}</p>
             <button onClick={() => setSuccessMsg("")} className="hover:text-green-300">
-              <X size={18} />
+              <Icon name="close" size={18} />
             </button>
           </div>
         )}
@@ -465,11 +462,11 @@ export default function ImageScraperPage() {
                 </div>
                 <div className="flex justify-between text-xs font-medium">
                   <span className="text-emerald-400 flex items-center gap-1">
-                    <CheckCircle size={14} /> {progress.completed} Successful
+                    <Icon name="check_circle" size={14} /> {progress.completed} Successful
                   </span>
                   {progress.failed > 0 && (
                     <span className="text-red-400 flex items-center gap-1">
-                      <AlertCircle size={14} /> {progress.failed} Failed / Corrupted
+                      <Icon name="error" size={14} /> {progress.failed} Failed / Corrupted
                     </span>
                   )}
                 </div>
@@ -506,7 +503,7 @@ export default function ImageScraperPage() {
                       variant="primary"
                       onClick={handleDeleteSelected}
                       disabled={selectedPaths.size === 0 || isDeleting}
-                      icon={<Trash2 size={14} />}
+                      icon={<Icon name="delete" size={14} />}
                       className="text-xs h-8 px-3 bg-red-600 hover:bg-red-700 text-white disabled:opacity-40"
                     >
                       {isDeleting ? "Deleting..." : `Delete (${selectedPaths.size})`}
@@ -515,7 +512,7 @@ export default function ImageScraperPage() {
                       onClick={exitSelectionMode}
                       className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                     >
-                      <X size={16} />
+                      <Icon name="close" size={16} />
                     </button>
                   </>
                 ) : (
@@ -523,14 +520,14 @@ export default function ImageScraperPage() {
                     onClick={() => setSelectionMode(true)}
                     className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-colors"
                   >
-                    <MousePointerClick size={13} />
+                    <Icon name="ads_click" size={13} />
                     Select to Delete
                   </button>
                 )}
 
                 {progress.failed > 0 && (
                   <span className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
-                    <ShieldAlert size={13} />
+                    <Icon name="gpp_maybe" size={13} />
                     {progress.failed} corrupted image{progress.failed > 1 ? "s" : ""} skipped
                   </span>
                 )}

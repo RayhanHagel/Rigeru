@@ -2,12 +2,14 @@
 import { Header } from "@/components/ui/Header";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
-import React, { useState, useEffect } from "react";
-import { Settings, Image as ImageIcon, Film, Download, Play, CheckSquare, Video, StopCircle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+
 
 import { Button } from "@/components/ui/Button";
 import { ModernTabs } from "@/components/ui/ModernTabs";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { VirtualCameraBroadcast } from "@/components/ui/VirtualCameraBroadcast";
+import { Icon } from "@/lib/utils";
 
 const DETECT_MODELS = {
   "buffalo_l": "buffalo_l (High Accuracy)",
@@ -67,7 +69,10 @@ export default function FaceBlurPage() {
   const [cameraIndex, setCameraIndex] = useState(0);
   const [webcamActive, setWebcamActive] = useState(false);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [useExtrapolation, setUseExtrapolation] = useState(true);
   const [activeTab, setActiveTab] = useState("Image");
+  
+  const streamImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/media-vision/ffmpeg-encoders")
@@ -158,6 +163,7 @@ export default function FaceBlurPage() {
     formData.append("blur_style", blurStyle);
     formData.append("selected_faces", JSON.stringify(selFaces));
     formData.append("fps_scan", fpsScan.toString());
+    formData.append("use_extrapolation", useExtrapolation.toString());
     formData.append("gap_limit", gapLimit.toString());
     formData.append("match_threshold", matchThresh.toString());
     formData.append("encoder", enc);
@@ -207,6 +213,9 @@ export default function FaceBlurPage() {
     if (webcamActive) {
       setWebcamActive(false);
       setStreamUrl(null);
+      const fd = new FormData();
+      fd.append("camera_index", cameraIndex.toString());
+      fetch("http://127.0.0.1:8000/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
     } else {
       setWebcamActive(true);
       const url = new URL("http://127.0.0.1:8000/api/media-vision/face-blur/webcam-stream");
@@ -214,9 +223,26 @@ export default function FaceBlurPage() {
       url.searchParams.append("conf_thresh", "0.5"); // default
       url.searchParams.append("blur_intensity", blurIntensity.toString());
       url.searchParams.append("blur_type", blurStyle);
+      url.searchParams.append("ai_fps", fpsScan.toString());
+      url.searchParams.append("use_extrapolation", useExtrapolation.toString());
+      url.searchParams.append("_t", Date.now().toString());
       setStreamUrl(url.toString());
     }
   };
+
+  useEffect(() => {
+    if (webcamActive) {
+      const url = new URL("http://127.0.0.1:8000/api/media-vision/face-blur/webcam-stream");
+      url.searchParams.append("camera_index", cameraIndex.toString());
+      url.searchParams.append("conf_thresh", "0.5"); // default
+      url.searchParams.append("blur_intensity", blurIntensity.toString());
+      url.searchParams.append("blur_type", blurStyle);
+      url.searchParams.append("ai_fps", fpsScan.toString());
+      url.searchParams.append("use_extrapolation", useExtrapolation.toString());
+      url.searchParams.append("_t", Date.now().toString());
+      setStreamUrl(url.toString());
+    }
+  }, [cameraIndex, blurIntensity, blurStyle, fpsScan, useExtrapolation]);
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
@@ -226,9 +252,9 @@ export default function FaceBlurPage() {
         actions={
           <ModernTabs
             tabs={[
-              { id: "Image", label: "Image", icon: <ImageIcon size={18} /> },
-              { id: "Video", label: "Video", icon: <Film size={18} /> },
-              { id: "Live Camera", label: "Live Camera", icon: <Video size={18} /> }
+              { id: "Image", label: "Image", icon: <Icon name="image" size={18} /> },
+              { id: "Video", label: "Video", icon: <Icon name="movie" size={18} /> },
+              { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
             ]}
             activeTab={activeTab}
             setActiveTab={(tab) => {
@@ -253,10 +279,10 @@ export default function FaceBlurPage() {
                     onUploadComplete={handleMediaUpload}
                   />
                 ) : (
-                  <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between bg-[var(--theme-bg)] p-4 border border-[var(--theme-ui-border)] rounded-xl">
                     <div className="flex items-center gap-3">
-                      {isImage ? <ImageIcon size={20} className="text-zinc-400" /> : <Film size={20} className="text-zinc-400" />}
-                      <span className="text-zinc-200 font-medium">{mediaName}</span>
+                      {isImage ? <Icon name="image" size={20} className="text-[var(--theme-text)]" /> : <Icon name="movie" size={20} className="text-[var(--theme-text)]" />}
+                      <span className="text-[var(--theme-heading)] font-medium">{mediaName}</span>
                     </div>
                     <Button
                       variant="secondary"
@@ -277,30 +303,23 @@ export default function FaceBlurPage() {
 
                 <SectionHeader title="Configuration" className="mt-8" />
                 {/* Unified Symmetrical Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <div className={`grid grid-cols-1 ${activeTab === "Video" ? "md:grid-cols-2" : ""} gap-6 mt-4`}>
                   
                   {/* CARD 1: Blur Appearance (Applies to both Image and Video) */}
-                  <div 
-                    className="p-5 rounded-xl space-y-5 shadow-sm border"
-                    style={{
-                      backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                    }}
-                  >
+                  <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                     <div 
                       className="flex items-center gap-2 font-medium pb-2 border-b"
                       style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                     >
-                      <h3 className="text-zinc-200">Blur Appearance</h3>
+                      <h3 className="text-[var(--theme-heading)]">Blur Appearance</h3>
                     </div>
                     
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                         Blur Style
                       </label>
-                      <select
-                        value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
-                        className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                      <select value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
+                        className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                         style={{ 
                           backgroundColor: "var(--theme-bg)",
                           borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -329,27 +348,20 @@ export default function FaceBlurPage() {
 
                   {/* CARD 2: Output Format (Video Only) */}
                   {activeTab === "Video" && (
-                    <div 
-                      className="p-5 rounded-xl space-y-5 shadow-sm border"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                      }}
-                    >
+                    <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                       <div 
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
-                        <h3 className="text-zinc-200">Output Format</h3>
+                        <h3 className="text-[var(--theme-heading)]">Output Format</h3>
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                           Output Method
                         </label>
-                        <select
-                          value={outMethod} onChange={e => setOutMethod(e.target.value)}
-                          className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                        <select value={outMethod} onChange={e => setOutMethod(e.target.value)}
+                          className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                           style={{ 
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -366,9 +378,8 @@ export default function FaceBlurPage() {
                         <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                           FFmpeg Video Encoder
                         </label>
-                        <select
-                          value={chosenEncoder} onChange={e => setChosenEncoder(e.target.value)}
-                          className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                        <select value={chosenEncoder} onChange={e => setChosenEncoder(e.target.value)}
+                          className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                           style={{ 
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -384,27 +395,20 @@ export default function FaceBlurPage() {
 
                   {/* CARD 3: Detection & Clustering (Video Only) */}
                   {activeTab === "Video" && (
-                    <div 
-                      className="p-5 rounded-xl space-y-5 shadow-sm border"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                      }}
-                    >
+                    <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                       <div 
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
-                        <h3 className="text-zinc-200">Detection Strategy</h3>
+                        <h3 className="text-[var(--theme-heading)]">Detection Strategy</h3>
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                           Clustering Method
                         </label>
-                        <select
-                          value={clusterMethod} onChange={e => setClusterMethod(e.target.value)}
-                          className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                        <select value={clusterMethod} onChange={e => setClusterMethod(e.target.value)}
+                          className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                           style={{ 
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -448,18 +452,12 @@ export default function FaceBlurPage() {
 
                   {/* CARD 4: Scan Timing (Video Only) */}
                   {activeTab === "Video" && (
-                    <div 
-                      className="p-5 rounded-xl space-y-5 shadow-sm border"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                      }}
-                    >
+                    <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                       <div 
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
-                        <h3 className="text-zinc-200">Scan Timing</h3>
+                        <h3 className="text-[var(--theme-heading)]">Scan Timing</h3>
                       </div>
 
                       <div className="space-y-1.5">
@@ -487,6 +485,14 @@ export default function FaceBlurPage() {
                           style={{ accentColor: "var(--theme-heading)" }}
                         />
                       </div>
+
+                      <div className="flex items-center justify-between pt-2">
+                        <label className="text-sm font-medium" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>Extrapolate In-between Frames</label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={useExtrapolation} onChange={(e) => setUseExtrapolation(e.target.checked)} />
+                          <div className="w-9 h-5 bg-[var(--theme-ui-border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--theme-heading)]"></div>
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -497,13 +503,12 @@ export default function FaceBlurPage() {
                   </div>
                 )}
 
-                <Button
-                  variant="primary"
+                <Button variant="primary"
                   onClick={runScan}
                   isLoading={isScanning}
                   disabled={!mediaHash}
-                  className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-500 border-none mt-4"
-                >
+                  className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-500 border-none mt-4 border-none !shadow-none !ring-0 !outline-none transition-colors"
+                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isScanning ? `Scanning ${activeTab} (This may take a while)...` : "Scan & Detect Faces"}
                 </Button>
               </div>
@@ -512,7 +517,7 @@ export default function FaceBlurPage() {
             <div className="flex flex-col gap-3 h-full mt-4">
               <SectionHeader title="Select Faces to Blur" />
               {!scanned ? (
-                <div className="text-zinc-500 py-12 text-center text-sm">
+                <div className="text-[var(--theme-text)] py-12 text-center text-sm">
                   Please upload a file and run 'Scan & Detect Faces' in the Configuration tab first.
                 </div>
               ) : (
@@ -524,7 +529,7 @@ export default function FaceBlurPage() {
                   ) : (
                     <>
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium text-zinc-200">Unique Individuals Found: {faceData.length}</h3>
+                        <h3 className="text-lg font-medium text-[var(--theme-heading)]">Unique Individuals Found: {faceData.length}</h3>
 
                       </div>
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -540,12 +545,12 @@ export default function FaceBlurPage() {
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={`data:image/jpeg;base64,${face.crop_b64}`} alt={`Face ${face.id}`} className="w-full h-full object-cover" />
                                 {isSelected && (
-                                  <div className="absolute top-1 right-1 bg-purple-500 rounded-full p-0.5 text-white">
-                                    <CheckSquare size={14} />
+                                  <div className="absolute top-1 right-1 bg-purple-500 rounded-full p-0.5 text-[var(--theme-heading)]">
+                                    <Icon name="check_box" size={14} />
                                   </div>
                                 )}
                               </div>
-                              <div className="p-1.5 text-center text-xs text-zinc-300 font-medium bg-zinc-950">
+                              <div className="p-1.5 text-center text-xs text-[var(--theme-text)] font-medium bg-[var(--theme-bg)]">
                                 Face {face.id}
                               </div>
                             </div>
@@ -561,10 +566,10 @@ export default function FaceBlurPage() {
             <div className="flex flex-col gap-4 h-full py-8 mt-4">
               <SectionHeader title="Download Output" />
 
-              <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+              <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
                 {!resultUrl ? (
-                  <div className="flex flex-col items-center justify-center text-zinc-600 gap-3">
-                    {isImage ? <ImageIcon size={48} className="opacity-30" /> : <Film size={48} className="opacity-30" />}
+                  <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                    {isImage ? <Icon name="image" size={48} className="opacity-30" /> : <Icon name="movie" size={48} className="opacity-30" />}
                     <p>{!scanned ? "Please complete the scanning and selection steps first." : "Processed media will appear here."}</p>
                   </div>
                 ) : (
@@ -576,7 +581,7 @@ export default function FaceBlurPage() {
                       <p>2. Drag and drop the downloaded `.ass` file onto the video player to see the face blurs.</p>
                     </div>
                   ) : (
-                    <div className="rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black w-full">
+                    <div className="rounded-xl overflow-hidden shadow-2xl border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] w-full">
                       {isImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={resultUrl} alt="Blurred Result" className="w-full h-auto max-h-[600px] object-contain" />
@@ -595,22 +600,21 @@ export default function FaceBlurPage() {
               )}
 
               {scanned && !resultUrl && (
-                <Button
-                  variant="primary"
+                <Button variant="primary"
                   onClick={runProcess}
                   disabled={isProcessing}
-                  className="w-full h-12 text-lg bg-green-600 hover:bg-green-500 border-none mt-4"
-                >
+                  className="w-full h-12 text-lg bg-green-600 hover:bg-green-500 border-none mt-4 border-none !shadow-none !ring-0 !outline-none transition-colors"
+                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isProcessing ? `Processing ${activeTab} (This may take a while)...` : `Process ${activeTab} & Apply Blur`}
                 </Button>
               )}
 
-              <Button
-                variant="primary"
+              <Button variant="primary"
                 onClick={() => downloadBlob(resultUrl || "")}
                 disabled={!resultUrl}
-                icon={<Download size={18} />}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 border-none text-white mt-4"
+                icon={<Icon name="download" size={18} />}
+                className="w-full mt-4 h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
+                style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
               >
                 Download {isImage ? "Image" : (outMethod.includes("Subtitle") ? 'Subtitle (.ass)' : 'Video (.mp4)')}
               </Button>
@@ -625,28 +629,21 @@ export default function FaceBlurPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 {/* CARD 1: Camera Source */}
-                <div 
-                  className="p-5 rounded-xl space-y-5 shadow-sm border"
-                  style={{
-                    backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                  }}
-                >
+                <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                   <div 
                     className="flex items-center gap-2 font-medium pb-2 border-b"
                     style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                   >
-                    <h3 className="text-zinc-200">Camera Source</h3>
+                    <h3 className="text-[var(--theme-heading)]">Camera Source</h3>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                       Select Camera Index
                     </label>
-                    <select
-                      value={cameraIndex}
+                    <select value={cameraIndex}
                       onChange={(e) => setCameraIndex(Number(e.target.value))}
-                      className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                      className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                       style={{ 
                         backgroundColor: "var(--theme-bg)",
                         borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -662,27 +659,20 @@ export default function FaceBlurPage() {
                 </div>
 
                 {/* CARD 2: Blur Appearance */}
-                <div 
-                  className="p-5 rounded-xl space-y-5 shadow-sm border"
-                  style={{
-                    backgroundColor: "color-mix(in srgb, var(--theme-heading) 5%, transparent)",
-                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)",
-                  }}
-                >
+                <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
                   <div 
                     className="flex items-center gap-2 font-medium pb-2 border-b"
                     style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                   >
-                    <h3 className="text-zinc-200">Blur Appearance</h3>
+                    <h3 className="text-[var(--theme-heading)]">Blur Appearance</h3>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                       Blur Style
                     </label>
-                    <select
-                      value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
-                      className="w-full border rounded-md py-2 px-3 text-white outline-none text-sm transition-colors"
+                    <select value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
+                      className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
                       style={{ 
                         backgroundColor: "var(--theme-bg)",
                         borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -707,13 +697,46 @@ export default function FaceBlurPage() {
                       style={{ accentColor: "var(--theme-heading)" }}
                     />
                   </div>
+                  
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-sm font-medium">
+                      <label style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>AI Inference Rate (FPS)</label>
+                      <span style={{ color: "var(--theme-heading)" }}>{fpsScan}</span>
+                    </div>
+                    <input
+                      type="range" min="1.0" max="30.0" step="1.0" value={fpsScan}
+                      onChange={(e) => {
+                        setFpsScan(parseFloat(e.target.value));
+                        if (webcamActive) {
+                          setWebcamActive(false);
+                          setStreamUrl(null);
+                        }
+                      }}
+                      className="w-full"
+                      style={{ accentColor: "var(--theme-heading)" }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <label className="text-sm font-medium" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>Extrapolate In-between Frames</label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={useExtrapolation} onChange={(e) => {
+                        setUseExtrapolation(e.target.checked);
+                        if (webcamActive) {
+                          setWebcamActive(false);
+                          setStreamUrl(null);
+                        }
+                      }} />
+                      <div className="w-9 h-5 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--theme-heading)]"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
               <Button
                 variant="primary"
                 onClick={toggleWebcam}
-                className={`w-full h-12 text-lg border-none !shadow-none !ring-0 !outline-none mt-4 transition-colors ${webcamActive ? 'bg-red-600 hover:bg-red-500 text-white' : ''}`}
+                className={`w-full h-12 text-lg border-none !shadow-none !ring-0 !outline-none mt-4 transition-colors ${webcamActive ? 'bg-red-600 hover:bg-red-500 text-[var(--theme-heading)]' : ''}`}
                 style={!webcamActive 
                   ? { backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" } 
                   : { boxShadow: "none" }
@@ -725,24 +748,34 @@ export default function FaceBlurPage() {
 
             <div className="flex flex-col gap-4 h-full py-8 mt-4">
               <SectionHeader title="Live Feed" />
-              <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+              <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
                 {!streamUrl ? (
-                  <div className="flex flex-col items-center justify-center text-zinc-600 gap-3">
-                    <Video size={48} className="opacity-30" />
+                  <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                    <Icon name="videocam" size={48} className="opacity-30" />
                     <p>Webcam stream is inactive.</p>
                   </div>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
+                    ref={streamImageRef}
+                    crossOrigin="anonymous"
                     src={streamUrl}
                     alt="Live Stream"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain transition-opacity duration-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 )}
               </div>
+              
+              {streamUrl && (
+                <VirtualCameraBroadcast 
+                  sourceRef={streamImageRef} 
+                  isStreamActive={webcamActive}
+                  mode="backend"
+                />
+              )}
             </div>
           </div>
         )}

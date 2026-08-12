@@ -2,8 +2,9 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, Square, Loader2, Copy, CheckCircle2, Play, Pause, Trash2, Edit2, Check, X, Search, FileText, UploadCloud, Wand2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 interface DictationItem {
   id: string;
@@ -263,12 +264,12 @@ export default function DictationPage() {
               {isRecording ? (
                 <>
                   <div className="absolute inset-0 rounded-full animate-ping bg-red-500/50"></div>
-                  <Square className="text-white fill-white z-10" size={32} />
+                  <Icon name="stop" className="text-white fill-white z-10" size={32} />
                 </>
               ) : isUploading ? (
-                <Loader2 className="text-zinc-300 animate-spin" size={32} />
+                <Icon name="progress_activity" className="text-zinc-300 animate-spin" size={32} />
               ) : (
-                <Mic className="text-zinc-300" size={36} />
+                <Icon name="mic" className="text-zinc-300" size={36} />
               )}
             </button>
             <p className="mt-4 text-center text-sm text-zinc-400 font-medium">
@@ -290,13 +291,13 @@ export default function DictationPage() {
                   size="sm" 
                   onClick={handleBatchTranscribe}
                   disabled={batchTranscribing || dictations.filter(d => !d.is_transcribed).length === 0}
-                  icon={batchTranscribing ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+                  icon={batchTranscribing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="description" size={16} />}
                 >
                   {batchTranscribing ? "Transcribing" : "Batch Transcribe"}
                 </Button>
               </div>
               <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input 
                   type="text" 
                   placeholder="Search dictations..."
@@ -334,10 +335,10 @@ export default function DictationPage() {
                               autoFocus
                             />
                             <button onClick={() => handleRename(item.id)} className="p-1 text-emerald-400 hover:bg-zinc-800 rounded">
-                              <Check size={14} />
+                              <Icon name="check" size={14} />
                             </button>
                             <button onClick={() => setEditingNameId(null)} className="p-1 text-red-400 hover:bg-zinc-800 rounded">
-                              <X size={14} />
+                              <Icon name="close" size={14} />
                             </button>
                           </div>
                         ) : (
@@ -351,7 +352,7 @@ export default function DictationPage() {
                               }}
                               className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 transition-opacity"
                             >
-                              <Edit2 size={12} />
+                              <Icon name="edit" size={12} />
                             </button>
                           </h4>
                         )}
@@ -374,7 +375,7 @@ export default function DictationPage() {
                             playingId === item.id ? "bg-amber-500 text-amber-950" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
                           }`}
                         >
-                          {playingId === item.id ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current" />}
+                          {playingId === item.id ? <Icon name="pause" size={14} className="fill-current" /> : <Icon name="play_arrow" size={14} className="fill-current" />}
                         </button>
                         {!item.is_transcribed && (
                           <button 
@@ -382,7 +383,7 @@ export default function DictationPage() {
                             className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 transition-colors"
                             title="Transcribe now"
                           >
-                            <FileText size={14} />
+                            <Icon name="description" size={14} />
                           </button>
                         )}
                         <button 
@@ -390,13 +391,13 @@ export default function DictationPage() {
                           className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-primary/20 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
                           title="Clean Background Noise"
                         >
-                          {cleaningId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                          {cleaningId === item.id ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="auto_fix_high" size={14} />}
                         </button>
                         <button 
                           onClick={(e) => handleDelete(item.id, e)}
                           className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                         >
-                          <Trash2 size={14} />
+                          <Icon name="delete" size={14} />
                         </button>
                       </div>
                     </div>
@@ -421,7 +422,7 @@ export default function DictationPage() {
                     size="sm"
                     onClick={() => copyToClipboard(selectedItem.transcript || "")}
                     disabled={!selectedItem.transcript}
-                    icon={copied ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                    icon={copied ? <Icon name="check_circle" size={16} className="text-emerald-400" /> : <Icon name="content_copy" size={16} />}
                   >
                     {copied ? "Copied!" : "Copy Text"}
                   </Button>
@@ -432,12 +433,12 @@ export default function DictationPage() {
                     <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                       {batchTranscribing ? (
                         <>
-                          <Loader2 className="animate-spin mb-4" size={32} />
+                          <Icon name="progress_activity" className="animate-spin mb-4" size={32} />
                           <p>Transcribing in progress</p>
                         </>
                       ) : (
                         <>
-                          <FileText size={48} className="mb-4 text-zinc-800" />
+                          <Icon name="description" size={48} className="mb-4 text-zinc-800" />
                           <p>This dictation hasn't been transcribed yet.</p>
                           <Button 
                             variant="primary" 
@@ -462,7 +463,7 @@ export default function DictationPage() {
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center">
-                <FileText size={64} className="mb-6 text-zinc-800" />
+                <Icon name="description" size={64} className="mb-6 text-zinc-800" />
                 <h3 className="text-xl font-medium text-zinc-300 mb-2">No Dictation Selected</h3>
                 <p className="text-zinc-500 max-w-sm">
                   Select a dictation from the list on the left to view its transcript, or record a new one.

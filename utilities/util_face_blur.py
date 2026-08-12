@@ -504,7 +504,7 @@ def scan_faces(input_path: str, rec_model: str = None, precision: str = "fp32",
 def process_media_blur(input_path: str, blur_intensity: int = 50, blur_type: str = "Gaussian",
                        selected_faces: list = None, scan_fps: float = 5.0, drop_limit_sec: float = 1.0,
                        match_threshold: float = _MATCH_SIM_THRESHOLD, encoder: str = "libx264",
-                       output_method: str = "reencode", frame_cache=None, progress_hook=None) -> tuple:
+                       output_method: str = "reencode", frame_cache=None, progress_hook=None, use_extrapolation: bool = True) -> tuple:
     """
     Applies a blur effect to the selected faces in an image or video.
     For videos, uses interpolation to smooth tracking between sampled frames.
@@ -560,9 +560,13 @@ def process_media_blur(input_path: str, blur_intensity: int = 50, blur_type: str
                 if (f_next - f_curr) / fps <= drop_limit_sec:
                     bc, bn = np.array(frames_dict[f_curr]), np.array(
                         frames_dict[f_next])
-                    ratios = np.linspace(
-                        0, 1, (f_next - f_curr) + 1)[1:-1, np.newaxis]
-                    boxes_mid = (bc + (bn - bc) * ratios).astype(int)
+                    if use_extrapolation:
+                        ratios = np.linspace(
+                            0, 1, (f_next - f_curr) + 1)[1:-1, np.newaxis]
+                        boxes_mid = (bc + (bn - bc) * ratios).astype(int)
+                    else:
+                        boxes_mid = np.tile(bc, (f_next - f_curr - 1, 1)).astype(int)
+                        
                     for k, f_mid in enumerate(range(f_curr + 1, f_next)):
                         interpolated[f_mid].append(boxes_mid[k].tolist())
 

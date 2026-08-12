@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { BookOpen, Search, RefreshCw, ArrowUpDown, Plus, Minus, X, PlusCircle } from "lucide-react";
+
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/lib/utils";
 
 interface MangaData {
   main_url: string;
@@ -144,14 +145,14 @@ export default function MangaLibrary() {
             variant="secondary" 
             onClick={() => { setShowSearch(!showSearch); setShowSort(false); }}
             className={showSearch ? "border-primary text-primary" : ""}
-            icon={<Search size={16} />}
+            icon={<Icon name="search" size={16} />}
           >
             Search
           </Button>
           <Button 
             variant="secondary" 
             onClick={() => router.push('/entertainment-reading/manga-search')}
-            icon={<PlusCircle size={16} />}
+            icon={<Icon name="add_circle" size={16} />}
           >
             WebSearch
           </Button>
@@ -159,14 +160,14 @@ export default function MangaLibrary() {
             variant="secondary" 
             onClick={handleRefresh}
             isLoading={refreshing}
-            icon={<RefreshCw size={16} />}
+            icon={<Icon name="refresh" size={16} />}
           >
             Refresh
           </Button>
           <Button 
             variant="secondary" 
             onClick={() => router.push('/entertainment-reading/manga-sort')}
-            icon={<ArrowUpDown size={16} />}
+            icon={<Icon name="swap_vert" size={16} />}
           >
             Sort Order
           </Button>
@@ -175,7 +176,7 @@ export default function MangaLibrary() {
               variant="secondary" 
               onClick={() => { setShowSort(!showSort); setShowSearch(false); }}
               className={showSort ? "border-primary text-primary" : ""}
-              icon={<ArrowUpDown size={16} />}
+              icon={<Icon name="swap_vert" size={16} />}
             >
               Sort
             </Button>
@@ -208,7 +209,7 @@ export default function MangaLibrary() {
       {showSearch && (
         <div className="mb-6 flex gap-3 animate-fade-in">
           <div className="flex-1 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input
               type="text"
               autoFocus
@@ -220,7 +221,7 @@ export default function MangaLibrary() {
           </div>
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="p-3 text-zinc-500 hover:text-white transition-colors">
-              <X size={18} />
+              <Icon name="close" size={18} />
             </button>
           )}
         </div>
@@ -307,7 +308,7 @@ export default function MangaLibrary() {
                       className="p-1 rounded-md text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                       title="Decrease chapter"
                     >
-                      <Minus size={14} />
+                      <Icon name="remove" size={14} />
                     </button>
                     <span className="text-xs font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded-md whitespace-nowrap text-center overflow-hidden text-ellipsis flex-1">
                       {chapterRead} / {chaptersAmount}
@@ -317,7 +318,7 @@ export default function MangaLibrary() {
                       className="p-1 rounded-md text-zinc-500 hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
                       title="Increase chapter"
                     >
-                      <Plus size={14} />
+                      <Icon name="add" size={14} />
                     </button>
                   </div>
                 </div>

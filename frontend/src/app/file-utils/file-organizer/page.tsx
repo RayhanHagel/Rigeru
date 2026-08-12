@@ -4,19 +4,8 @@ import { Header } from "@/components/ui/Header";
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { FileExplorerModal } from '@/components/ui/FileExplorerModal';
-import {
-  FolderOpen,
-  Search,
-  SkipForward,
-  Trash2,
-  FolderOutput,
-  Undo2,
-  RotateCcw,
-  ExternalLink,
-  CheckCircle2,
-  AlertCircle,
-  FolderSearch
-} from 'lucide-react';
+import { Icon } from "@/lib/utils";
+
 
 export default function FileOrganizerPage() {
   const [sourcePath, setSourcePath] = useState('');
@@ -222,9 +211,9 @@ export default function FileOrganizerPage() {
               statusMsg.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' :
                 'bg-secondary/10 border border-secondary/20 text-secondary'
             }`}>
-            {statusMsg.type === 'error' ? <AlertCircle size={20} /> :
-              statusMsg.type === 'success' ? <CheckCircle2 size={20} /> :
-                <FolderOpen size={20} />}
+            {statusMsg.type === 'error' ? <Icon name="error" size={20} /> :
+              statusMsg.type === 'success' ? <Icon name="check_circle" size={20} /> :
+                <Icon name="folder_open" size={20} />}
             <span className="font-medium">{statusMsg.text}</span>
           </div>
         )}
@@ -236,7 +225,7 @@ export default function FileOrganizerPage() {
               <label className="text-sm font-medium text-zinc-300 ml-1">Source Directory (To Scan)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                  <Search size={18} />
+                  <Icon name="search" size={18} />
                 </div>
                 <input
                   type="text"
@@ -251,7 +240,7 @@ export default function FileOrganizerPage() {
                   className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
-                  <FolderSearch size={18} />
+                  <Icon name="folder_open" size={18} />
                 </button>
               </div>
             </div>
@@ -259,7 +248,7 @@ export default function FileOrganizerPage() {
               <label className="text-sm font-medium text-zinc-300 ml-1">Destination Root Directory</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                  <FolderOutput size={18} />
+                  <Icon name="drive_file_move" size={18} />
                 </div>
                 <input
                   type="text"
@@ -274,7 +263,7 @@ export default function FileOrganizerPage() {
                   className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
-                  <FolderSearch size={18} />
+                  <Icon name="folder_open" size={18} />
                 </button>
               </div>
             </div>
@@ -337,10 +326,10 @@ export default function FileOrganizerPage() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Button variant="secondary" onClick={handleOpen} className="flex-1 whitespace-nowrap">
-                    <ExternalLink size={16} className="mr-2" /> Open
+                    <Icon name="open_in_new" size={16} className="mr-2" /> Open
                   </Button>
                   <Button variant="secondary" onClick={handleSkip} className="flex-1 whitespace-nowrap">
-                    <SkipForward size={16} className="mr-2" /> Skip
+                    <Icon name="skip_next" size={16} className="mr-2" /> Skip
                   </Button>
                   <Button
                     variant="danger"
@@ -348,7 +337,7 @@ export default function FileOrganizerPage() {
                     disabled={isLoading}
                     className="flex-1 whitespace-nowrap bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border-red-500/30"
                   >
-                    <Trash2 size={16} className="mr-2" /> Trash
+                    <Icon name="delete" size={16} className="mr-2" /> Trash
                   </Button>
                 </div>
               </div>
@@ -370,7 +359,7 @@ export default function FileOrganizerPage() {
                     disabled={isLoading}
                     className="whitespace-nowrap bg-green-500 hover:bg-green-600 text-white border-green-400/50"
                   >
-                    <FolderOutput size={18} className="mr-2" /> Move
+                    <Icon name="drive_file_move" size={18} className="mr-2" /> Move
                   </Button>
                 </div>
               </div>
@@ -380,7 +369,7 @@ export default function FileOrganizerPage() {
 
         {isFinished && (
           <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-12 shadow-xl flex flex-col items-center justify-center text-center animate-slide-up">
-            <CheckCircle2 size={64} className="text-green-500 mb-6" />
+            <Icon name="check_circle" size={64} className="text-green-500 mb-6" />
             <h2 className="text-3xl font-bold text-white mb-4">All Caught Up!</h2>
             <p className="text-zinc-400 text-lg mb-8">You have successfully processed all files in this folder.</p>
             <Button
@@ -393,7 +382,7 @@ export default function FileOrganizerPage() {
               }}
               className="px-8 py-3 text-lg"
             >
-              <RotateCcw size={20} className="mr-2" /> Start Over
+              <Icon name="replay" size={20} className="mr-2" /> Start Over
             </Button>
           </div>
         )}
@@ -407,7 +396,7 @@ export default function FileOrganizerPage() {
               disabled={isLoading}
               className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/20"
             >
-              <Undo2 size={16} className="mr-2" /> Undo Last Action
+              <Icon name="undo" size={16} className="mr-2" /> Undo Last Action
             </Button>
           </div>
         )}

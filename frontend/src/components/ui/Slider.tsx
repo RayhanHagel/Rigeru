@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Info } from "lucide-react";
+import { Icon } from "@/lib/utils";
 
 interface SliderProps {
   label: string;
@@ -23,7 +23,7 @@ export function Slider({ label, min, max, value, step = 1, onChange, helpText }:
           {label}
           {helpText && (
             <div className="relative flex items-center">
-              <Info size={14} className="text-zinc-500 hover:text-zinc-300 cursor-help transition-colors" />
+              <Icon name="info" size={14} className="text-zinc-500 hover:text-zinc-300 cursor-help transition-colors" />
               {/* Tooltip could go here */}
             </div>
           )}

@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
-import { FileVideo, Upload, Image as ImageIcon, Settings2, Download, Loader2, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 export default function VideoToGifPage() {
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export default function VideoToGifPage() {
             
             {errorMsg && (
               <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={18} />
+                <Icon name="error" className="text-red-400 shrink-0 mt-0.5" size={18} />
                 <p className="text-red-400 text-sm">{errorMsg}</p>
               </div>
             )}
@@ -95,7 +96,7 @@ export default function VideoToGifPage() {
               <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
                 <div className="relative w-full max-w-2xl bg-zinc-950 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
                   <div className="bg-zinc-900 border-b border-white/5 p-3 flex items-center gap-2">
-                    <ImageIcon className="text-pink-400" size={16} />
+                    <Icon name="image" className="text-pink-400" size={16} />
                     <span className="text-xs font-medium text-zinc-300">{resultFilename}</span>
                   </div>
                   <div className="p-4 flex items-center justify-center bg-[#000000] min-h-[300px]">
@@ -116,7 +117,7 @@ export default function VideoToGifPage() {
                       download={resultFilename}
                       className="flex items-center gap-2 px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-sm font-medium transition-colors"
                     >
-                      <Download size={16} /> Download GIF
+                      <Icon name="download" size={16} /> Download GIF
                     </a>
                   </div>
                 </div>
@@ -168,7 +169,7 @@ export default function VideoToGifPage() {
                   disabled={!fileHash || isProcessing}
                 >
                   {isProcessing ? (
-                    <><Loader2 size={18} className="animate-spin mr-2" /> Processing</>
+                    <><Icon name="progress_activity" size={18} className="animate-spin mr-2" /> Processing</>
                   ) : (
                     "Convert to GIF"
                   )}

@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { QrCode, Scan, Camera, XCircle, Settings2, Download } from "lucide-react";
+
 
 import { Button } from "@/components/ui/Button";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
+import { Icon } from "@/lib/utils";
 
 export default function QrCodePage() {
   const [activeTab, setActiveTab] = useState<"generate" | "scan">("generate");
@@ -158,7 +159,7 @@ export default function QrCodePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2 flex items-center gap-2">
-                    <Settings2 size={14} /> Foreground Color
+                    <Icon name="tune" size={14} /> Foreground Color
                   </label>
                   <div className="flex items-center gap-3 bg-zinc-950 border border-white/10 rounded-xl p-2 pr-4">
                     <input 
@@ -172,7 +173,7 @@ export default function QrCodePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2 flex items-center gap-2">
-                    <Settings2 size={14} /> Background Color
+                    <Icon name="tune" size={14} /> Background Color
                   </label>
                   <div className="flex items-center gap-3 bg-zinc-950 border border-white/10 rounded-xl p-2 pr-4">
                     <input 
@@ -199,7 +200,7 @@ export default function QrCodePage() {
                   </div>
                   <Button 
                     variant="secondary" 
-                    icon={<Download size={16} />}
+                    icon={<Icon name="download" size={16} />}
                     onClick={() => {
                       const a = document.createElement("a");
                       a.href = qrResult;
@@ -212,7 +213,7 @@ export default function QrCodePage() {
                 </div>
               ) : (
                 <div className="text-zinc-600 flex flex-col items-center gap-3">
-                  <QrCode size={48} className="opacity-50" />
+                  <Icon name="qr_code_2" size={48} className="opacity-50" />
                   <p>Your QR code will appear here</p>
                 </div>
               )}
@@ -224,9 +225,9 @@ export default function QrCodePage() {
           <div className="flex flex-col items-center">
             
             {scanResult ? (
-              <div className="w-full max-w-2xl bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8 flex flex-col items-center text-center animate-slide-up gap-6">
+              <div className="w-full bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-8 flex flex-col items-center text-center animate-slide-up gap-6">
                 <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-2">
-                  <QrCode size={32} />
+                  <Icon name="qr_code_2" size={32} />
                 </div>
                 <div>
                   <h3 className="text-emerald-400 font-semibold mb-2">Scan Successful!</h3>
@@ -246,15 +247,15 @@ export default function QrCodePage() {
                 </div>
               </div>
             ) : (
-              <div className="w-full max-w-2xl">
+              <div className="w-full">
                 <div className="relative bg-black rounded-2xl overflow-hidden border border-white/10 aspect-video flex items-center justify-center">
                   <video ref={videoRef} playsInline className="absolute inset-0 w-full h-full object-cover" />
                   <canvas ref={canvasRef} className="hidden" />
                   
                   {!isScanning && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-zinc-900/80 backdrop-blur-sm z-10">
-                      <Camera size={48} className="text-zinc-500" />
-                      <Button variant="primary" onClick={startScanner} icon={<Camera size={16} />}>
+                      <Icon name="photo_camera" size={48} className="text-zinc-500" />
+                      <Button variant="primary" onClick={startScanner} icon={<Icon name="photo_camera" size={16} />}>
                         Start Camera
                       </Button>
                     </div>
@@ -276,7 +277,7 @@ export default function QrCodePage() {
                 
                 {isScanning && (
                   <div className="mt-6 flex justify-center">
-                    <Button variant="danger" onClick={stopScanner} icon={<XCircle size={16} />}>
+                    <Button variant="danger" onClick={stopScanner} icon={<Icon name="cancel" size={16} />}>
                       Stop Camera
                     </Button>
                   </div>

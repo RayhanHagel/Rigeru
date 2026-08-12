@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { HardDrive, Play, Square, RefreshCw, Power, Box, Activity, Network, ChevronDown, ChevronRight, X, Save, FileText, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { PopupModal } from '@/components/ui/PopupModal';
+import { Icon } from "@/lib/utils";
 
 type DockerContainer = {
   id: string;
@@ -300,7 +301,7 @@ export default function DockerManagerPage() {
             <p className="text-zinc-400 text-sm font-medium">Control local Docker containers and view images.</p>
           </div>
         </div>
-        <Button variant="secondary" onClick={fetchStatusAndContainers} disabled={isLoading || isProcessing} icon={<RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />}>
+        <Button variant="secondary" onClick={fetchStatusAndContainers} disabled={isLoading || isProcessing} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
           Refresh
         </Button>
       </div>
@@ -320,7 +321,7 @@ export default function DockerManagerPage() {
             </div>
             
             {!isRunning && !isLoading && (
-              <Button variant="primary" onClick={handleStartDaemon} disabled={isProcessing} icon={<Power size={16} />}>
+              <Button variant="primary" onClick={handleStartDaemon} disabled={isProcessing} icon={<Icon name="power_settings_new" size={16} />}>
                 Launch Docker Daemon
               </Button>
             )}
@@ -352,7 +353,7 @@ export default function DockerManagerPage() {
                       onClick={() => group.isProject && openProjectConfig(group.name)}
                     >
                       <div className={`p-2.5 rounded-xl ${isGroupUp ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                        <Box size={24} />
+                        <Icon name="deployed_code" size={24} />
                       </div>
                       <div>
                         <h3 className="font-bold text-white text-lg truncate max-w-[200px]" title={group.name}>{group.name}</h3>
@@ -365,11 +366,11 @@ export default function DockerManagerPage() {
                     {group.isProject && (
                       <div className="flex gap-2">
                         {isGroupUp ? (
-                          <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "stop"); }} disabled={isProcessing} icon={<Square size={14} />}>
+                          <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "stop"); }} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>
                             Stop All
                           </Button>
                         ) : (
-                          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "start"); }} disabled={isProcessing} icon={<Play size={14} />}>
+                          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "start"); }} disabled={isProcessing} icon={<Icon name="play_arrow" size={14} />}>
                             Start All
                           </Button>
                         )}
@@ -389,7 +390,7 @@ export default function DockerManagerPage() {
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
                               <div className="text-zinc-500">
-                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                {isExpanded ? <Icon name="expand_more" size={16} /> : <Icon name="chevron_right" size={16} />}
                               </div>
                               <div className="font-medium text-zinc-200 truncate" title={c.name}>{c.name}</div>
                             </div>
@@ -401,12 +402,12 @@ export default function DockerManagerPage() {
                           {isExpanded && (
                             <div className="p-4 pt-2 border-t border-white/5 flex flex-col gap-3">
                               <div className="flex items-start gap-2">
-                                <Activity size={14} className="text-zinc-500 mt-0.5 shrink-0" />
+                                <Icon name="monitoring" size={14} className="text-zinc-500 mt-0.5 shrink-0" />
                                 <div className="text-xs text-zinc-400 truncate" title={c.image}>{c.image}</div>
                               </div>
                               
                               <div className="flex items-start gap-2">
-                                <Network size={14} className="text-zinc-500 mt-0.5 shrink-0" />
+                                <Icon name="hub" size={14} className="text-zinc-500 mt-0.5 shrink-0" />
                                 <div className="text-xs text-zinc-400 break-words line-clamp-2">
                                   {formatPorts(c.ports)}
                                 </div>
@@ -415,11 +416,11 @@ export default function DockerManagerPage() {
                               <div className="flex gap-2 mt-2">
                                 {isUp ? (
                                   <>
-                                    <Button variant="secondary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "restart")} disabled={isProcessing} icon={<RefreshCw size={14} />}>Restart</Button>
-                                    <Button variant="danger" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "stop")} disabled={isProcessing} icon={<Square size={14} />}>Stop</Button>
+                                    <Button variant="secondary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "restart")} disabled={isProcessing} icon={<Icon name="refresh" size={14} />}>Restart</Button>
+                                    <Button variant="danger" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "stop")} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>Stop</Button>
                                   </>
                                 ) : (
-                                  <Button variant="primary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "start")} disabled={isProcessing} icon={<Play size={14} />}>Start</Button>
+                                  <Button variant="primary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "start")} disabled={isProcessing} icon={<Icon name="play_arrow" size={14} />}>Start</Button>
                                 )}
                               </div>
                             </div>
@@ -434,7 +435,7 @@ export default function DockerManagerPage() {
 
             {filteredGroups.length === 0 && !isLoading && (
               <div className="col-span-full py-12 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-2xl bg-zinc-950/50">
-                <Box size={48} className="mb-4 opacity-50" />
+                <Icon name="deployed_code" size={48} className="mb-4 opacity-50" />
                 <p>No containers found matching your search.</p>
               </div>
             )}
@@ -447,7 +448,7 @@ export default function DockerManagerPage() {
           <div className="flex flex-col h-[70vh]">
             {isComposeLoading ? (
               <div className="flex-1 flex items-center justify-center min-h-[300px]">
-                <RefreshCw className="animate-spin text-zinc-500" size={32} />
+                <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
               </div>
             ) : (
               <div className="flex flex-col h-full">
@@ -489,12 +490,12 @@ export default function DockerManagerPage() {
                 </div>
                 
                 <div className="flex justify-between items-center pt-4 border-t border-white/10 shrink-0">
-                  <Button variant="danger" onClick={handleDeleteProject} disabled={isProcessing} icon={<Trash2 size={16} />}>
+                  <Button variant="danger" onClick={handleDeleteProject} disabled={isProcessing} icon={<Icon name="delete" size={16} />}>
                     Delete Project (Down -v)
                   </Button>
                   <div className="flex gap-3">
                     <Button variant="secondary" onClick={() => setSelectedProject(null)}>Cancel</Button>
-                    <Button variant="primary" onClick={saveProjectConfig} disabled={isSavingCompose || isProcessing} icon={<Save size={16} />}>
+                    <Button variant="primary" onClick={saveProjectConfig} disabled={isSavingCompose || isProcessing} icon={<Icon name="save" size={16} />}>
                       Save Changes
                     </Button>
                   </div>
@@ -511,7 +512,7 @@ export default function DockerManagerPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-secondary/20 text-secondary">
-                <RefreshCw size={22} />
+                <Icon name="refresh" size={22} />
               </div>
               <div>
                 <p className="text-sm text-zinc-400">{composeUpProject}</p>
@@ -536,7 +537,7 @@ export default function DockerManagerPage() {
                 {composeUpResult ? "Close" : "No, skip"}
               </Button>
               {!composeUpResult && (
-                <Button variant="primary" onClick={handleComposeUp} disabled={isComposingUp} icon={<Play size={16} />}>
+                <Button variant="primary" onClick={handleComposeUp} disabled={isComposingUp} icon={<Icon name="play_arrow" size={16} />}>
                   {isComposingUp ? "Running..." : "Yes, run it"}
                 </Button>
               )}

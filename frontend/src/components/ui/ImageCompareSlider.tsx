@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Move, SlidersHorizontal } from 'lucide-react';
+import { Icon } from "@/lib/utils";
+
 
 interface ImageCompareSliderProps {
   originalImage: string;
@@ -255,14 +256,14 @@ export function ImageCompareSlider({
           className={`p-2 rounded-lg transition-colors ${mode === 'compare' ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           title="Compare Mode"
         >
-          <SlidersHorizontal size={18} />
+          <Icon name="tune" size={18} />
         </button>
         <button 
           onClick={(e) => { e.stopPropagation(); setMode('pan'); }}
           className={`p-2 rounded-lg transition-colors ${mode === 'pan' ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           title="Pan Mode"
         >
-          <Move size={18} />
+          <Icon name="open_with" size={18} />
         </button>
         <div className="w-px h-6 bg-white/10 mx-1"></div>
         <button 
@@ -270,14 +271,14 @@ export function ImageCompareSlider({
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           title="Zoom Out"
         >
-          <ZoomOut size={18} />
+          <Icon name="zoom_out" size={18} />
         </button>
         <button 
           onClick={(e) => { e.stopPropagation(); doZoom(1.2); }}
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           title="Zoom In"
         >
-          <ZoomIn size={18} />
+          <Icon name="zoom_in" size={18} />
         </button>
         <button 
           onClick={(e) => { 
@@ -289,7 +290,7 @@ export function ImageCompareSlider({
           className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           title="Fit Screen"
         >
-          <Maximize size={18} />
+          <Icon name="fullscreen" size={18} />
         </button>
       </div>
     </div>

@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
-import { KeyRound, Download, Trash2, Database, AlertTriangle, CheckCircle2, HardDrive, Cpu, Settings2, Save, Eye, EyeOff } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
+import { Icon } from "@/lib/utils";
 
 interface CachedModel {
   id: string;
@@ -378,7 +379,7 @@ export default function ModelSettingsPage() {
             </select>
             {isModelDownloaded ? (
                 <div className="flex items-center justify-center bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg px-3" title="Model downloaded">
-                    <CheckCircle2 size={18} />
+                    <Icon name="check_circle" size={18} />
                 </div>
             ) : (
                 <Button 
@@ -389,7 +390,7 @@ export default function ModelSettingsPage() {
                     className="h-[38px] px-3 shrink-0"
                     title="Download this model"
                 >
-                    {isDownloading && downloadingModelId === currentValue ? <span className="animate-pulse"><Download size={16}/></span> : <Download size={16} />}
+                    {isDownloading && downloadingModelId === currentValue ? <span className="animate-pulse"><Icon name="download" size={16}/></span> : <Icon name="download" size={16} />}
                 </Button>
             )}
         </div>
@@ -413,13 +414,13 @@ export default function ModelSettingsPage() {
                 disabled={isSavingConfig}
                 className="bg-secondary hover:bg-blue-700 h-9"
             >
-                {isSavingConfig ? "Saving" : <span className="flex items-center gap-2"><Save size={14}/> Save Preferences</span>}
+                {isSavingConfig ? "Saving" : <span className="flex items-center gap-2"><Icon name="save" size={14}/> Save Preferences</span>}
             </Button>
         </div>
         
         {configMessage && (
           <div className="flex items-center gap-2 text-sm text-green-400 bg-green-400/10 p-2 rounded-lg border border-green-400/20">
-            <CheckCircle2 size={14} /> {configMessage}
+            <Icon name="check_circle" size={14} /> {configMessage}
           </div>
         )}
 
@@ -680,14 +681,14 @@ export default function ModelSettingsPage() {
                   onClick={() => setShowToken(!showToken)}
                   className="absolute inset-y-0 right-2 flex items-center text-zinc-500 hover:text-zinc-300"
                 >
-                  {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showToken ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
                 </button>
               </div>
               <div className="flex items-center justify-between mt-2">
                 <div className="h-5">
                   {tokenMessage && (
                     <span className="text-xs text-green-400 flex items-center gap-1">
-                      <CheckCircle2 size={12} /> {tokenMessage}
+                      <Icon name="check_circle" size={12} /> {tokenMessage}
                     </span>
                   )}
                 </div>
@@ -756,7 +757,7 @@ export default function ModelSettingsPage() {
               </div>
             ) : models.length === 0 ? (
               <div className="flex flex-col justify-center items-center h-full text-zinc-500 text-sm gap-2">
-                <Cpu size={32} className="opacity-20 mb-2" />
+                <Icon name="memory" size={32} className="opacity-20 mb-2" />
                 No models downloaded yet.
               </div>
             ) : (
@@ -772,7 +773,7 @@ export default function ModelSettingsPage() {
                       className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
                       title="Delete model"
                     >
-                      <Trash2 size={16} />
+                      <Icon name="delete" size={16} />
                     </button>
                   </div>
                 ))}
@@ -832,7 +833,7 @@ export default function ModelSettingsPage() {
               </div>
             ) : ollamaModels.length === 0 ? (
               <div className="flex flex-col justify-center items-center h-full text-zinc-500 text-sm gap-2">
-                <Cpu size={32} className="opacity-20 mb-2" />
+                <Icon name="memory" size={32} className="opacity-20 mb-2" />
                 No Ollama models found.
               </div>
             ) : (
@@ -848,7 +849,7 @@ export default function ModelSettingsPage() {
                       className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
                       title="Delete model"
                     >
-                      <Trash2 size={16} />
+                      <Icon name="delete" size={16} />
                     </button>
                   </div>
                 ))}

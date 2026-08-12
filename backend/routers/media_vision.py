@@ -14,7 +14,8 @@ from utilities.util_tts import (
     save_voice,
     delete_voice,
 )
-from fastapi import UploadFile, File, Form, Response
+from fastapi import UploadFile, File, Form, Response, Request
+from fastapi.concurrency import run_in_threadpool
 import os
 import tempfile
 from utilities.util_config import load_all_config
@@ -24,6 +25,16 @@ import uuid
 import shutil
 
 router = APIRouter(prefix="/api/media-vision", tags=["Media & Vision"])
+
+import threading
+WEBCAM_STOP_EVENTS = {}
+
+@router.post("/webcam/stop")
+def api_stop_webcam(camera_index: int = Form(...)):
+    if camera_index in WEBCAM_STOP_EVENTS:
+        WEBCAM_STOP_EVENTS[camera_index].set()
+        return {"status": "stopped"}
+    return {"status": "not_found"}
 
 class TranslationRequest(BaseModel):
     text: str
@@ -339,6 +350,7 @@ def api_compress_images(req: CompressImagesRequest):
 
 from utilities.util_upscale import upscale_image, get_compute_device
 import io
+import asyncio
 from fastapi.responses import Response
 
 @router.get("/upscaler-config")
@@ -365,7 +377,7 @@ async def api_upscale_image(
         if not os.path.exists(tmp_path):
             raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
 
-        success, result = upscale_image(tmp_path, scale=scale, device=device)
+        success, result = await asyncio.to_thread(upscale_image, tmp_path, scale=scale, device=device)
         pass # do not delete cached upload
 
         if not success:
@@ -409,7 +421,7 @@ async def api_upscale_image_batch(hashes: str = Form(...)):
             if not os.path.exists(tmp_path):
                 continue
 
-            success, result = upscale_image(tmp_path, scale=scale, device=device)
+            success, result = await asyncio.to_thread(upscale_image, tmp_path, scale=scale, device=device)
             if success:
                 out_filename = f"{fhash}_upscaled.png"
                 out_path = os.path.join(out_dir, out_filename)
@@ -455,7 +467,7 @@ async def api_remove_background(file_hash: str = Form(...)):
             raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
         with open(tmp_path, "rb") as f:
             content = f.read()
-        success, result = remove_image_background(content)
+        success, result = await asyncio.to_thread(remove_image_background, content)
         
         if not success:
             raise HTTPException(status_code=500, detail=str(result))
@@ -493,7 +505,7 @@ async def api_remove_background_batch(hashes: str = Form(...)):
                 continue
             with open(tmp_path, "rb") as f:
                 content = f.read()
-            success, result = remove_image_background(content)
+            success, result = await asyncio.to_thread(remove_image_background, content)
             if success:
                 out_filename = f"{fhash}_nobg.png"
                 out_path = os.path.join(out_dir, out_filename)
@@ -544,7 +556,7 @@ async def api_fisheye(
 
         output_path = os.path.join(".", "temp", f"{uuid.uuid4()}_fisheye.jpg")
         
-        apply_fisheye(tmp_path, output_path, strength)
+        await asyncio.to_thread(apply_fisheye, tmp_path, output_path, strength)
 
         background_tasks.add_task(cleanup_files, output_path)
         return FileResponse(output_path, media_type="image/jpeg")
@@ -579,7 +591,7 @@ async def api_fisheye_batch(
             
             out_filename = f"{fhash}_fisheye.jpg"
             out_path = os.path.join(out_dir, out_filename)
-            apply_fisheye(tmp_path, out_path, strength)
+            await asyncio.to_thread(apply_fisheye, tmp_path, out_path, strength)
             
             # Copy to a static/temp accessible path for frontend preview
             frontend_accessible_path = os.path.join(".", "temp", out_filename)
@@ -733,22 +745,49 @@ async def api_depth_image(
 from utilities.util_webcam_fx import generate_depth_webcam_frames
 
 @router.get("/depth-estimation/webcam-stream")
-def api_depth_webcam(
+async def api_depth_webcam(
+    request: Request,
     camera_index: int,
     colormap: str = "INFERNO",
-    invert: bool = False
+    invert: bool = False,
+    ai_fps: float = 5.0
 ):
-    try:
-        return StreamingResponse(
-            generate_depth_webcam_frames(
-                camera_index=camera_index,
-                colormap=colormap,
-                invert=invert
-            ),
-            media_type="multipart/x-mixed-replace; boundary=frame"
+    import threading
+    from fastapi.concurrency import run_in_threadpool
+    stop_event = threading.Event()
+    WEBCAM_STOP_EVENTS[camera_index] = stop_event
+
+    async def stream_generator():
+        it = generate_depth_webcam_frames(
+            camera_index=camera_index,
+            colormap=colormap,
+            invert=invert,
+            ai_fps=ai_fps,
+            stop_event=stop_event
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        try:
+            while True:
+                if await request.is_disconnected():
+                    stop_event.set()
+                    break
+                try:
+                    chunk = await run_in_threadpool(next, it)
+                    yield chunk
+                except StopIteration:
+                    break
+                except Exception:
+                    stop_event.set()
+                    raise
+        except Exception:
+            stop_event.set()
+        finally:
+            stop_event.set()
+            WEBCAM_STOP_EVENTS.pop(camera_index, None)
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
 
 @router.post("/depth-video")
 async def api_depth_video(
@@ -756,7 +795,8 @@ async def api_depth_video(
     file_hash: str = Form(...),
     colormap: str = Form(...),
     invert: bool = Form(...),
-    encoder: str = Form(...)
+    encoder: str = Form(...),
+    ai_fps: float = Form(5.0)
 ):
     config = load_all_config()
     model_size = config.get("depth_estimation", "Base")
@@ -780,7 +820,8 @@ async def api_depth_video(
             colormap=colormap,
             invert=invert,
             encoder=encoder,
-            progress_hook=None
+            progress_hook=None,
+            ai_fps=ai_fps
         )
         if not success:
             pass # do not delete cached upload
@@ -908,7 +949,8 @@ async def api_od_video(
     output_method: str = Form(...),
     encoder: str = Form(...),
     selected_classes: str = Form("[]"),
-    ai_fps: float = Form(5.0)
+    ai_fps: float = Form(5.0),
+    use_extrapolation: bool = Form(True)
 ):
     config = load_all_config()
     model = config.get("object_detection", "yolov8n.pt")
@@ -939,7 +981,8 @@ async def api_od_video(
             progress_hook=None,
             encoder=encoder,
             selected_classes=sel_classes,
-            ai_fps=ai_fps
+            ai_fps=ai_fps,
+            use_extrapolation=use_extrapolation
         )
         if not success:
             pass # do not delete cached upload
@@ -963,7 +1006,8 @@ def api_od_webcam_config(camera_index: int = Form(...), ai_fps: float = Form(...
     return {"status": "ok"}
 
 @router.get("/object-detect/webcam-stream")
-def api_od_webcam_stream(
+async def api_od_webcam_stream(
+    request: Request,
     conf_thresh: float,
     camera_index: int,
     use_extrapolation: bool = False
@@ -977,15 +1021,47 @@ def api_od_webcam_stream(
     if yolo is None:
         raise HTTPException(status_code=500, detail=msg)
         
-    return StreamingResponse(
-        generate_webcam_frames(
+    import threading
+    stop_event = threading.Event()
+    WEBCAM_STOP_EVENTS[camera_index] = stop_event
+
+    async def stream_generator():
+        print(f"DEBUG: Starting stream generator for camera {camera_index}")
+        it = generate_webcam_frames(
             model=yolo,
             camera_index=camera_index,
             resolution=resolution,
             conf_thresh=conf_thresh,
             target_height=600,
-            use_extrapolation=use_extrapolation
-        ),
+            use_extrapolation=use_extrapolation,
+            stop_event=stop_event
+        )
+        try:
+            while True:
+                if await request.is_disconnected():
+                    print("DEBUG: Request is disconnected via await request.is_disconnected()")
+                    stop_event.set()
+                    break
+                try:
+                    chunk = await run_in_threadpool(next, it)
+                    yield chunk
+                except StopIteration:
+                    print("DEBUG: StopIteration from generator")
+                    break
+                except Exception as e:
+                    print(f"DEBUG: Exception during yield or next: {repr(e)}")
+                    stop_event.set()
+                    raise
+        except Exception as e:
+            print(f"Webcam stream error: {repr(e)}")
+            stop_event.set()
+        finally:
+            stop_event.set()
+            WEBCAM_STOP_EVENTS.pop(camera_index, None)
+            print("DEBUG: stream_generator finished")
+
+    return StreamingResponse(
+        stream_generator(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
@@ -1152,24 +1228,53 @@ from utilities.util_webcam_fx import generate_face_blur_webcam_frames
 from fastapi.responses import StreamingResponse
 
 @router.get("/face-blur/webcam-stream")
-def api_face_blur_webcam(
+async def api_face_blur_webcam(
+    request: Request,
     conf_thresh: float,
     camera_index: int,
     blur_intensity: int = 50,
-    blur_type: str = "Gaussian"
+    blur_type: str = "Gaussian",
+    ai_fps: float = 5.0,
+    use_extrapolation: bool = True
 ):
-    try:
-        return StreamingResponse(
-            generate_face_blur_webcam_frames(
-                camera_index=camera_index,
-                conf_thresh=conf_thresh,
-                blur_type=blur_type,
-                blur_strength=blur_intensity
-            ),
-            media_type="multipart/x-mixed-replace; boundary=frame"
+    import threading
+    from fastapi.concurrency import run_in_threadpool
+    stop_event = threading.Event()
+    WEBCAM_STOP_EVENTS[camera_index] = stop_event
+
+    async def stream_generator():
+        it = generate_face_blur_webcam_frames(
+            camera_index=camera_index,
+            conf_thresh=conf_thresh,
+            blur_type=blur_type,
+            blur_strength=blur_intensity,
+            ai_fps=ai_fps,
+            use_extrapolation=use_extrapolation,
+            stop_event=stop_event
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        try:
+            while True:
+                if await request.is_disconnected():
+                    stop_event.set()
+                    break
+                try:
+                    chunk = await run_in_threadpool(next, it)
+                    yield chunk
+                except StopIteration:
+                    break
+                except Exception:
+                    stop_event.set()
+                    raise
+        except Exception:
+            stop_event.set()
+        finally:
+            stop_event.set()
+            WEBCAM_STOP_EVENTS.pop(camera_index, None)
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
 
 @router.post("/face-blur/process")
 async def api_fb_process(
@@ -1183,7 +1288,8 @@ async def api_fb_process(
     gap_limit: float = Form(1.0),
     match_threshold: float = Form(0.50),
     encoder: str = Form("libx264"),
-    output_method: str = Form("reencode")
+    output_method: str = Form("reencode"),
+    use_extrapolation: bool = Form(True)
 ):
     try:
         sel_faces = json.loads(selected_faces)
@@ -1201,7 +1307,8 @@ async def api_fb_process(
             encoder=encoder if output_method != "subtitle" else None,
             output_method=output_method,
             frame_cache=frame_cache_path if frame_cache_path else None,
-            progress_hook=None
+            progress_hook=None,
+            use_extrapolation=use_extrapolation
         )
         
         if not success:
@@ -1284,5 +1391,100 @@ async def api_vision_censor(
             mime = "video/mp4"
             
         return FileResponse(out_path, media_type=mime)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/vision-censor/batch")
+async def api_vision_censor_batch(
+    background_tasks: BackgroundTasks,
+    hashes: str = Form(...),
+    selected_labels: str = Form(...),
+    scan_fps: float = Form(2.0),
+    method: str = Form("reencode"),
+    model_type: str = Form("320n.onnx"),
+    engine: str = Form("cpu"),
+    precision: str = Form("fp32"),
+    blur_intensity: int = Form(50),
+    blur_type: str = Form("Gaussian"),
+    encoder: str = Form("libx264")
+):
+    import json, zipfile, uuid, shutil, asyncio
+    
+    try:
+        hash_list = json.loads(hashes)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid hashes format")
+        
+    if not hash_list:
+        raise HTTPException(status_code=400, detail="No files provided")
+        
+    try:
+        labels = json.loads(selected_labels)
+        if not labels:
+            raise HTTPException(status_code=400, detail="No labels selected.")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid labels format")
+        
+    out_dir = os.path.join(".", "temp", f"vision_censor_batch_{uuid.uuid4().hex[:8]}")
+    os.makedirs(out_dir, exist_ok=True)
+    
+    try:
+        processed_files = []
+        original_files = []
+        
+        for fhash in hash_list:
+            tmp_path = os.path.join(".", "uploads", fhash)
+            if not os.path.exists(tmp_path):
+                continue
+
+            success, out_path = await asyncio.to_thread(
+                process_media_censor,
+                input_path=tmp_path,
+                target_classes=labels,
+                scan_fps=scan_fps,
+                method=method,
+                model_type=model_type,
+                engine=engine,
+                precision=precision,
+                blur_intensity=blur_intensity,
+                blur_type=blur_type,
+                encoder=encoder if method != "subtitle" else None,
+                progress_hook=None
+            )
+            
+            if success and os.path.exists(out_path):
+                out_filename = os.path.basename(out_path)
+                frontend_accessible_path = os.path.join(".", "temp", out_filename)
+                shutil.copy2(out_path, frontend_accessible_path)
+                
+                # We can also put it in the zip directory
+                zip_item_path = os.path.join(out_dir, out_filename)
+                shutil.copy2(out_path, zip_item_path)
+                
+                processed_files.append(f"/temp/{out_filename}")
+                original_files.append(f"/uploads/{fhash}")
+                
+                try:
+                    os.remove(out_path)
+                except Exception:
+                    pass
+                    
+        # Zip the directory
+        zip_filename = f"vision_censor_batch_{uuid.uuid4().hex[:8]}.zip"
+        zip_path = os.path.join(".", "temp", zip_filename)
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(out_dir):
+                for file in files:
+                    zipf.write(os.path.join(root, file), file)
+                    
+        # Clean up out_dir
+        shutil.rmtree(out_dir, ignore_errors=True)
+        
+        return {
+            "zip_url": f"/temp/{zip_filename}",
+            "processed_urls": processed_files,
+            "original_urls": original_files
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

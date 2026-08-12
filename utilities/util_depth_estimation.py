@@ -191,7 +191,7 @@ def process_image_depth(input_path: str, model_size: str, engine: str, precision
         return False, None, str(e)
 
 
-def process_video_depth(input_path: str, model_size: str, engine: str, precision: str, colormap: str, invert: bool, encoder: str = "libx264", progress_hook=None):
+def process_video_depth(input_path: str, model_size: str, engine: str, precision: str, colormap: str, invert: bool, encoder: str = "libx264", progress_hook=None, ai_fps: float = 5.0):
     """Processes a video to estimate depth frame by frame and encodes the output."""
     import cv2
     import numpy as np
@@ -258,6 +258,9 @@ def process_video_depth(input_path: str, model_size: str, engine: str, precision
     writer_thread.start()
 
     frames_processed = 0
+    last_inference_idx = -9999
+    inference_interval_frames = fps / ai_fps if ai_fps > 0 else 0
+    last_raw_depth = None
 
     try:
         while True:
@@ -265,15 +268,17 @@ def process_video_depth(input_path: str, model_size: str, engine: str, precision
             if not ret:
                 break
 
-            # 1. CPU Pre-processing
-            input_tensor = _preprocess_frame(frame, input_size=518)
+            if frames_processed - last_inference_idx >= inference_interval_frames or last_raw_depth is None:
+                # 1. CPU Pre-processing
+                input_tensor = _preprocess_frame(frame, input_size=518)
 
-            # 2. ONNX GPU Inference
-            outputs = session.run(None, {input_name: input_tensor})
-            raw_depth = np.squeeze(outputs[0])
+                # 2. ONNX GPU Inference
+                outputs = session.run(None, {input_name: input_tensor})
+                last_raw_depth = np.squeeze(outputs[0])
+                last_inference_idx = frames_processed
 
             # 3. Offload CPU Post-processing and Disk I/O to background thread
-            write_queue.put(raw_depth)
+            write_queue.put(last_raw_depth)
 
             frames_processed += 1
             if progress_hook:

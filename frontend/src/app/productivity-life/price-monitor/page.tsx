@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Activity, Plus, Search, RefreshCw, Trash2, LineChart as ChartIcon, CheckCircle, Flame, Minus } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import { Select } from "@/components/ui/Select";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { Icon } from "@/lib/utils";
 
 interface HistoryEntry {
   date: string;
@@ -197,7 +198,7 @@ export default function PriceMonitor() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       {toastMsg && (
         <div className="fixed top-4 right-4 z-50 bg-zinc-800 text-white px-4 py-2 rounded-lg shadow-lg animate-slide-up flex items-center gap-2">
-          <CheckCircle size={18} className="text-green-400" />
+          <Icon name="check_circle" size={18} className="text-green-400" />
           {toastMsg}
         </div>
       )}
@@ -215,14 +216,14 @@ export default function PriceMonitor() {
             variant="primary" 
             onClick={handleRefreshAll}
             disabled={isRefreshing}
-            icon={<RefreshCw size={18} className={isRefreshing ? "animate-spin" : ""} />}
+            icon={<Icon name="refresh" size={18} className={isRefreshing ? "animate-spin" : ""} />}
           >
             {isRefreshing ? "Refreshing" : "Refresh All Prices"}
           </Button>
           <Button 
             variant="secondary" 
             onClick={() => setShowAdd(!showAdd)}
-            icon={<Plus size={18} />}
+            icon={<Icon name="add" size={18} />}
           >
             Add Product
           </Button>
@@ -252,7 +253,7 @@ export default function PriceMonitor() {
       <div className="bg-zinc-900/30 border border-white/5 rounded-xl p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-4 mb-2">
           <div className="flex-1 relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input 
               type="text"
               className="w-full bg-zinc-950 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-[var(--theme-heading)] outline-none"
@@ -289,11 +290,11 @@ export default function PriceMonitor() {
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <RefreshCw className="animate-spin text-zinc-500" size={32} />
+          <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
         </div>
       ) : filteredAndSortedItems.length === 0 ? (
         <div className="text-center p-12 text-zinc-500 bg-zinc-900/20 rounded-xl border border-white/5">
-          <Activity size={48} className="mx-auto mb-4 opacity-50" />
+          <Icon name="monitoring" size={48} className="mx-auto mb-4 opacity-50" />
           <p className="text-lg">No items match your criteria.</p>
         </div>
       ) : (
@@ -329,7 +330,7 @@ export default function PriceMonitor() {
               <div key={item.id} className="bg-zinc-900/40 border border-white/10 rounded-xl overflow-hidden">
                 {isCheapest && (
                   <div className="bg-green-500/20 text-green-400 text-sm py-1.5 px-4 font-medium flex items-center gap-2 border-b border-green-500/20">
-                    <Flame size={16} /> Great News! This item is currently at its lowest tracked price!
+                    <Icon name="local_fire_department" size={16} /> Great News! This item is currently at its lowest tracked price!
                   </div>
                 )}
                 
@@ -337,8 +338,8 @@ export default function PriceMonitor() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-[var(--theme-heading)] hover:text-white hover:underline flex items-center gap-2 break-words">
-                      {isCheapest ? <Flame size={18} className="text-orange-500 shrink-0" /> : null}
-                      {priceNeverChanged && history.length > 1 ? <Minus size={18} className="text-zinc-500 shrink-0" /> : null}
+                      {isCheapest ? <Icon name="local_fire_department" size={18} className="text-orange-500 shrink-0" /> : null}
+                      {priceNeverChanged && history.length > 1 ? <Icon name="remove" size={18} className="text-zinc-500 shrink-0" /> : null}
                       {item.name}
                     </a>
                     <div className="text-sm text-zinc-500 mt-1">Platform: {domain}</div>
@@ -404,13 +405,13 @@ export default function PriceMonitor() {
                       disabled={history.length < 2}
                       className={history.length < 2 ? "opacity-50" : ""}
                     >
-                      <ChartIcon size={18} />
+                      <Icon name="show_chart" size={18} />
                     </Button>
                     <Button 
                       variant="danger" 
                       onClick={() => handleDelete(item.id)}
                     >
-                      <Trash2 size={18} />
+                      <Icon name="delete" size={18} />
                     </Button>
                   </div>
                 </div>

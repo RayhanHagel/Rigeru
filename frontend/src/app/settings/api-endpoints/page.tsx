@@ -2,7 +2,8 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
-import { Server, Zap, Database, Lock, Globe, Code2, Layers, Box, Tag } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 
 
 interface Endpoint {
@@ -79,7 +80,7 @@ export default function ApiEndpointsPage() {
         </div>
       ) : error ? (
         <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 flex items-center gap-3">
-          <Lock size={20} />
+          <Icon name="lock" size={20} />
           <span>Error loading API documentation: {error}. Is the backend running?</span>
         </div>
       ) : (
@@ -101,7 +102,7 @@ export default function ApiEndpointsPage() {
                     }`}
                   >
                     <span className="flex items-center gap-1">
-                      {tag === "All" ? <Globe size={14}/> : <Box size={14}/>}
+                      {tag === "All" ? <Icon name="language" size={14}/> : <Icon name="deployed_code" size={14}/>}
                       {tag}
                     </span>
                     {tag !== "All" && (
@@ -141,7 +142,7 @@ export default function ApiEndpointsPage() {
                   <div className="flex gap-2 shrink-0 overflow-x-auto">
                     {ep.tags.map(tag => (
                       <span key={tag} className="flex items-center gap-1 text-[10px] uppercase tracking-wider bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md whitespace-nowrap">
-                        <Tag size={10} /> {tag}
+                        <Icon name="label" size={10} /> {tag}
                       </span>
                     ))}
                   </div>

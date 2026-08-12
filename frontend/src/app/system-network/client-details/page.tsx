@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
-import { Monitor, Globe, Cpu, Server, Activity, ArrowRight, ShieldCheck, ShieldAlert } from "lucide-react";
+
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 interface ClientData {
   ip: string;
@@ -142,16 +143,16 @@ export default function ClientDetailsPage() {
           {/* Top Banner */}
           <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Globe size={120} />
+              <Icon name="language" size={120} />
             </div>
             <div className="z-10">
               <h2 className="text-zinc-400 text-sm font-medium mb-1 tracking-wider uppercase">Public IP Address</h2>
               <div className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-2 flex items-center gap-3">
                 {data.ip}
                 {data.ip !== "Unknown" ? (
-                  <ShieldCheck className="text-emerald-500" size={28} />
+                  <Icon name="verified_user" className="text-emerald-500" size={28} />
                 ) : (
-                  <ShieldAlert className="text-amber-500" size={28} />
+                  <Icon name="gpp_maybe" className="text-amber-500" size={28} />
                 )}
               </div>
               <p className="text-zinc-400 text-sm">
@@ -174,7 +175,7 @@ export default function ClientDetailsPage() {
           </div>
 
           <div className="flex flex-col gap-6 animate-slide-up">
-            {renderSection("Device & Display", <Monitor className="text-secondary" size={20} />, [
+            {renderSection("Device & Display", <Icon name="desktop_windows" className="text-secondary" size={20} />, [
               { label: "Screen Resolution", value: `${data.screenWidth} x ${data.screenHeight}` },
               { label: "Color Depth", value: `${data.colorDepth}-bit` },
               { label: "Pixel Ratio", value: data.pixelRatio },
@@ -183,7 +184,7 @@ export default function ClientDetailsPage() {
               { label: "Platform", value: data.platform },
             ])}
 
-            {renderSection("Software & Privacy", <ShieldCheck className="text-emerald-400" size={20} />, [
+            {renderSection("Software & Privacy", <Icon name="verified_user" className="text-emerald-400" size={20} />, [
               { label: "Language", value: data.language },
               { label: "Timezone", value: data.timezone },
               { label: "Cookies Enabled", value: data.cookiesEnabled ? "Yes" : "No" },
@@ -191,12 +192,12 @@ export default function ClientDetailsPage() {
               { label: "User Agent", value: data.userAgent },
             ])}
 
-            {renderSection("Graphics / WebGL", <Cpu className="text-orange-400" size={20} />, [
+            {renderSection("Graphics / WebGL", <Icon name="memory" className="text-orange-400" size={20} />, [
               { label: "WebGL Vendor", value: data.webglVendor },
               { label: "WebGL Renderer", value: data.webglRenderer },
             ])}
 
-            {renderSection("Network", <Server className="text-secondary" size={20} />, [
+            {renderSection("Network", <Icon name="dns" className="text-secondary" size={20} />, [
               { label: "Effective Connection", value: data.connection },
             ])}
           </div>
