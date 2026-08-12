@@ -2,10 +2,11 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
-import { Tag, Search, Save, CheckCircle2 } from "lucide-react";
+
 
 import { Button } from "@/components/ui/Button";
 import { FileExplorerModal } from "@/components/ui/FileExplorerModal";
+import { Icon } from "@/lib/utils";
 
 export default function MediaTagsPage() {
   const [filePath, setFilePath] = useState("");
@@ -99,7 +100,7 @@ export default function MediaTagsPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-zinc-300">📁 Local File Path</label>
             <div className="flex gap-3">
-              <Button variant="secondary" onClick={() => setShowFilePicker(true)} icon={<Search size={16} />}>
+              <Button variant="secondary" onClick={() => setShowFilePicker(true)} icon={<Icon name="search" size={16} />}>
                 Browse File
               </Button>
               <input 
@@ -199,7 +200,7 @@ export default function MediaTagsPage() {
           
           {saveSuccess && (
             <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-sm flex items-center gap-2">
-              <CheckCircle2 size={18} />
+              <Icon name="check_circle" size={18} />
               {saveSuccess}
             </div>
           )}
@@ -210,7 +211,7 @@ export default function MediaTagsPage() {
             disabled={isSaving || !filePath}
             className="w-full py-4 text-base font-medium shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-shadow"
           >
-            <Save size={18} className="mr-2" />
+            <Icon name="save" size={18} className="mr-2" />
             {isSaving ? "Writing metadata" : "Save Media Tags"}
           </Button>
         </div>

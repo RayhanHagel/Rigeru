@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, Suspense, useRef } from "react";
-import { BookOpen, ArrowLeft, ChevronLeft, ChevronRight, Edit2, Book, Star, Bookmark, Download, DownloadCloud, BookOpenCheck, RefreshCw, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Icon } from "@/lib/utils";
 
 function MangaReadContent() {
   const router = useRouter();
@@ -261,7 +262,7 @@ function MangaReadContent() {
     return (
       <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
         <Button variant="secondary" onClick={() => router.push('/entertainment-reading/manga-library')} className="mb-4">
-          <ArrowLeft size={16} /> Back to Library
+          <Icon name="arrow_back" size={16} /> Back to Library
         </Button>
         <div className="p-4 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30">{errorMsg}</div>
       </div>
@@ -274,7 +275,7 @@ function MangaReadContent() {
         <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 flex flex-col">
           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="secondary" icon={<ArrowLeft size={16} />} onClick={() => setMode("details")} className="h-10">
+            <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => setMode("details")} className="h-10">
               Details
             </Button>
             <div className="truncate max-w-[200px] sm:max-w-md">
@@ -292,7 +293,7 @@ function MangaReadContent() {
               } 
               className="h-10 px-3"
             >
-              <ChevronLeft size={16} />
+              <Icon name="chevron_left" size={16} />
             </Button>
             
             <select 
@@ -327,7 +328,7 @@ function MangaReadContent() {
               } 
               className="h-10 px-3"
             >
-              <ChevronRight size={16} />
+              <Icon name="chevron_right" size={16} />
             </Button>
           </div>
           </div>
@@ -409,7 +410,7 @@ function MangaReadContent() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center">
                 <div className="p-4 bg-zinc-900/50 rounded-full mb-4 border border-white/5">
-                  <DownloadCloud size={48} className="text-zinc-500" />
+                  <Icon name="cloud_download" size={48} className="text-zinc-500" />
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">Chapter Not Downloaded</h2>
                 <p className="text-zinc-400 max-w-sm mb-6">You need to download this chapter before you can read it in PDF mode.</p>
@@ -428,7 +429,7 @@ function MangaReadContent() {
             ) : pages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-[50vh] text-white gap-4">
                 <div className="p-4 bg-zinc-900/50 rounded-full mb-4 border border-white/5">
-                  <BookOpen size={48} className="text-zinc-500" />
+                  <Icon name="menu_book" size={48} className="text-zinc-500" />
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">No Images Found</h2>
                 <p className="text-zinc-400 max-w-sm mb-6 text-center">We couldn't retrieve any images for this chapter.</p>
@@ -448,12 +449,12 @@ function MangaReadContent() {
                 <div className="relative flex w-full justify-center bg-zinc-950/50 rounded-xl overflow-hidden shadow-2xl w-full h-full" style={{ height: '80vh' }}>
                   {/* Left click zone */}
                   <div className="absolute left-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-start p-4 group" onClick={() => handlePageClick('left')}>
-                    <ChevronLeft size={64} className="text-white/10 group-hover:text-white/60 drop-shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Icon name="chevron_left" size={64} className="text-white/10 group-hover:text-white/60 drop-shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   
                   {/* Right click zone */}
                   <div className="absolute right-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-end p-4 group" onClick={() => handlePageClick('right')}>
-                    <ChevronRight size={64} className="text-white/10 group-hover:text-white/60 drop-shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Icon name="chevron_right" size={64} className="text-white/10 group-hover:text-white/60 drop-shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
 
                   {horizontalType === 'single' ? (
@@ -505,7 +506,7 @@ function MangaReadContent() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-primary/30 pb-6">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-primary/20 text-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <BookOpen size={32} />
+            <Icon name="menu_book" size={32} />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">{mangaId}</h1>
@@ -519,18 +520,18 @@ function MangaReadContent() {
             title="Delete from Library"
             className="h-[46px]"
           >
-            <Trash2 size={16} />
+            <Icon name="delete" size={16} />
           </Button>
           <Button 
             variant="secondary" 
             onClick={handleRefresh}
             isLoading={refreshing}
             className="h-[46px]"
-            icon={refreshing ? undefined : <RefreshCw size={16} />}
+            icon={refreshing ? undefined : <Icon name="refresh" size={16} />}
           >
             Refresh
           </Button>
-          <Button variant="secondary" icon={<ArrowLeft size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')} className="h-[46px]">
+          <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')} className="h-[46px]">
             Back to Library
           </Button>
         </div>
@@ -551,16 +552,16 @@ function MangaReadContent() {
           <h2 className="text-xl font-bold text-white mb-4">Tag Information</h2>
           <div className="flex flex-wrap gap-2 mb-8">
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
-              <Edit2 size={14} /> {mangaData.status}
+              <Icon name="edit" size={14} /> {mangaData.status}
             </span>
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
-              <Book size={14} /> {mangaData.type}
+              <Icon name="book" size={14} /> {mangaData.type}
             </span>
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
-              <Star size={14} /> Rating {mangaData.rating}
+              <Icon name="star" size={14} /> Rating {mangaData.rating}
             </span>
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
-              <Bookmark size={14} /> Chapter {mangaData.chapters_amount}
+              <Icon name="bookmark" size={14} /> Chapter {mangaData.chapters_amount}
             </span>
           </div>
 
@@ -627,7 +628,7 @@ function MangaReadContent() {
                 <div className="flex gap-2 min-w-[200px]">
                   <Button 
                     variant="primary" 
-                    icon={<BookOpenCheck size={16} />} 
+                    icon={<Icon name="library_add_check" size={16} />} 
                     className="flex-1 bg-primary hover:bg-primary text-white"
                     disabled={!isDownloaded}
                     onClick={() => {
@@ -638,13 +639,13 @@ function MangaReadContent() {
                     Read
                   </Button>
                   {isDownloaded ? (
-                    <Button variant="secondary" icon={<DownloadCloud size={16} />} disabled className="flex-1 text-green-400 border-green-500/30">
+                    <Button variant="secondary" icon={<Icon name="cloud_download" size={16} />} disabled className="flex-1 text-green-400 border-green-500/30">
                       Done
                     </Button>
                   ) : (
                     <Button 
                       variant="secondary" 
-                      icon={<Download size={16} />} 
+                      icon={<Icon name="download" size={16} />} 
                       className="flex-1"
                       isLoading={downloading[url]}
                       onClick={() => handleDownload(url)}

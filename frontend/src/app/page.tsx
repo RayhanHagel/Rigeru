@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { Header } from '@/components/ui/Header';
-import { Link2, Image as ImageIcon, FileText, MousePointer2, Settings2 } from "lucide-react";
+
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Icon } from "@/lib/utils";
 
-interface WidgetData {  widget: string;
+interface WidgetData {
+  widget: string;
   input: string;
 }
 
@@ -15,7 +17,6 @@ export default function Dashboard() {
   const router = useRouter();
   const [cards, setCards] = useState<WidgetData[][]>([]);
   const [loading, setLoading] = useState(true);
-  const [isManageMode, setIsManageMode] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -47,12 +48,12 @@ export default function Dashboard() {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/50 transition-all duration-300 group"
+          className="flex items-center gap-3 w-full p-4 rounded-xl bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] hover:bg-white/10 hover:border-[var(--theme-heading)] transition-all duration-300 group"
         >
-          <div className="p-2 rounded-lg bg-primary/20 text-primary group-hover:bg-primary/40 transition-colors">
-            <Link2 size={18} />
+          <div className="p-2 rounded-lg bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] group-hover:bg-[var(--theme-heading)]/40 transition-colors">
+            <Icon name="link" size={18} />
           </div>
-          <span className="text-zinc-200 font-medium">{label}</span>
+          <span className="text-[var(--theme-text)] font-medium">{label}</span>
         </a>
       );
     }
@@ -60,7 +61,7 @@ export default function Dashboard() {
     if (widget === "image" || widget === "clickable image") {
       const parts = input.split(" | ");
       const rawImgUrl = parts[0].trim();
-      
+
       const resolveImageUrl = (url?: string) => {
         if (!url) return "";
         if (url.startsWith('/app/static/')) {
@@ -68,12 +69,12 @@ export default function Dashboard() {
         }
         return url;
       };
-      
+
       const imgUrl = resolveImageUrl(rawImgUrl);
       const destUrl = parts.length > 1 ? parts[1].trim() : "";
-      
+
       const imgElement = (
-        <div key={index} className="relative w-full h-40 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all duration-300">
+        <div key={index} className="relative w-full h-40 rounded-xl overflow-hidden border border-[var(--theme-ui-border)] group-hover:border-[var(--theme-heading)] transition-all duration-300">
           <img src={imgUrl} alt="Widget" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
         </div>
@@ -91,11 +92,11 @@ export default function Dashboard() {
 
     if (widget === "text" || widget === "caption") {
       return (
-        <div key={index} className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
+        <div key={index} className="flex items-start gap-3 p-4 bg-[var(--theme-ui-bg)] rounded-xl border border-[var(--theme-ui-border)]">
           <div className="mt-1 text-zinc-400">
-            {widget === "caption" ? <FileText size={16} /> : <FileText size={18} />}
+            {widget === "caption" ? <Icon name="description" size={16} /> : <Icon name="description" size={18} />}
           </div>
-          <p className={widget === "caption" ? "text-sm text-zinc-400" : "text-base text-zinc-200 leading-relaxed"}>
+          <p className={widget === "caption" ? "text-sm text-zinc-400" : "text-base text-[var(--theme-text)] leading-relaxed"}>
             {input}
           </p>
         </div>
@@ -107,12 +108,12 @@ export default function Dashboard() {
         <button
           key={index}
           onClick={() => router.push(input)}
-          className="flex items-center gap-3 w-full p-4 rounded-xl bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 hover:border-secondary transition-all duration-300 group"
+          className="flex items-center gap-3 w-full p-4 rounded-xl bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] hover:bg-white/10 hover:border-[var(--theme-heading)] transition-all duration-300 group"
         >
           <div className="p-2 rounded-lg bg-secondary/20 text-secondary group-hover:bg-secondary/40 transition-colors">
-            <MousePointer2 size={18} />
+            <Icon name="mouse" size={18} />
           </div>
-          <span className="text-zinc-200 font-medium">{input}</span>
+          <span className="text-[var(--theme-text)] font-medium">{input}</span>
         </button>
       );
     }
@@ -123,26 +124,29 @@ export default function Dashboard() {
   return (
     <div className="w-full h-full relative font-sans selection:bg-primary/30">
       <div className="w-full px-6 py-12 lg:px-8 relative z-10">
-        <div className="flex items-center justify-between mb-8">
-          <Header title="Dashboard" subtitle="Welcome back" />
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            onClick={() => setIsManageMode(!isManageMode)} 
-            className="flex items-center gap-2 rounded-xl h-9 text-xs font-medium bg-zinc-900 border border-white/10 hover:bg-zinc-800"
-          >
-            <Settings2 size={14} />
-            Manage Shortcuts
-          </Button>
-        </div>
+        <Header 
+          title="Dashboard" 
+          subtitle="Welcome back" 
+          actions={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => router.push('/home/sort')}
+              className="flex items-center gap-2 rounded-xl h-9 text-xs font-medium bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] hover:bg-white/10"
+            >
+              <Icon name="tune" size={14} />
+              Manage Shortcuts
+            </Button>
+          }
+        />
 
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : cards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/30 backdrop-blur-sm">
-            <p className="text-zinc-500 text-lg">No cards configured yet.</p>
+          <div className="flex flex-col items-center justify-center h-64 rounded-3xl border border-dashed border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-sm">
+            <p className="text-[var(--theme-text)] text-lg">No cards configured yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-slide-up">
@@ -157,4 +161,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

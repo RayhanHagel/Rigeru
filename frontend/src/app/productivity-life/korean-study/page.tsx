@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { BrainCircuit, Book, Trophy, Repeat, Check, X, ArrowRight, Globe, Pen, RotateCcw, TrendingUp, Activity } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from '@/components/ui/Button';
 import { WhiteboardCanvas, Stroke } from '@/components/whiteboard/WhiteboardCanvas';
+import { Icon } from "@/lib/utils";
 
 type Card = {
   id: string;
@@ -161,7 +162,7 @@ export default function KoreanStudyPage() {
                                         <div className="space-y-8">
                                           <div className="flex justify-between items-center mb-6">
                                             <h2 className="text-xl font-bold text-zinc-200">Library ({allCards.length} Cards)</h2>
-                                            <Button variant="secondary" onClick={generateClozeCard} isLoading={generatingCloze} icon={<Globe size={16} />}>
+                                            <Button variant="secondary" onClick={generateClozeCard} isLoading={generatingCloze} icon={<Icon name="language" size={16} />}>
                                               Scrape Wiki Cloze
                                             </Button>
                                           </div>
@@ -193,16 +194,16 @@ export default function KoreanStudyPage() {
                           {activeTab === 'test' && (
                                         <div className="flex flex-col items-center justify-center min-h-[500px]">
                                           {dueCards.length === 0 ? (
-                                            <div className="text-center p-12 bg-zinc-900/40 rounded-3xl border border-dashed border-zinc-700 max-w-lg w-full">
+                                            <div className="text-center p-12 bg-zinc-900/40 rounded-3xl border border-dashed border-zinc-700 w-full">
                                               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                                <Check className="text-green-500" size={32} />
+                                                <Icon name="check" className="text-green-500" size={32} />
                                               </div>
                                               <h2 className="text-2xl font-bold text-zinc-200 mb-2">You're all caught up!</h2>
                                               <p className="text-zinc-400 mb-8">No more cards due right now. Check back later to strengthen your memory.</p>
                                               <Button variant="primary" onClick={() => setActiveTab('study')}>Browse Library</Button>
                                             </div>
                                           ) : (
-                                            <div className="w-full max-w-2xl">
+                                            <div className="w-full">
                                               <div className="flex justify-between items-center mb-6 text-sm font-medium text-zinc-500">
                                                 <span>Card {currentCardIndex + 1} of {dueCards.length}</span>
                                                 <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-full uppercase tracking-wider text-xs border border-secondary/20">
@@ -230,7 +231,7 @@ export default function KoreanStudyPage() {
                                                       <p className="text-4xl font-bold text-indigo-300">{dueCards[currentCardIndex].back}</p>
                                                     </div>
                                                     
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-lg mt-auto">
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mt-auto">
                                                       <button onClick={() => handleReview(0)} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors">
                                                         <span className="font-bold">Fail</span>
                                                         <span className="text-xs opacity-70">1m</span>
@@ -255,10 +256,10 @@ export default function KoreanStudyPage() {
 
                                               {/* Scratchpad Whiteboard */}
                                               {!showAnswer && (
-                                                <div className="mt-8 flex flex-col items-center animate-fade-in w-full max-w-[500px] mx-auto">
+                                                <div className="mt-8 flex flex-col items-center animate-fade-in w-full mx-auto">
                                                   <div className="flex justify-between items-center w-full mb-3 px-2">
                                                      <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">Writing Scratchpad</h3>
-                                                     <button onClick={() => setStrokes([])} className="text-xs font-medium text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors"><RotateCcw size={12}/> Clear</button>
+                                                     <button onClick={() => setStrokes([])} className="text-xs font-medium text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors"><Icon name="replay" size={12}/> Clear</button>
                                                   </div>
                                                   <div className="w-full flex justify-center bg-zinc-950 p-2 rounded-xl border border-white/5">
                                                     <WhiteboardCanvas 

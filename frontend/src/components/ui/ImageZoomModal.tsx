@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { Icon } from "@/lib/utils";
 
 interface ImageZoomModalProps {
   isOpen: boolean;
@@ -70,7 +70,7 @@ export function ImageZoomModal({ isOpen, onClose, imageUrl, altText = "Zoomed Im
           className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           title="Zoom Out"
         >
-          <ZoomOut size={20} />
+          <Icon name="zoom_out" size={20} />
         </button>
         <div className="text-zinc-300 font-medium text-sm w-12 text-center">
           {Math.round(scale * 100)}%
@@ -80,7 +80,7 @@ export function ImageZoomModal({ isOpen, onClose, imageUrl, altText = "Zoomed Im
           className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           title="Zoom In"
         >
-          <ZoomIn size={20} />
+          <Icon name="zoom_in" size={20} />
         </button>
         <div className="w-px h-6 bg-white/10 mx-1" />
         <button 
@@ -88,7 +88,7 @@ export function ImageZoomModal({ isOpen, onClose, imageUrl, altText = "Zoomed Im
           className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           title="Reset View"
         >
-          <Maximize size={20} />
+          <Icon name="fullscreen" size={20} />
         </button>
         <div className="w-px h-6 bg-white/10 mx-1" />
         <button 
@@ -96,7 +96,7 @@ export function ImageZoomModal({ isOpen, onClose, imageUrl, altText = "Zoomed Im
           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
           title="Close"
         >
-          <X size={20} />
+          <Icon name="close" size={20} />
         </button>
       </div>
 

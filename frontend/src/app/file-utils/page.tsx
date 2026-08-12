@@ -2,8 +2,9 @@
 
 import { Header } from '@/components/ui/Header';
 import { navigation } from '@/components/layout/Sidebar';
-import { LayoutGrid } from 'lucide-react';
+
 import { Card } from '@/components/ui/Card';
+import { Icon } from "@/lib/utils";
 
 
 export default function CategoryPage() {

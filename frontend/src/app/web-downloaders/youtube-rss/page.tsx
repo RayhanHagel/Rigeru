@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { Plus, Trash2, RefreshCw, Clock, ListVideo, Search, Tv } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
@@ -216,7 +217,7 @@ function YoutubeRssContent() {
         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
           {isRefreshing && (
             <span className="text-xs text-zinc-500 flex items-center gap-1.5 animate-pulse mr-2">
-              <RefreshCw size={12} className="animate-spin" />
+              <Icon name="refresh" size={12} className="animate-spin" />
               Refreshing...
             </span>
           )}
@@ -253,7 +254,7 @@ function YoutubeRssContent() {
               onChange={e => setSearchQuery(e.target.value)}
               className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-2.5 text-white focus:border-red-500 outline-none" 
             />
-            <Button variant="primary" type="submit" isLoading={isSearching} icon={<Search size={18} />}>Search &amp; Add</Button>
+            <Button variant="primary" type="submit" isLoading={isSearching} icon={<Icon name="search" size={18} />}>Search &amp; Add</Button>
           </form>
         )}
 
@@ -327,7 +328,7 @@ function YoutubeRssContent() {
                               </a>
                               <div className="text-sm font-medium text-zinc-300 mb-2">{vid.channel_name}</div>
                               <div className="text-xs text-zinc-500 flex items-center gap-1">
-                                <Clock size={12} /> {dateStr}
+                                <Icon name="schedule" size={12} /> {dateStr}
                               </div>
                             </div>
                           )
@@ -343,7 +344,7 @@ function YoutubeRssContent() {
                   <div>
                     <div className="flex items-center gap-4 mb-6">
                       <div className="relative flex-1">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                         <input 
                           type="text" 
                           placeholder="Search subscriptions..." 
@@ -367,7 +368,7 @@ function YoutubeRssContent() {
                         variant="primary" 
                         onClick={handleDeleteChannels}
                         disabled={selectedToDelete.size === 0}
-                        icon={<Trash2 size={16} />}
+                        icon={<Icon name="delete" size={16} />}
                         className="bg-red-600 hover:bg-red-700 text-white"
                       >
                         Unsubscribe ({selectedToDelete.size})

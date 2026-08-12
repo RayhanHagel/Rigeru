@@ -3,16 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
-import { 
-  Folder, 
-  HardDrive, 
-  ChevronRight, 
-  ArrowUp,
-  X,
-  Loader2,
-  FolderOpen,
-  File
-} from 'lucide-react';
+import { Icon } from "@/lib/utils";
+
 
 interface FileExplorerModalProps {
   isOpen: boolean;
@@ -73,14 +65,14 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-zinc-900/50">
           <div className="flex items-center gap-2 text-zinc-100 font-semibold">
-            <FolderOpen className="text-blue-400" size={20} />
+            <Icon name="folder_open" className="text-blue-400" size={20} />
             {title}
           </div>
           <button 
             onClick={onClose}
             className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <X size={20} />
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -90,13 +82,13 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
             onClick={() => fetchDirectory("")}
             className="text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors flex items-center gap-1"
           >
-            <HardDrive size={16} />
+            <Icon name="hard_drive" size={16} />
             Drives
           </button>
           
           {currentPath && (
             <>
-              <ChevronRight size={16} className="text-zinc-600 flex-shrink-0" />
+              <Icon name="chevron_right" size={16} className="text-zinc-600 flex-shrink-0" />
               <div className="text-zinc-200 text-sm font-mono truncate" title={currentPath}>
                 {currentPath}
               </div>
@@ -112,7 +104,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
             onClick={() => fetchDirectory(parentPath)}
             disabled={!currentPath || isLoading}
             className="text-sm py-1 h-8 bg-zinc-800 hover:bg-zinc-700"
-            icon={<ArrowUp size={16} />}
+            icon={<Icon name="arrow_upward" size={16} />}
           >
             Go Up
           </Button>
@@ -126,7 +118,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
         <div className="flex-1 overflow-y-auto p-2 bg-black/40 min-h-[300px]">
           {isLoading ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
-              <Loader2 size={32} className="animate-spin text-blue-500" />
+              <Icon name="progress_activity" size={32} className="animate-spin text-blue-500" />
               <span>Loading folders</span>
             </div>
           ) : folders.length === 0 ? (
@@ -142,9 +134,9 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group border border-transparent hover:border-white/5"
                 >
                   {!currentPath ? (
-                    <HardDrive size={24} className="text-zinc-400 group-hover:text-blue-400 transition-colors" />
+                    <Icon name="hard_drive" size={24} className="text-zinc-400 group-hover:text-blue-400 transition-colors" />
                   ) : (
-                    <Folder size={24} className="text-blue-500/80 group-hover:text-blue-400 transition-colors" />
+                    <Icon name="folder" size={24} className="text-blue-500/80 group-hover:text-blue-400 transition-colors" />
                   )}
                   <span className="text-zinc-300 group-hover:text-white font-medium truncate">
                     {folder.name}
@@ -160,7 +152,7 @@ export function FileExplorerModal({ isOpen, onClose, onSelect, title = "Select F
                   }}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group border border-transparent hover:border-white/5"
                 >
-                  <File size={24} className="text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+                  <Icon name="insert_drive_file" size={24} className="text-indigo-400 group-hover:text-indigo-300 transition-colors" />
                   <span className="text-zinc-300 group-hover:text-white font-medium truncate">
                     {file.name}
                   </span>

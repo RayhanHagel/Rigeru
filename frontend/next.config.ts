@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   allowedDevOrigins: ['192.168.100.88'],
 
+  // 5 min timeout — prevents proxy from killing long-running backend ops
+  // (e.g. image upscale tile processing, AI model inference)
+  experimental: {
+    proxyTimeout: 300_000,
+  },
+
   async rewrites() {
     return [
       {

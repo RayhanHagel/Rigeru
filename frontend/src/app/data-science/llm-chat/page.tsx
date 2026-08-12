@@ -3,8 +3,9 @@ import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Bot, Send, Settings2, User, Loader2, X, Check } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type Message = {
   role: "user" | "assistant";
@@ -206,7 +207,7 @@ export default function LLMChatBotPage() {
         <button onClick={() => setShowSettings(true)}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-lg text-sm text-zinc-300 transition-colors shadow-lg"
         >
-             <Settings2 size={16} /> Configure Tools
+             <Icon name="tune" size={16} /> Configure Tools
         </button>
       </div>
 
@@ -221,7 +222,7 @@ export default function LLMChatBotPage() {
               <div key={i} className={`flex gap-4 ${msg.role === 'assistant' ? '' : 'flex-row-reverse'}`}>
                 {msg.role === 'assistant' && (
                   <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">
-                    <Bot size={16} />
+                    <Icon name="smart_toy" size={16} />
                   </div>
                 )}
                 
@@ -233,7 +234,7 @@ export default function LLMChatBotPage() {
                 
                 {msg.role === 'user' && (
                   <div className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center shrink-0">
-                    <User size={16} />
+                    <Icon name="person" size={16} />
                   </div>
                 )}
               </div>
@@ -241,7 +242,7 @@ export default function LLMChatBotPage() {
           )}
           {statusMsg && (
             <div className="flex items-center gap-3 text-zinc-400 text-sm">
-              <Loader2 size={14} className="animate-spin" />
+              <Icon name="progress_activity" size={14} className="animate-spin" />
               <span>{statusMsg}</span>
             </div>
           )}
@@ -250,7 +251,7 @@ export default function LLMChatBotPage() {
 
         {/* Input Area */}
         <div className="p-4 bg-zinc-900/50 border-t border-white/5 shrink-0 relative">
-          <div className="relative max-w-4xl mx-auto">
+          <div className="relative w-full mx-auto">
             <textarea 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -268,11 +269,11 @@ export default function LLMChatBotPage() {
               <div className="absolute right-2 bottom-2">
                 {isGenerating ? (
                   <Button variant="danger" size="icon" onClick={stopGeneration} className="w-10 h-10">
-                    <X size={18} />
+                    <Icon name="close" size={18} />
                   </Button>
                 ) : (
                   <Button variant="primary" size="icon" onClick={handleSend} disabled={!input.trim()} className="w-10 h-10">
-                    <Send size={18} />
+                    <Icon name="send" size={18} />
                   </Button>
                 )}
               </div>
@@ -288,7 +289,7 @@ export default function LLMChatBotPage() {
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 shrink-0">
               <h3 className="font-semibold text-zinc-100 flex items-center gap-2 text-lg">Tool Configuration</h3>
               <button onClick={() => setShowSettings(false)} className="text-zinc-400 hover:text-white transition-colors bg-zinc-800/50 hover:bg-zinc-700 p-2 rounded-lg">
-                <X size={20} />
+                <Icon name="close" size={20} />
               </button>
             </div>
             
@@ -307,7 +308,7 @@ export default function LLMChatBotPage() {
                       className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${tool.enabled ? 'bg-primary/10 border-primary/40 shadow-[0_0_10px_rgba(168,85,247,0.1)]' : 'bg-black/40 border-white/5 hover:border-white/10'}`}
                     >
                       <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${tool.enabled ? 'bg-primary border-primary text-white' : 'border-zinc-600 bg-zinc-900'}`}>
-                        {tool.enabled && <Check size={14} />}
+                        {tool.enabled && <Icon name="check" size={14} />}
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${tool.enabled ? 'text-white' : 'text-zinc-400'}`}>{tool.label}</p>
@@ -321,7 +322,7 @@ export default function LLMChatBotPage() {
             
             {isSavingConfig && (
               <div className="p-3 bg-primary/20 text-center text-xs font-medium text-primary border-t border-primary/20 flex justify-center items-center gap-2 shrink-0">
-                <Loader2 size={14} className="animate-spin" /> Saving configuration...
+                <Icon name="progress_activity" size={14} className="animate-spin" /> Saving configuration...
               </div>
             )}
           </div>

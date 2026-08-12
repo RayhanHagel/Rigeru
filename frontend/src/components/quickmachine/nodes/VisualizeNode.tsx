@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { createPortal } from 'react-dom';
-import { BarChart2, Trash2, Play, Download, X } from 'lucide-react';
+
 import { useLayoutUpdate } from '../useLayoutUpdate';
+import { Icon } from "@/lib/utils";
 
 export function VisualizeNode({ id, data, selected }: any) {
   const { deleteElements, getNodes, getEdges } = useReactFlow();
@@ -75,14 +76,14 @@ export function VisualizeNode({ id, data, selected }: any) {
         }}
         className="absolute -top-3 -right-3 p-1.5 bg-red-500/20 text-red-500 rounded-full border border-red-500/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/40 z-10"
       >
-        <Trash2 size={12} />
+        <Icon name="delete" size={12} />
       </button>
 
       <Handle type="target" position={targetPos} className="w-3 h-3 bg-rose-500 border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity" />
       
       <div className="flex items-center gap-2">
         <div className="p-2 rounded-lg bg-rose-500/20 text-rose-400">
-          <BarChart2 size={16} />
+          <Icon name="bar_chart" size={16} />
         </div>
         <div className="flex flex-col">
           <div className="text-sm font-bold text-zinc-100">{data.label || 'Visualize Data'}</div>
@@ -93,7 +94,7 @@ export function VisualizeNode({ id, data, selected }: any) {
           className="ml-2 p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-md transition-colors"
           title="Generate Plot"
         >
-          <Play size={14} />
+          <Icon name="play_arrow" size={14} />
         </button>
       </div>
       
@@ -119,14 +120,14 @@ export function VisualizeNode({ id, data, selected }: any) {
                   onClick={handleDownload}
                   className="flex items-center gap-1 px-3 py-1.5 bg-rose-500 text-white rounded hover:bg-rose-600 transition-colors text-sm"
                 >
-                  <Download size={14} /> Download
+                  <Icon name="download" size={14} /> Download
                 </button>
               )}
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-colors"
               >
-                <X size={20} />
+                <Icon name="close" size={20} />
               </button>
             </div>
           </div>

@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, Square, Upload, Play, Loader2, AlertCircle, FileAudio, CheckCircle2, Download, Trash2, Wand2, Save, RefreshCw, Sparkles, Mic2, Palette } from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
 import { DirectUploadBox, directUploadFile } from '@/components/ui/DirectUploadBox';
+import { Icon } from "@/lib/utils";
 
 type Mode = "clone" | "design";
 type Status = "idle" | "recording" | "recorded" | "generating" | "success" | "error";
@@ -149,12 +150,12 @@ export default function VoiceClonePage() {
                     <button onClick={() => setMode("clone")}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "clone" ? "bg-secondary text-white shadow" : "text-zinc-400 hover:text-zinc-200"}`}
                     >
-                        <Mic2 size={16} /> Voice Clone
+                        <Icon name="mic" size={16} /> Voice Clone
                     </button>
                     <button onClick={() => setMode("design")}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "design" ? "bg-primary text-white shadow" : "text-zinc-400 hover:text-zinc-200"}`}
                     >
-                        <Palette size={16} /> Voice Design
+                        <Icon name="palette" size={16} /> Voice Design
                     </button>
                 </div>
 
@@ -200,7 +201,7 @@ export default function VoiceClonePage() {
                                                             <div className="text-xs text-zinc-500 mt-1 line-clamp-1">{v.ref_text}</div>
                                                         </div>
                                                         <button onClick={(e) => handleDeleteVoice(v.id, e)} className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                                                            <Trash2 size={16} />
+                                                            <Icon name="delete" size={16} />
                                                         </button>
                                                     </div>
                                                 ))}
@@ -227,7 +228,7 @@ export default function VoiceClonePage() {
 
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-                                                <Save size={14} /> Save Voice As <span className="text-zinc-600">(Optional)</span>
+                                                <Icon name="save" size={14} /> Save Voice As <span className="text-zinc-600">(Optional)</span>
                                             </label>
                                             <input 
                                                 type="text"
@@ -302,9 +303,9 @@ export default function VoiceClonePage() {
                                     disabled={!canGenerate}
                                 >
                                     {status === "generating" ? (
-                                        <><Loader2 className="animate-spin" size={20} /> Generating Audio...</>
+                                        <><Icon name="progress_activity" className="animate-spin" size={20} /> Generating Audio...</>
                                     ) : (
-                                        <><Sparkles size={20} /> Generate Speech</>
+                                        <><Icon name="auto_awesome" size={20} /> Generate Speech</>
                                     )}
                                 </Button>
                             </div>
@@ -315,7 +316,7 @@ export default function VoiceClonePage() {
                 {/* RESULT SECTION */}
                 {status === "error" && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-5 rounded-2xl flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in mt-2">
-                        <AlertCircle size={24} className="shrink-0" />
+                        <Icon name="error" size={24} className="shrink-0" />
                         <div className="font-medium">{errorMsg}</div>
                     </div>
                 )}
@@ -325,7 +326,7 @@ export default function VoiceClonePage() {
                         <div className={`absolute -inset-1 bg-gradient-to-r ${mode === 'clone' ? 'from-secondary/20' : 'from-primary/20'} to-transparent opacity-50 blur-2xl`}></div>
                         
                         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center shrink-0 z-10 shadow-lg">
-                            <CheckCircle2 size={32} className={mode === 'clone' ? 'text-secondary' : 'text-primary'} />
+                            <Icon name="check_circle" size={32} className={mode === 'clone' ? 'text-secondary' : 'text-primary'} />
                         </div>
                         
                         <div className="flex-1 w-full z-10 space-y-4">
@@ -335,7 +336,7 @@ export default function VoiceClonePage() {
                         
                         <a href={generatedAudio} download="generated_voice.wav" className="z-10 w-full md:w-auto">
                             <Button variant="secondary" className="w-full md:w-auto flex items-center justify-center gap-2 py-3 px-6 h-12 bg-zinc-900/50 hover:bg-white/10 border-white/10">
-                                <Download size={18} /> Download
+                                <Icon name="download" size={18} /> Download
                             </Button>
                         </a>
                     </div>

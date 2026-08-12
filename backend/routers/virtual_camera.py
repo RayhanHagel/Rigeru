@@ -16,6 +16,28 @@ async def get_status():
     """
     is_available = check_obs_virtualcam()
     return {"available": is_available}
+from pydantic import BaseModel
+
+class VirtualCameraToggleRequest(BaseModel):
+    active: bool
+    width: int = 1280
+    height: int = 720
+    fps: int = 30
+
+@router.post("/toggle-backend", dependencies=[Depends(get_current_user)])
+async def toggle_backend_virtual_camera(request: VirtualCameraToggleRequest):
+    """
+    Start or stop the backend virtual camera.
+    """
+    if request.active:
+        success = start_virtual_camera(width=request.width, height=request.height, fps=request.fps)
+        if success:
+            return {"status": "started"}
+        else:
+            return {"status": "error", "message": "Failed to start virtual camera"}
+    else:
+        stop_virtual_camera()
+        return {"status": "stopped"}
 
 @router.websocket("/stream")
 async def virtual_camera_stream(websocket: WebSocket):

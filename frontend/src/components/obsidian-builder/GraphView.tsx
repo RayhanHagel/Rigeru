@@ -1,8 +1,9 @@
 "use client";
 import React, { useRef, useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+
 import * as d3 from 'd3-force';
+import { Icon } from "@/lib/utils";
 
 export default function GraphView({ graphData, settings = {}, onNodeClick }: { graphData: any, settings?: any, onNodeClick?: (id: string) => void }) {
   const fgRef = useRef<any>(null);
@@ -73,13 +74,13 @@ export default function GraphView({ graphData, settings = {}, onNodeClick }: { g
       {/* Zoom Controls */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 bg-black/50 p-2 rounded-lg border border-white/10 backdrop-blur-sm">
         <button onClick={handleZoomIn} className="p-1.5 text-zinc-300 hover:text-white hover:bg-white/10 rounded transition-colors" title="Zoom In">
-          <ZoomIn size={18} />
+          <Icon name="zoom_in" size={18} />
         </button>
         <button onClick={handleFit} className="p-1.5 text-zinc-300 hover:text-white hover:bg-white/10 rounded transition-colors" title="Fit to Screen">
-          <Maximize size={18} />
+          <Icon name="fullscreen" size={18} />
         </button>
         <button onClick={handleZoomOut} className="p-1.5 text-zinc-300 hover:text-white hover:bg-white/10 rounded transition-colors" title="Zoom Out">
-          <ZoomOut size={18} />
+          <Icon name="zoom_out" size={18} />
         </button>
       </div>
 

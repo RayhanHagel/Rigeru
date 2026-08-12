@@ -2,7 +2,7 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
-import { BarChart as BarChartIcon, PieChart as PieChartIcon, LineChart as LineChartIcon, Settings2, Download, Table2 } from "lucide-react";
+
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { Button } from "@/components/ui/Button";
 import { 
@@ -12,6 +12,7 @@ import {
   ScatterChart, Scatter,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from "recharts";
+import { Icon } from "@/lib/utils";
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
 
@@ -148,10 +149,10 @@ export default function ChartMakerPage() {
       <Header title="Chart Maker" subtitle="Upload a CSV or Excel file to instantly generate beautiful, interactive charts." />
 
       {!data.length ? (
-        <div className="max-w-2xl mx-auto mt-12">
+        <div className="w-full mx-auto mt-12">
           <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 shadow-xl text-center">
             <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-              <Table2 size={32} />
+              <Icon name="table" size={32} />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Upload Data</h3>
             <p className="text-zinc-400 mb-8 max-w-md mx-auto">Upload a .csv or .xlsx file to begin configuring your chart.</p>
@@ -181,10 +182,10 @@ export default function ChartMakerPage() {
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-zinc-400 mb-2">Chart Type</label>
                   <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
-                    <button onClick={() => setChartType("bar")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "bar" ? "bg-primary/20 border-primary/50 text-purple-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><BarChartIcon size={16}/> Bar</button>
-                    <button onClick={() => setChartType("line")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "line" ? "bg-secondary/20 border-secondary/50 text-blue-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><LineChartIcon size={16}/> Line</button>
-                    <button onClick={() => setChartType("pie")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "pie" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><PieChartIcon size={16}/> Pie</button>
-                    <button onClick={() => setChartType("scatter")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "scatter" ? "bg-amber-500/20 border-amber-500/50 text-amber-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Settings2 size={16}/> Scatter</button>
+                    <button onClick={() => setChartType("bar")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "bar" ? "bg-primary/20 border-primary/50 text-purple-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="bar_chart" size={16}/> Bar</button>
+                    <button onClick={() => setChartType("line")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "line" ? "bg-secondary/20 border-secondary/50 text-blue-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="show_chart" size={16}/> Line</button>
+                    <button onClick={() => setChartType("pie")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "pie" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="pie_chart" size={16}/> Pie</button>
+                    <button onClick={() => setChartType("scatter")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "scatter" ? "bg-amber-500/20 border-amber-500/50 text-amber-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="tune" size={16}/> Scatter</button>
                   </div>
                 </div>
 

@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, User, ArrowRight } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -53,7 +54,7 @@ export default function LoginPage() {
         
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-[var(--theme-heading)] rounded-2xl flex items-center justify-center shadow-lg shadow-[0_0_15px_var(--theme-glow1)] mb-6">
-            <Lock size={28} className="text-white" />
+            <Icon name="lock" size={28} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-[var(--theme-heading)]">Welcome Back</h1>
           <p className="text-zinc-500 text-sm text-center">Enter your credentials to access the workspace.</p>
@@ -63,7 +64,7 @@ export default function LoginPage() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Username</label>
             <div className="relative group">
-              <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" />
+              <Icon name="person" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 value={username}
@@ -78,7 +79,7 @@ export default function LoginPage() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider ml-1">Password</label>
             <div className="relative group">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" />
+              <Icon name="lock" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" />
               <input
                 type="password"
                 value={password}
@@ -102,7 +103,7 @@ export default function LoginPage() {
             className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-medium py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 disabled:opacity-50 disabled:cursor-not-allowed group mt-2"
           >
             {loading ? "Authenticating" : "Sign In"}
-            {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+            {!loading && <Icon name="arrow_forward" size={18} className="group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
       </div>

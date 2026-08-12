@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import { useState, useEffect } from "react";
-import { Music, Download, CheckCircle2, AlertCircle, FolderSearch } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { FileExplorerModal } from "@/components/ui/FileExplorerModal";
+import { Icon } from "@/lib/utils";
 
 export default function SpotifyDownloader() {
   const [url, setUrl] = useState("");
@@ -123,7 +124,7 @@ export default function SpotifyDownloader() {
                   className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
-                  <FolderSearch size={18} />
+                  <Icon name="folder_open" size={18} />
                 </button>
               </div>
             </div>
@@ -132,7 +133,7 @@ export default function SpotifyDownloader() {
           <div className="pt-4">
             <Button 
               variant="primary" 
-              icon={<Download size={20} />} 
+              icon={<Icon name="download" size={20} />} 
               fullWidth 
               onClick={startDownload}
               isLoading={taskId !== null}
@@ -151,8 +152,8 @@ export default function SpotifyDownloader() {
           status.status === 'failed' ? 'bg-red-500/10 border-red-500/30' :
           'bg-secondary/10 border-secondary/30'
         }`}>
-          {status.status === 'completed' ? <CheckCircle2 className="text-green-500" /> :
-           status.status === 'failed' ? <AlertCircle className="text-red-500" /> :
+          {status.status === 'completed' ? <Icon name="check_circle" className="text-green-500" /> :
+           status.status === 'failed' ? <Icon name="error" className="text-red-500" /> :
            <div className="w-6 h-6 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
           }
           <div>

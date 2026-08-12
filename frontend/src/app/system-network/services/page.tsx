@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Settings, RefreshCw, Server, Zap, ShieldAlert } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type ServiceInfo = {
   "Service Name": string;
@@ -153,7 +154,7 @@ export default function ServicesPage() {
             <p className="text-zinc-400 text-sm font-medium">View background Windows services and applications that start with your PC.</p>
           </div>
         </div>
-        <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />}>
+        <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
           Refresh Lists
         </Button>
       

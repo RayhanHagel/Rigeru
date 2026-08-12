@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Radio, Power, Trash2, Monitor, Smartphone, Server } from 'lucide-react';
+
 import toast from 'react-hot-toast';
+import { Icon } from "@/lib/utils";
 
 export default function LanRadarPage() {
   const [isRunning, setIsRunning] = useState(false);
@@ -74,10 +75,10 @@ export default function LanRadarPage() {
 
   const getDeviceIcon = (hostname: string) => {
     const hn = hostname.toLowerCase();
-    if (hn.includes('phone') || hn.includes('iphone') || hn.includes('android')) return <Smartphone className="text-secondary" size={24} />;
-    if (hn.includes('tv') || hn.includes('chromecast') || hn.includes('roku')) return <Monitor className="text-primary" size={24} />;
-    if (hn.includes('server') || hn.includes('nas')) return <Server className="text-green-400" size={24} />;
-    return <Monitor className="text-zinc-400" size={24} />;
+    if (hn.includes('phone') || hn.includes('iphone') || hn.includes('android')) return <Icon name="smartphone" className="text-secondary" size={24} />;
+    if (hn.includes('tv') || hn.includes('chromecast') || hn.includes('roku')) return <Icon name="desktop_windows" className="text-primary" size={24} />;
+    if (hn.includes('server') || hn.includes('nas')) return <Icon name="dns" className="text-green-400" size={24} />;
+    return <Icon name="desktop_windows" className="text-zinc-400" size={24} />;
   };
 
   return (
@@ -104,7 +105,7 @@ export default function LanRadarPage() {
               onClick={startTracking}
               disabled={isRunning}
               className={isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Scan
             </Button>
@@ -113,7 +114,7 @@ export default function LanRadarPage() {
               onClick={stopTracking}
               disabled={!isRunning}
               className={!isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Stop
             </Button>
@@ -140,14 +141,14 @@ export default function LanRadarPage() {
             <span className="text-xs font-mono text-zinc-500 bg-black/40 px-2 py-1 rounded-md">{devices.length} devices found</span>
           </div>
           <Button variant="ghost" className="!p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={clearDevices} title="Clear Devices">
-            <Trash2 size={16} />
+            <Icon name="delete" size={16} />
           </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 relative z-10 custom-scrollbar">
           {devices.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-zinc-500">
-              <Radio size={48} className="mb-4 opacity-20" />
+              <Icon name="radio" size={48} className="mb-4 opacity-20" />
               <p>No devices detected. Click Scan to search your local network.</p>
             </div>
           ) : (

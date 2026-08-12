@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { KeyRound, Search, Download, Settings, FileText } from "lucide-react";
+
 import { Header } from "@/components/ui/Header";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 const LANGUAGES: Record<string, string> = {
   "English": "en",
@@ -113,7 +114,7 @@ export default function SubtitleFetcherPage() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="Local Subtitle Fetcher" subtitle="Find the exact subtitle for your video using digital fingerprints." />
 
-      <Container title="OpenSubtitles Configuration" icon={<Settings className="text-secondary" size={20} />}>
+      <Container title="OpenSubtitles Configuration" icon={<Icon name="settings" className="text-secondary" size={20} />}>
         <div className="space-y-4">
           <p className="text-sm text-zinc-300">
             You need a free REST API Key from <a href="https://opensubtitles.com/" target="_blank" rel="noreferrer" className="text-secondary hover:underline">OpenSubtitles.com</a>.
@@ -121,7 +122,7 @@ export default function SubtitleFetcherPage() {
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <KeyRound size={16} className="text-zinc-500" />
+                <Icon name="key" size={16} className="text-zinc-500" />
               </div>
               <input 
                 type="password"
@@ -138,7 +139,7 @@ export default function SubtitleFetcherPage() {
         </div>
       </Container>
 
-      <Container title="Search Subtitles" icon={<Search className="text-secondary" size={20} />}>
+      <Container title="Search Subtitles" icon={<Icon name="search" className="text-secondary" size={20} />}>
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-3 space-y-1.5">
@@ -217,7 +218,7 @@ export default function SubtitleFetcherPage() {
                       onClick={() => handleDownload(file.file_id)}
                       disabled={downloadingId === file.file_id}
                     >
-                      <Download size={16} className="mr-2" />
+                      <Icon name="download" size={16} className="mr-2" />
                       {downloadingId === file.file_id ? "Fetching" : "Fetch"}
                     </Button>
                   </div>

@@ -2,11 +2,12 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Link2, Network, Search, Loader2, FileText, CheckCircle2, Bot, Folder, Play, Archive, Plus, Trash2, Settings2, X } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import dynamic from 'next/dynamic';
 
 import MarkdownViewer from '@/components/obsidian-builder/MarkdownViewer';
+import { Icon } from "@/lib/utils";
 
 const GraphView = dynamic(() => import('@/components/obsidian-builder/GraphView'), { ssr: false });
 
@@ -309,7 +310,7 @@ export default function ObsidianBuilderPage() {
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Vault Folder Name</label>
                 <div className="relative">
-                  <Folder className="absolute left-3 top-2.5 text-zinc-500" size={16} />
+                  <Icon name="folder" className="absolute left-3 top-2.5 text-zinc-500" size={16} />
                   <input 
                     type="text" 
                     value={vaultName}
@@ -339,14 +340,14 @@ export default function ObsidianBuilderPage() {
                           className="text-emerald-400 hover:text-emerald-300 ml-1 p-0.5 rounded hover:bg-white/10"
                           title="Continue Expanding"
                         >
-                          <Play size={12} />
+                          <Icon name="play_arrow" size={12} />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDeleteTopic(vaultName, t); }}
                           className="text-red-400 hover:text-red-300 p-0.5 rounded hover:bg-white/10"
                           title="Remove Topic"
                         >
-                          <X size={12} />
+                          <Icon name="close" size={12} />
                         </button>
                       </div>
                     ))}
@@ -383,7 +384,7 @@ export default function ObsidianBuilderPage() {
             <div className="mt-6 flex gap-3">
               {!isBuilding ? (
                 <Button onClick={handleStart} className="flex-1 flex items-center justify-center bg-primary hover:bg-purple-700 text-white border-0 shadow-[0_0_15px_rgba(147,51,234,0.3)]">
-                  <Play size={18} className="mr-2" /> Start AI Agent
+                  <Icon name="play_arrow" size={18} className="mr-2" /> Start AI Agent
                 </Button>
               ) : (
                 <Button onClick={handleStop} variant="danger" className="flex-1 flex items-center justify-center">
@@ -398,18 +399,18 @@ export default function ObsidianBuilderPage() {
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
               {statusLogs.length === 0 ? (
                 <div className="flex items-start gap-3">
-                  <Search className="text-zinc-500 mt-0.5 shrink-0" size={18} />
+                  <Icon name="search" className="text-zinc-500 mt-0.5 shrink-0" size={18} />
                   <p className="text-zinc-200 text-sm leading-relaxed">Ready to start building.</p>
                 </div>
               ) : (
                 statusLogs.map((log, idx) => (
                   <div key={idx} className="flex items-start gap-3">
                     {idx === statusLogs.length - 1 && isBuilding ? (
-                      <Loader2 className="animate-spin text-primary mt-0.5 shrink-0" size={14} />
+                      <Icon name="progress_activity" className="animate-spin text-primary mt-0.5 shrink-0" size={14} />
                     ) : log.includes("Error") ? (
-                      <X className="text-red-400 mt-0.5 shrink-0" size={14} />
+                      <Icon name="close" className="text-red-400 mt-0.5 shrink-0" size={14} />
                     ) : log.toLowerCase().includes("complete") || log.toLowerCase().includes("done") ? (
-                      <CheckCircle2 className="text-emerald-400 mt-0.5 shrink-0" size={14} />
+                      <Icon name="check_circle" className="text-emerald-400 mt-0.5 shrink-0" size={14} />
                     ) : (
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
                     )}
@@ -446,7 +447,7 @@ export default function ObsidianBuilderPage() {
             <div className="space-y-4 flex-1 flex flex-col">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 text-zinc-500" size={16} />
+                  <Icon name="search" className="absolute left-3 top-2.5 text-zinc-500" size={16} />
                   <input 
                     type="text" 
                     placeholder="Search vaults..." 
@@ -487,14 +488,14 @@ export default function ObsidianBuilderPage() {
                           title="Add new Root Topic"
                           className="p-1.5 hover:bg-white/10 rounded text-zinc-400 hover:text-emerald-400"
                         >
-                          <Plus size={16} />
+                          <Icon name="add" size={16} />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDeleteVault(v.name); }}
                           title="Delete Vault"
                           className="p-1.5 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400"
                         >
-                          <Trash2 size={16} />
+                          <Icon name="delete" size={16} />
                         </button>
                       </div>
                     </div>
@@ -515,7 +516,7 @@ export default function ObsidianBuilderPage() {
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center gap-2 px-3 py-1.5 bg-black/40 hover:bg-black/60 border border-white/10 rounded-lg text-sm text-zinc-300 transition-colors"
           >
-            <Settings2 size={16} /> Customize Graph
+            <Icon name="tune" size={16} /> Customize Graph
           </button>
         </div>
         
@@ -524,7 +525,7 @@ export default function ObsidianBuilderPage() {
           <div className="absolute top-16 right-6 z-20 w-80 bg-black/90 border border-white/10 rounded-xl p-5 shadow-2xl backdrop-blur-md">
             <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
               <h4 className="font-semibold text-zinc-200 flex items-center gap-2">Graph Physics & Style</h4>
-              <button onClick={() => setShowSettings(false)} className="text-zinc-500 hover:text-white"><X size={16} /></button>
+              <button onClick={() => setShowSettings(false)} className="text-zinc-500 hover:text-white"><Icon name="close" size={16} /></button>
             </div>
             
             <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
@@ -580,7 +581,7 @@ export default function ObsidianBuilderPage() {
               <GraphView graphData={filteredGraphData} settings={graphSettings} onNodeClick={handleNodeClick} />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 space-y-3">
-                <Network size={48} className="opacity-20" />
+                <Icon name="hub" size={48} className="opacity-20" />
                 <p className="text-sm">The knowledge graph will appear here.</p>
               </div>
             )}

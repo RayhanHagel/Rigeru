@@ -3,21 +3,22 @@
 import React, { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Settings, MapPin, Eye, FileText, Zap, Activity, Shield, Copy, X, TerminalSquare, ShieldAlert, Globe, Mic, Moon, Keyboard } from 'lucide-react';
+
 import toast from 'react-hot-toast';
 import { PopupModal } from '@/components/ui/PopupModal';
+import { Icon } from "@/lib/utils";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  "MapPin": <MapPin size={24} />,
-  "Eye": <Eye size={24} />,
-  "FileText": <FileText size={24} />,
-  "Zap": <Zap size={24} />,
-  "Activity": <Activity size={24} />,
-  "Shield": <Shield size={24} />,
-  "Globe": <Globe size={24} />,
-  "Mic": <Mic size={24} />,
-  "Moon": <Moon size={24} />,
-  "Keyboard": <Keyboard size={24} />
+  "MapPin": <Icon name="location_on" size={24} />,
+  "Eye": <Icon name="visibility" size={24} />,
+  "FileText": <Icon name="description" size={24} />,
+  "Zap": <Icon name="bolt" size={24} />,
+  "Activity": <Icon name="monitoring" size={24} />,
+  "Shield": <Icon name="shield" size={24} />,
+  "Globe": <Icon name="language" size={24} />,
+  "Mic": <Icon name="mic" size={24} />,
+  "Moon": <Icon name="dark_mode" size={24} />,
+  "Keyboard": <Icon name="keyboard" size={24} />
 };
 
 export default function WindowsTweaksPage() {
@@ -66,7 +67,7 @@ export default function WindowsTweaksPage() {
             <p className="text-zinc-400 text-sm font-medium">View your system's current hidden settings and generate PowerShell scripts to toggle them effortlessly.</p>
           </div>
         </div>
-        <Button variant="secondary" onClick={fetchTweaks} icon={<Settings size={16} />}>Refresh Status</Button>
+        <Button variant="secondary" onClick={fetchTweaks} icon={<Icon name="settings" size={16} />}>Refresh Status</Button>
       </div>
 
       {loading ? (
@@ -81,7 +82,7 @@ export default function WindowsTweaksPage() {
                   <div key={t.id} className="bg-zinc-950/50 border border-white/10 rounded-xl p-5 hover:bg-white/5 transition-colors cursor-pointer group flex flex-col h-full shadow-lg" onClick={() => setSelectedTweak(t)}>
                     <div className="flex justify-between items-start mb-3">
                       <div className="p-3 bg-black/40 rounded-lg border border-white/5 text-secondary group-hover:scale-110 transition-transform shadow-md">
-                        {ICON_MAP[t.icon] || <Settings size={24} />}
+                        {ICON_MAP[t.icon] || <Icon name="settings" size={24} />}
                       </div>
                       {getStatusBadge(t.status)}
                     </div>
@@ -89,7 +90,7 @@ export default function WindowsTweaksPage() {
                     <p className="text-sm text-zinc-400 flex-1 leading-relaxed">{t.description}</p>
                     <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
                       <span className="text-xs text-secondary/70 font-medium group-hover:text-secondary transition-colors">Click to configure</span>
-                      <TerminalSquare size={16} className="text-zinc-600 group-hover:text-secondary transition-colors" />
+                      <Icon name="terminal" size={16} className="text-zinc-600 group-hover:text-secondary transition-colors" />
                     </div>
                   </div>
                 ))}
@@ -108,7 +109,7 @@ export default function WindowsTweaksPage() {
             </div>
             
             <div className="flex items-start gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-200/90 text-sm">
-              <ShieldAlert size={20} className="shrink-0 text-orange-400" />
+              <Icon name="gpp_maybe" size={20} className="shrink-0 text-orange-400" />
               <p>
                 To apply these changes, you must run the PowerShell scripts below with Administrator privileges. 
                 <br/><br/>
@@ -119,7 +120,7 @@ export default function WindowsTweaksPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-green-400">Enable Script</h4>
-                <Button variant="secondary" onClick={() => copyToClipboard(selectedTweak.enable_script)} icon={<Copy size={14} />} className="!py-1.5 !px-3 !text-xs">
+                <Button variant="secondary" onClick={() => copyToClipboard(selectedTweak.enable_script)} icon={<Icon name="content_copy" size={14} />} className="!py-1.5 !px-3 !text-xs">
                   Copy
                 </Button>
               </div>
@@ -133,7 +134,7 @@ export default function WindowsTweaksPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-red-400">Disable Script</h4>
-                <Button variant="secondary" onClick={() => copyToClipboard(selectedTweak.disable_script)} icon={<Copy size={14} />} className="!py-1.5 !px-3 !text-xs">
+                <Button variant="secondary" onClick={() => copyToClipboard(selectedTweak.disable_script)} icon={<Icon name="content_copy" size={14} />} className="!py-1.5 !px-3 !text-xs">
                   Copy
                 </Button>
               </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Activity, ShieldCheck, Search, Filter } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 
 type PortInfo = {
   port: number;
@@ -69,7 +70,7 @@ export default function PortTestPage() {
           </h3>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 bg-zinc-950 border border-white/10 rounded-lg p-2 focus-within:border-primary/50 transition-colors">
-            <Search size={18} className="text-zinc-500 ml-2" />
+            <Icon name="search" size={18} className="text-zinc-500 ml-2" />
             <input
               type="text"
               placeholder="Search by port number or application name..."

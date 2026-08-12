@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, AlertCircle, File, HardDrive, RefreshCw, Play, Folder } from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
 import { FileExplorerModal } from '@/components/ui/FileExplorerModal';
+import { Icon } from "@/lib/utils";
 
 export default function EverythingSearchPage() {
     const [query, setQuery] = useState("");
@@ -107,7 +108,7 @@ export default function EverythingSearchPage() {
             variant="secondary" 
             onClick={handleStartService} 
             disabled={startingService}
-            icon={startingService ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+            icon={startingService ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="play_arrow" size={16} />}
           >
             Start Service
           </Button>
@@ -115,17 +116,17 @@ export default function EverythingSearchPage() {
 
         {status === "loading" && (
             <div className="flex flex-col items-center justify-center p-12 bg-zinc-900/50 rounded-2xl border border-white/5">
-                <Loader2 className="animate-spin text-secondary mb-4" size={32} />
+                <Icon name="progress_activity" className="animate-spin text-secondary mb-4" size={32} />
                 <p className="text-zinc-300">Checking Everything CLI installation</p>
             </div>
         )}
 
         {status === "error" && (
             <div className="flex flex-col items-center justify-center p-12 bg-red-500/10 rounded-2xl border border-red-500/20">
-                <AlertCircle className="text-red-400 mb-4" size={32} />
+                <Icon name="error" className="text-red-400 mb-4" size={32} />
                 <p className="text-red-300 font-medium mb-2">Failed to prepare Everything CLI</p>
                 <p className="text-red-400/70 text-sm mb-6 max-w-lg text-center">{errorMsg}</p>
-                <Button onClick={checkStatus} variant="secondary" icon={<RefreshCw size={16} />}>Retry</Button>
+                <Button onClick={checkStatus} variant="secondary" icon={<Icon name="refresh" size={16} />}>Retry</Button>
             </div>
         )}
 
@@ -161,7 +162,7 @@ export default function EverythingSearchPage() {
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-                                    <Folder size={16} />
+                                    <Icon name="folder" size={16} />
                                 </div>
                                 <input
                                     type="text"
@@ -179,7 +180,7 @@ export default function EverythingSearchPage() {
                     
                     <div className="pt-2">
                         <Button type="submit" disabled={(!query.trim() && !extension.trim() && !searchPath.trim()) || searching} className="w-full">
-                            {searching ? <Loader2 size={18} className="animate-spin mx-auto" /> : "Search Everything"}
+                            {searching ? <Icon name="progress_activity" size={18} className="animate-spin mx-auto" /> : "Search Everything"}
                         </Button>
                     </div>
                 </form>
@@ -198,7 +199,7 @@ export default function EverythingSearchPage() {
                                         <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                                             <td className="py-3 px-6 flex items-center gap-3">
                                                 <div className="text-zinc-600 group-hover:text-secondary transition-colors">
-                                                    <File size={16} />
+                                                    <Icon name="insert_drive_file" size={16} />
                                                 </div>
                                                 <span className="font-mono text-sm text-zinc-300 break-all select-all">{res}</span>
                                             </td>
@@ -211,27 +212,27 @@ export default function EverythingSearchPage() {
                         <div className="flex flex-col items-center justify-center h-[400px] text-zinc-500">
                             {searching ? (
                                 <>
-                                    <Loader2 size={32} className="animate-spin text-zinc-600 mb-4" />
+                                    <Icon name="progress_activity" size={32} className="animate-spin text-zinc-600 mb-4" />
                                     <p>Searching everywhere</p>
                                 </>
                             ) : searchError ? (
                                 <>
-                                    <AlertCircle size={48} className="text-red-500/50 mb-4" />
+                                    <Icon name="error" size={48} className="text-red-500/50 mb-4" />
                                     <p className="text-lg text-red-400">Search Error</p>
                                     <p className="text-sm max-w-lg text-center">{searchError}</p>
                                     {searchError.includes("IPC") && (
-                                        <Button onClick={handleStartService} variant="secondary" className="mt-4" icon={<Play size={16} />}>Start Everything Service</Button>
+                                        <Button onClick={handleStartService} variant="secondary" className="mt-4" icon={<Icon name="play_arrow" size={16} />}>Start Everything Service</Button>
                                     )}
                                 </>
                             ) : hasSearched ? (
                                 <>
-                                    <Search size={48} className="text-zinc-800 mb-4 opacity-50" />
+                                    <Icon name="search" size={48} className="text-zinc-800 mb-4 opacity-50" />
                                     <p className="text-lg">No results found</p>
                                     <p className="text-sm">Try a different search term or extension</p>
                                 </>
                             ) : (
                                 <>
-                                    <HardDrive size={48} className="text-zinc-800 mb-4 opacity-50" />
+                                    <Icon name="hard_drive" size={48} className="text-zinc-800 mb-4 opacity-50" />
                                     <p className="text-lg">Ready to search</p>
                                     <p className="text-sm">Enter a query above to start searching</p>
                                 </>

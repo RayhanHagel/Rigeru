@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Sigma, Upload, Copy, Check, FileImage, AlertTriangle, RefreshCcw, Code } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { DirectUploadBox, directUploadFile } from "@/components/ui/DirectUploadBox";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Icon } from "@/lib/utils";
 
 export default function MathLatexPage() {
   const [fileInfo, setFileInfo] = useState<{ hash_name: string; original_name: string; file_type: string } | null>(null);
@@ -212,7 +213,7 @@ export default function MathLatexPage() {
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
-                          <RefreshCcw className="animate-spin" size={16} /> 
+                          <Icon name="refresh" className="animate-spin" size={16} /> 
                           Converting...
                         </span>
                       ) : (
@@ -225,7 +226,7 @@ export default function MathLatexPage() {
             
             {errorMsg && (
               <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3 mt-2">
-                <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={16} />
+                <Icon name="warning" className="text-red-400 shrink-0 mt-0.5" size={16} />
                 <p className="text-sm text-red-400">{errorMsg}</p>
               </div>
             )}
@@ -277,7 +278,7 @@ export default function MathLatexPage() {
                         className="absolute top-4 right-4 p-2 bg-zinc-800 text-zinc-400 hover:text-white rounded-md transition-colors"
                         title="Copy to clipboard"
                       >
-                          {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                          {copied ? <Icon name="check" size={16} className="text-green-500" /> : <Icon name="content_copy" size={16} />}
                       </button>
                   </div>
               </div>

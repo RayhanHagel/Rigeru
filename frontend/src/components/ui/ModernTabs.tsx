@@ -42,7 +42,7 @@ export function ModernTabs({ tabs, activeTab, setActiveTab, className = "" }: Mo
     <div className={className}>
       <div 
         ref={containerRef}
-        className="relative inline-flex max-w-full bg-zinc-900/80 p-1.5 rounded-xl border border-white/10 backdrop-blur-md shadow-2xl overflow-x-auto gap-1"
+        className="relative inline-flex max-w-full bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm overflow-x-auto gap-1"
       >
         <div 
            className="absolute top-1.5 bottom-1.5 rounded-lg bg-[var(--theme-heading)] shadow-[0_0_15px_var(--theme-glow1)] transition-all duration-300 ease-out z-0"
@@ -75,8 +75,8 @@ export function ModernTabs({ tabs, activeTab, setActiveTab, className = "" }: Mo
               className={`
                 relative z-10 px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center
                 ${activeTab === id 
-                  ? "text-zinc-950" 
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"}
+                  ? "text-[var(--theme-bg)]" 
+                  : "text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"}
               `}
             >
               {label}

@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/Button';
-import { Wifi, Power, MapPin, Search, X, Trash2 } from 'lucide-react';
+
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 import { PopupModal } from '@/components/ui/PopupModal';
+import { Icon } from "@/lib/utils";
 
 const MapComponent = dynamic(() => import('./Map'), { ssr: false });
 
@@ -181,7 +182,7 @@ export default function WifiMapperPage() {
           <Button 
             variant="secondary" 
             onClick={() => setShowLocationModal(true)}
-            icon={<MapPin size={16} />}
+            icon={<Icon name="location_on" size={16} />}
           >
             Set Location
           </Button>
@@ -191,7 +192,7 @@ export default function WifiMapperPage() {
               onClick={startTracking}
               disabled={isRunning}
               className={isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Start
             </Button>
@@ -200,7 +201,7 @@ export default function WifiMapperPage() {
               onClick={stopTracking}
               disabled={!isRunning}
               className={!isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Stop
             </Button>
@@ -213,7 +214,7 @@ export default function WifiMapperPage() {
         <div className="w-full h-[500px] relative rounded-xl border border-white/10 bg-zinc-950/50 shadow-2xl flex flex-col overflow-hidden shrink-0">
           {center[0] === 0 && center[1] === 0 && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm text-center p-6">
-              <MapPin className="text-zinc-500 mb-4" size={48} />
+              <Icon name="location_on" className="text-zinc-500 mb-4" size={48} />
               <h3 className="text-lg font-medium text-white mb-2">Location Unavailable</h3>
               <p className="text-zinc-400 text-sm max-w-md">
                 We haven't detected your location yet. Set a custom location to see the map.
@@ -229,13 +230,13 @@ export default function WifiMapperPage() {
             <h3 className="text-sm font-medium text-zinc-400">Detected Networks ({networks.length})</h3>
             <div className="flex gap-1">
               <Button variant="ghost" className="!p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={clearHistory} title="Clear History">
-                <Trash2 size={16} />
+                <Icon name="delete" size={16} />
               </Button>
             </div>
           </div>
           
           <div className="relative px-2 shrink-0">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <Icon name="search" className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
             <input 
               type="text" 
               placeholder="Search SSID or BSSID..." 
@@ -320,7 +321,7 @@ export default function WifiMapperPage() {
         <div className="flex flex-col gap-6 h-[70vh]">
           <div className="flex gap-4 shrink-0">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
               <input 
                 type="text" 
                 placeholder="Search for a place (e.g. Times Square, New York)..." 
@@ -334,7 +335,7 @@ export default function WifiMapperPage() {
               {searching ? "Searching..." : "Search"}
             </Button>
             <Button variant="secondary" onClick={useBrowserLocation} title="Use my current location">
-              <MapPin size={16} />
+              <Icon name="location_on" size={16} />
             </Button>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2">

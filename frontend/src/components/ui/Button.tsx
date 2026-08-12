@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Icon } from "@/lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "tertiary" | "danger" | "ghost";
@@ -63,7 +63,7 @@ export function Button({
         <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
       )}
       
-      {isLoading ? <Loader2 size={16} className="animate-spin" /> : icon}
+      {isLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : icon}
       <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">{children}</span>
     </button>
   );

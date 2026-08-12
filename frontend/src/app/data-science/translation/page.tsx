@@ -2,10 +2,11 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
-import { ArrowRightLeft, Languages, Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 
 import nllbLanguages from "@/data/nllb_languages.json";
+import { Icon } from "@/lib/utils";
 
 // The JSON maps Flores-200 code (e.g. "ace_Arab") -> Human Readable Name (e.g. "Acehnese (Arabic)")
 // Let's create an array of just the human readable names for the dropdown.
@@ -76,7 +77,7 @@ export default function TranslationPage() {
             className="p-2 bg-zinc-800 rounded-full hover:bg-zinc-700 transition-colors text-zinc-300"
             title="Swap Languages"
           >
-            <ArrowRightLeft size={16} />
+            <Icon name="swap_horiz" size={16} />
           </button>
 
           <select 
@@ -113,7 +114,7 @@ export default function TranslationPage() {
             <div className={`flex-1 bg-zinc-950/50 border border-white/5 rounded-xl p-4 text-white text-base overflow-y-auto ${isLoading ? 'opacity-50' : ''}`}>
               {isLoading ? (
                 <div className="w-full h-full flex items-center justify-center text-zinc-500">
-                  <Loader2 className="animate-spin" size={24} />
+                  <Icon name="progress_activity" className="animate-spin" size={24} />
                   <span className="ml-2 text-sm">Translating...</span>
                 </div>
               ) : translatedText ? (
