@@ -199,7 +199,7 @@ def render_image_boxes(rgb_img, obj_data, selected_ids: list):
 def process_video_object_detection(
     input_path: str, model, resolution: int, conf_thresh: float,
     output_method: str, progress_hook, encoder: str = "libx264",
-    selected_classes: list = None, ai_fps: float = 5.0
+    selected_classes: list = None, ai_fps: float = 5.0, use_extrapolation: bool = True
 ) -> tuple:
     """Processes a video frame-by-frame, tracking objects and exporting either an overlaid video or an .ass subtitle file."""
     import cv2
@@ -254,6 +254,9 @@ def process_video_object_detection(
     try:
         frame_idx = 0
         font = cv2.FONT_HERSHEY_DUPLEX
+        last_inference_idx = -9999
+        inference_interval_frames = fps / ai_fps if ai_fps > 0 else 0
+        active_tracks = {}
         
         while True:
             ret, frame = cap.read()
@@ -263,36 +266,54 @@ def process_video_object_detection(
             start_str = format_ass_time(frame_idx / fps)
             end_str = format_ass_time((frame_idx + 1) / fps)
 
-            # Use YOLOv8 built-in tracking for every frame! (Significantly faster and more stable than OpenCV trackers)
-            results = model.track(frame, persist=True, imgsz=resolution, conf=conf_thresh, tracker="bytetrack.yaml", verbose=False)
-            boxes = results[0].boxes
-            
-            tracker_info = {}
-            if len(boxes) > 0 and boxes.id is not None:
-                all_xyxy = boxes.xyxy.cpu().numpy().astype(int)
-                all_conf = boxes.conf.cpu().numpy()
-                all_cls = boxes.cls.cpu().numpy().astype(int)
-                all_ids = boxes.id.cpu().numpy().astype(int)
+            if frame_idx - last_inference_idx >= inference_interval_frames:
+                # Run YOLO tracking
+                results = model.track(frame, persist=True, imgsz=resolution, conf=conf_thresh, tracker="bytetrack.yaml", verbose=False)
+                boxes = results[0].boxes
                 
-                for xyxy, conf, cls_id, tid in zip(all_xyxy, all_conf, all_cls, all_ids):
-                    label_name = model.names[cls_id].lower()
-                    if selected_classes and label_name not in selected_classes:
-                        continue
-                        
-                    x1, y1, x2, y2 = map(int, xyxy)
-                    h_img, w_img = frame.shape[:2]
-                    x1 = max(0, min(x1, w_img - 2))
-                    y1 = max(0, min(y1, h_img - 2))
-                    x2 = max(x1 + 1, min(x2, w_img - 1))
-                    y2 = max(y1 + 1, min(y2, h_img - 1))
+                new_tracks = {}
+                if len(boxes) > 0 and boxes.id is not None:
+                    all_xyxy = boxes.xyxy.cpu().numpy().astype(float)
+                    all_conf = boxes.conf.cpu().numpy()
+                    all_cls = boxes.cls.cpu().numpy().astype(int)
+                    all_ids = boxes.id.cpu().numpy().astype(int)
                     
-                    tracker_info[tid] = {"cls_id": int(cls_id), "conf": float(conf), "box": (x1, y1, x2, y2)}
+                    for xyxy, conf, cls_id, tid in zip(all_xyxy, all_conf, all_cls, all_ids):
+                        label_name = model.names[cls_id].lower()
+                        if selected_classes and label_name not in selected_classes:
+                            continue
+                            
+                        box = list(xyxy)
+                        v = [0, 0, 0, 0]
+                        dt_frames = frame_idx - last_inference_idx
+                        if use_extrapolation and tid in active_tracks and dt_frames > 0:
+                            old_box = active_tracks[tid]["box"]
+                            v = [(box[i] - old_box[i]) / dt_frames for i in range(4)]
+                            
+                        new_tracks[tid] = {"cls_id": int(cls_id), "conf": float(conf), "box": box, "v": v}
+                        
+                active_tracks = new_tracks
+                last_inference_idx = frame_idx
+                frames_since_inference = 0
+            else:
+                frames_since_inference = frame_idx - last_inference_idx
 
             if not is_ass:
                 overlay = frame.copy()
 
-            for tid, info in tracker_info.items():
-                x1, y1, x2, y2 = info["box"]
+            for tid, info in active_tracks.items():
+                if use_extrapolation:
+                    e_box = [info["box"][i] + (info["v"][i] * frames_since_inference) for i in range(4)]
+                else:
+                    e_box = info["box"]
+                    
+                x1, y1, x2, y2 = [int(v) for v in e_box]
+                h_img, w_img = frame.shape[:2]
+                x1 = max(0, min(x1, w_img - 2))
+                y1 = max(0, min(y1, h_img - 2))
+                x2 = max(x1 + 1, min(x2, w_img - 1))
+                y2 = max(y1 + 1, min(y2, h_img - 1))
+                
                 cls_id = info["cls_id"]
                 conf = info["conf"]
                 label = model.names[cls_id]
@@ -315,8 +336,19 @@ def process_video_object_detection(
             if not is_ass:
                 cv2.addWeighted(overlay, 0.25, frame, 0.75, 0, frame)
 
-                for tid, info in tracker_info.items():
-                    x1, y1, x2, y2 = info["box"]
+                for tid, info in active_tracks.items():
+                    if use_extrapolation:
+                        e_box = [info["box"][i] + (info["v"][i] * frames_since_inference) for i in range(4)]
+                    else:
+                        e_box = info["box"]
+                        
+                    x1, y1, x2, y2 = [int(v) for v in e_box]
+                    h_img, w_img = frame.shape[:2]
+                    x1 = max(0, min(x1, w_img - 2))
+                    y1 = max(0, min(y1, h_img - 2))
+                    x2 = max(x1 + 1, min(x2, w_img - 1))
+                    y2 = max(y1 + 1, min(y2, h_img - 1))
+                    
                     cls_id = info["cls_id"]
                     conf = info["conf"]
                     label = model.names[cls_id]
@@ -378,7 +410,7 @@ def update_webcam_config(camera_index: int, ai_fps: float, selected_classes: str
 # ─────────────────────────────────────────────
 # HYBRID WEBCAM (NATIVE GPU OR CPU EXTRAPOLATION)
 # ─────────────────────────────────────────────
-def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False):
+def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thresh: float, target_height: int = 600, use_extrapolation: bool = False, stop_event=None):
     """Yields live MJPEG frames from a webcam with YOLO bounding boxes, supporting extrapolation for smooth tracking between inferences."""
     import cv2
     
@@ -421,6 +453,9 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
 
     try:
         while True:
+            if stop_event and stop_event.is_set():
+                break
+
             # Read dynamic config
             config = WEBCAM_CONFIG.get(camera_index, {"ai_fps": 30.0, "classes": None})
             current_fps = config["ai_fps"]
@@ -428,7 +463,7 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
             inference_interval = 1.0 / current_fps if current_fps > 0 else 0
 
             try:
-                frame = frame_queue.get(timeout=0.5)
+                frame = frame_queue.get(timeout=0.2)
             except queue.Empty:
                 continue
 
@@ -506,6 +541,10 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
                 text_color = (0, 0, 0) if brightness > 140 else (255, 255, 255)
                 
                 cv2.putText(res_plotted, text, (x1 + 5, label_y - 4), font, 0.5, text_color, 1, cv2.LINE_AA)
+                
+            from utilities.util_virtual_camera import _active_camera, send_frame_bgr
+            if _active_camera is not None:
+                send_frame_bgr(res_plotted)
 
             ret_enc, buffer = cv2.imencode('.jpg', res_plotted)
             if ret_enc:
@@ -513,9 +552,13 @@ def generate_webcam_frames(model, camera_index: int, resolution: int, conf_thres
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-    except Exception:
+    except Exception as e:
+        print(f"DEBUG generator: exception {repr(e)}")
         pass
     finally:
+        print("DEBUG generator: finally block starting")
         thread_stop_event.set()
         producer_thread.join(timeout=1.0)
+        print("DEBUG generator: releasing cap")
         cap.release()
+        print("DEBUG generator: cap released")

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Terminal, Download, RefreshCw, Layers } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type PathEntry = {
   type: string;
@@ -61,10 +62,10 @@ export default function EnvironmentVariablesPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />}>
+          <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
             Force Refresh
           </Button>
-          <Button variant="primary" onClick={handleExport} disabled={isLoading} icon={<Download size={16} />}>
+          <Button variant="primary" onClick={handleExport} disabled={isLoading} icon={<Icon name="download" size={16} />}>
             Export Backup
           </Button>
         </div>

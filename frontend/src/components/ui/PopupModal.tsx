@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
+import { Icon } from "@/lib/utils";
 
 interface PopupModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export function PopupModal({ isOpen, onClose, title, children }: PopupModalProps
         <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0 bg-white/5">
           <h3 className="text-lg font-medium text-white">{title}</h3>
           <Button variant="ghost" onClick={onClose} className="!p-2 hover:bg-white/10 rounded-xl transition-colors">
-            <X size={20} className="text-zinc-400" />
+            <Icon name="close" size={20} className="text-zinc-400" />
           </Button>
         </div>
         <div className="p-6 flex flex-col flex-1 overflow-hidden relative">

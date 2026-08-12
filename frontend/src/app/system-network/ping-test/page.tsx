@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Network, Activity, Settings, RefreshCw, Server, Terminal } from "lucide-react";
+
 import { Header } from "@/components/ui/Header";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type DnsSpeed = {
   ipv4: number;
@@ -124,7 +125,7 @@ export default function PingTestPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slide-up">
         <div className="space-y-6">
-          <Container title="Standard Ping Test" icon={<Terminal size={18} className="text-secondary" />}>
+          <Container title="Standard Ping Test" icon={<Icon name="terminal" size={18} className="text-secondary" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Target Host / IP</label>
@@ -169,7 +170,7 @@ export default function PingTestPage() {
                 </div>
               </div>
               <Button variant="primary" onClick={handlePing} disabled={isPinging || !target} className="w-full">
-                {isPinging ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Pinging</> : <><Activity size={16} className="mr-2" /> Start Ping</>}
+                {isPinging ? <><Icon name="refresh" size={16} className="mr-2 animate-spin" /> Pinging</> : <><Icon name="monitoring" size={16} className="mr-2" /> Start Ping</>}
               </Button>
 
               {pingLog && (
@@ -180,7 +181,7 @@ export default function PingTestPage() {
             </div>
           </Container>
 
-          <Container title="DNS Settings Override (Windows)" icon={<Settings size={18} className="text-emerald-400" />}>
+          <Container title="DNS Settings Override (Windows)" icon={<Icon name="settings" size={18} className="text-emerald-400" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Network Interface</label>
@@ -213,7 +214,7 @@ export default function PingTestPage() {
         </div>
 
         <div>
-          <Container title="DNS Latency Benchmark" icon={<Server size={18} className="text-primary" />}>
+          <Container title="DNS Latency Benchmark" icon={<Icon name="dns" size={18} className="text-primary" />}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Select DNS Providers</label>
@@ -239,7 +240,7 @@ export default function PingTestPage() {
               </div>
 
               <Button variant="secondary" onClick={handleCheckDns} disabled={isCheckingDns || selectedDnsPresets.length === 0} className="w-full">
-                {isCheckingDns ? <><RefreshCw size={16} className="mr-2 animate-spin" /> Benchmarking</> : "Run Benchmark"}
+                {isCheckingDns ? <><Icon name="refresh" size={16} className="mr-2 animate-spin" /> Benchmarking</> : "Run Benchmark"}
               </Button>
 
               {Object.keys(dnsSpeeds).length > 0 && (

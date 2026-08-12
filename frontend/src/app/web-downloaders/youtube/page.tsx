@@ -2,10 +2,11 @@
 import { Header } from "@/components/ui/Header";
 
 import { useState } from "react";
-import { MonitorPlay, Search, Download, Clock, Eye, User } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import { Select } from "@/components/ui/Select";
+import { Icon } from "@/lib/utils";
 
 interface SearchResult {
   title: string;
@@ -98,7 +99,7 @@ export default function YouTubeDownloader() {
             placeholder="Enter YouTube URL or search query..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            icon={<Search size={18} />}
+            icon={<Icon name="search" size={18} />}
           />
         </div>
         <Button variant="primary" type="submit" isLoading={loading} className="px-8">
@@ -155,8 +156,8 @@ function ResultCard({ vid, downloadState, onDownload }: {
             {vid.title}
           </a>
           <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-zinc-400">
-            <span className="flex items-center gap-1"><User size={14} /> {vid.uploader || "Unknown"}</span>
-            <span className="flex items-center gap-1"><Eye size={14} /> {vid.views?.toLocaleString() || 0} views</span>
+            <span className="flex items-center gap-1"><Icon name="person" size={14} /> {vid.uploader || "Unknown"}</span>
+            <span className="flex items-center gap-1"><Icon name="visibility" size={14} /> {vid.views?.toLocaleString() || 0} views</span>
           </div>
         </div>
 
@@ -198,7 +199,7 @@ function ResultCard({ vid, downloadState, onDownload }: {
                 onChange={(e) => setQuality(e.target.value)}
               />
             </div>
-            <Button variant="primary" icon={<Download size={16} />} onClick={() => onDownload(vid, format, quality)} className="px-6">
+            <Button variant="primary" icon={<Icon name="download" size={16} />} onClick={() => onDownload(vid, format, quality)} className="px-6">
               Download
             </Button>
           </div>

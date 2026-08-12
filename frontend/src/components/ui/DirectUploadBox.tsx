@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { UploadCloud, CheckCircle2, AlertCircle, X, Image as ImageIcon, Film, FileText, Music } from "lucide-react";
+import { Icon } from "@/lib/utils";
 
 interface DirectUploadBoxProps {
   accept?: string;
@@ -124,10 +124,10 @@ export function DirectUploadBox({
 
   const getFileIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return <ImageIcon size={24} />;
-    if (n.match(/\.(mp4|mov|avi|mkv|webm)$/i)) return <Film size={24} />;
-    if (n.match(/\.(mp3|wav|ogg|flac)$/i)) return <Music size={24} />;
-    return <FileText size={24} />;
+    if (n.match(/\.(jpg|jpeg|png|webp|gif)$/i)) return <Icon name="image" size={24} />;
+    if (n.match(/\.(mp4|mov|avi|mkv|webm)$/i)) return <Icon name="movie" size={24} />;
+    if (n.match(/\.(mp3|wav|ogg|flac)$/i)) return <Icon name="music_note" size={24} />;
+    return <Icon name="description" size={24} />;
   };
 
   const processFile = async (file: File) => {
@@ -187,9 +187,9 @@ export function DirectUploadBox({
             {getFileIcon(uploadedFileName)}
           </div>
           <div className="flex flex-col">
-            <span className="text-zinc-100 font-medium truncate max-w-[180px] sm:max-w-sm tracking-wide">{uploadedFileName}</span>
+            <span className="text-[var(--theme-heading)] font-medium truncate max-w-[180px] sm:max-w-sm tracking-wide">{uploadedFileName}</span>
             <span className="text-xs text-green-400/90 font-medium flex items-center gap-1 mt-0.5">
-              <CheckCircle2 size={12} /> Upload Complete
+              <Icon name="check_circle" size={12} /> Upload Complete
             </span>
           </div>
         </div>
@@ -199,7 +199,7 @@ export function DirectUploadBox({
             <input ref={fileInputRef} type="file" className="hidden" accept={accept} onChange={handleFileSelect} />
           </label>
           <button onClick={handleClear} className="text-[var(--theme-text)] hover:text-red-400 bg-[var(--theme-ui-bg)] hover:bg-red-500/15 px-3 py-2 rounded-xl transition-all shadow-sm border border-[var(--theme-ui-border)]">
-            <X size={16} />
+            <Icon name="close" size={16} />
           </button>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function DirectUploadBox({
         className={`group flex flex-col items-center justify-center w-full h-full min-h-[7rem] flex-1 border rounded-3xl cursor-pointer transition-all duration-500 relative overflow-hidden backdrop-blur-md
           ${isUploading ? 'border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-[0_0_30px_var(--theme-glow1)]' 
           : isDragging ? 'border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-[0_0_30px_var(--theme-glow2)] scale-[1.02]' 
-          : 'border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] bg-zinc-900/40 hover:bg-zinc-800/60 shadow-lg hover:shadow-[0_0_20px_var(--theme-glow1)]'} ${className}`}
+          : 'border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-lg hover:shadow-[0_0_20px_var(--theme-glow1)]'} ${className}`}
       >
         {isUploading ? (
           <div className="flex flex-col items-center justify-center z-10 scale-110 transition-transform duration-500 py-6">
@@ -224,26 +224,26 @@ export function DirectUploadBox({
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-center w-full px-4 py-6 z-10 transition-transform duration-300 group-hover:scale-[1.01] gap-4 sm:gap-6">
-            <div className={`p-3 sm:p-4 rounded-2xl shrink-0 transition-all duration-500 ${isDragging ? 'bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] shadow-[0_0_20px_var(--theme-glow1)]' : 'bg-zinc-800/50 text-zinc-400 group-hover:bg-[var(--theme-ui-bg)] group-hover:text-[var(--theme-heading)] group-hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}>
-              <UploadCloud size={28} className={`w-8 h-8 sm:w-9 sm:h-9 ${isDragging ? 'animate-bounce' : 'group-hover:scale-110 transition-transform duration-500'}`} />
+            <div className={`flex items-center justify-center p-3 sm:p-4 rounded-2xl shrink-0 transition-all duration-500 ${isDragging ? 'bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] shadow-[0_0_20px_var(--theme-glow1)]' : 'bg-[var(--theme-bg)] text-[var(--theme-text)] group-hover:bg-[var(--theme-ui-bg)] group-hover:text-[var(--theme-heading)] group-hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}>
+              <Icon name="cloud_upload" size={32} className={`${isDragging ? 'animate-bounce' : 'group-hover:scale-110 transition-transform duration-500'}`} />
             </div>
             
             <div className="flex flex-col items-center text-center">
-              <p className="text-base sm:text-lg text-zinc-300 group-hover:text-white transition-colors duration-300"><span className="font-bold tracking-wide">Drag and Drop</span></p>
-              <p className="text-xs sm:text-sm font-medium text-zinc-500 group-hover:text-[var(--theme-heading)] transition-colors duration-300 mt-1">or Select Here</p>
+              <p className="text-base sm:text-lg text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors duration-300"><span className="font-bold tracking-wide">Drag and Drop</span></p>
+              <p className="text-xs sm:text-sm font-normal text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors duration-300 mt-1">or Select Here</p>
               
               <div className="flex flex-wrap gap-1.5 mt-3 items-center justify-center">
                 {accept === "*" || !accept ? (
-                  <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium border border-white/5">ANY FORMAT</span>
+                  <span className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium border border-[var(--theme-ui-border)]">ANY FORMAT</span>
                 ) : (
                   <>
                     {accept.split(',').slice(0, 6).map((ext, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium uppercase border border-white/5">
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium uppercase border border-[var(--theme-ui-border)]">
                         {ext.trim().replace('.', '')}
                       </span>
                     ))}
                     {accept.split(',').length > 6 && (
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium border border-white/5">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium border border-[var(--theme-ui-border)]">
                         +{accept.split(',').length - 6}
                       </span>
                     )}
@@ -263,7 +263,7 @@ export function DirectUploadBox({
       
       {error && (
         <div className="flex items-center gap-3 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] px-4 py-3 rounded-2xl shadow-[0_0_15px_var(--theme-glow1)] animate-in slide-in-from-top-2 fade-in duration-300">
-          <AlertCircle size={18} className="shrink-0" />
+          <Icon name="error" size={18} className="shrink-0" />
           <span className="leading-tight">{error}</span>
         </div>
       )}

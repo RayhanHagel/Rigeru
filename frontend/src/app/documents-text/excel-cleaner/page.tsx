@@ -2,9 +2,10 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef } from "react";
-import { Upload, Download, RefreshCcw, Table, Info, Plus, Trash2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 type TableData = {
   rows: number;
@@ -270,7 +271,7 @@ export default function ExcelCleanerPage() {
             
             {errorMsg && (
               <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
-                <Info size={16} className="mt-0.5 shrink-0" />
+                <Icon name="info" size={16} className="mt-0.5 shrink-0" />
                 <p>{errorMsg}</p>
               </div>
             )}
@@ -312,7 +313,7 @@ export default function ExcelCleanerPage() {
                     onClick={addRule}
                     className="text-xs flex items-center gap-1 text-secondary hover:text-blue-300 transition-colors bg-secondary/10 px-2 py-1 rounded"
                   >
-                    <Plus size={14} /> Add Rule
+                    <Icon name="add" size={14} /> Add Rule
                   </button>
                 </div>
                 
@@ -397,7 +398,7 @@ export default function ExcelCleanerPage() {
                             className="h-[38px] px-3 bg-red-500/10 text-red-400/80 hover:text-red-400 hover:bg-red-500/20 rounded flex items-center justify-center transition-colors"
                             title="Remove Rule"
                           >
-                            <Trash2 size={16} />
+                            <Icon name="delete" size={16} />
                           </button>
                         </div>
                       );
@@ -409,7 +410,7 @@ export default function ExcelCleanerPage() {
               <Button 
                 variant="primary" 
                 fullWidth 
-                icon={<RefreshCcw size={16} />}
+                icon={<Icon name="refresh" size={16} />}
                 onClick={handleApplyCleaning}
                 isLoading={isLoading}
               >
@@ -453,7 +454,7 @@ export default function ExcelCleanerPage() {
           {!originalData ? (
             <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl bg-zinc-900/20">
               <div className="text-center text-zinc-500">
-                <Table size={48} className="mx-auto mb-4 opacity-20" />
+                <Icon name="table_chart" size={48} className="mx-auto mb-4 opacity-20" />
                 <p>Upload a file to see preview</p>
               </div>
             </div>

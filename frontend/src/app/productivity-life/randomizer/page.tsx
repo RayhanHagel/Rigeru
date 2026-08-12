@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Dices, Users, Play, RefreshCw, X, Gift, ClipboardList, Coins } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 // ─── Web Audio Sound Effects ────────────────────────────────────────────────
 function useAudioContext() {
@@ -234,7 +235,7 @@ const GhostLegMaze = ({
   if (N < 2) {
     return (
       <div className="animate-slide-up bg-zinc-900/50 border border-white/5 rounded-xl p-8 flex flex-col items-center justify-center h-[600px]">
-        <Dices size={48} className="text-zinc-800 mb-4" />
+        <Icon name="casino" size={48} className="text-zinc-800 mb-4" />
         <p className="text-zinc-500">Add at least one person and one task to generate the Ghost Leg maze.</p>
       </div>
     );
@@ -413,7 +414,7 @@ const CoinFlip = ({ onFlip }: { onFlip: () => void }) => {
   const tailsCount = history.filter(r => r === "tails").length;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto py-8 animate-slide-up">
+    <div className="flex flex-col items-center gap-8 w-full mx-auto py-8 animate-slide-up">
 
       <div className="relative" style={{ perspective: "600px" }}>
         <div
@@ -468,7 +469,7 @@ const CoinFlip = ({ onFlip }: { onFlip: () => void }) => {
         className="bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] font-bold px-10 py-4 text-lg rounded-2xl border-none shadow-[0_0_20px_var(--theme-glow1)]"
         onClick={handleFlip}
         disabled={isFlipping}
-        icon={<Coins size={20} />}
+        icon={<Icon name="monetization_on" size={20} />}
       >
         {isFlipping ? "Flipping…" : "Flip Coin"}
       </Button>
@@ -586,13 +587,13 @@ const DiceRoller = ({ onRoll }: { onRoll: () => void }) => {
         className="bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] font-bold px-10 py-4 text-lg rounded-2xl border-none shadow-[0_0_20px_var(--theme-glow1)]"
         onClick={roll}
         disabled={isRolling}
-        icon={isRolling ? <RefreshCw className="animate-spin" size={20} /> : <Dices size={20} />}
+        icon={isRolling ? <Icon name="refresh" className="animate-spin" size={20} /> : <Icon name="casino" size={20} />}
       >
         {isRolling ? "Rolling…" : `Roll ${diceCount === 1 ? "Die" : `${diceCount} Dice`}`}
       </Button>
 
       {history.length > 0 && (
-        <div className="w-full max-w-lg bg-zinc-900/50 border border-white/5 rounded-xl p-4">
+        <div className="w-full bg-zinc-900/50 border border-white/5 rounded-xl p-4">
           <p className="text-xs text-zinc-500 mb-3 font-medium">Recent Rolls</p>
           <div className="space-y-2">
             {history.map((h, i) => (
@@ -773,7 +774,7 @@ export default function RandomizerPage() {
                               </h3>
                               
                               <div className="flex flex-col md:flex-row gap-4 mb-4">
-                                <div className="flex gap-2 flex-1 w-full md:max-w-md">
+                                <div className="flex gap-2 flex-1 w-full">
                                   <input 
                                     type="text"
                                     value={newWheelItem}
@@ -794,7 +795,7 @@ export default function RandomizerPage() {
                                     <div key={idx} className="flex items-center gap-2 bg-zinc-950/50 px-3 py-1.5 rounded-lg border border-white/5 group hover:border-white/10 transition-colors w-fit">
                                       <span className="text-sm text-zinc-300">{item}</span>
                                       <button onClick={() => removeWheelItem(idx)} className="text-zinc-600 hover:text-red-400 transition-colors">
-                                        <X size={14} />
+                                        <Icon name="close" size={14} />
                                       </button>
                                     </div>
                                   ))
@@ -906,7 +907,7 @@ export default function RandomizerPage() {
                               {wheelWinner ? (
                                 <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 flex flex-col items-center">
                                   <h2 className="text-4xl font-black text-[var(--theme-heading)] mb-6 flex items-center gap-4 drop-shadow-[0_0_15px_var(--theme-glow1)]">{wheelWinner} 
-                                    <Gift className="text-[var(--theme-heading)] animate-bounce" size={32} style={{ animationDelay: "150ms" }} />
+                                    <Icon name="redeem" className="text-[var(--theme-heading)] animate-bounce" size={32} style={{ animationDelay: "150ms" }} />
                                   </h2>
                                   <Button variant="primary" className="bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] font-bold px-8 py-4 text-lg rounded-xl border-none" onClick={handleSpin}>
                                     Spin Again
@@ -918,7 +919,7 @@ export default function RandomizerPage() {
                                   className={`bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] font-bold px-10 py-6 text-xl rounded-2xl border-none shadow-[0_0_30px_var(--theme-glow1)] transition-transform ${isSpinning ? "scale-95 opacity-50" : "hover:scale-105"}`}
                                   onClick={handleSpin}
                                   disabled={isSpinning || wheelItems.length < 2}
-                                  icon={isSpinning ? <RefreshCw className="animate-spin" size={24} /> : <Play size={24} />}
+                                  icon={isSpinning ? <Icon name="refresh" className="animate-spin" size={24} /> : <Icon name="play_arrow" size={24} />}
                                 >
                                   {isSpinning ? "SPINNING" : "SPIN THE WHEEL"}
                                 </Button>
@@ -969,7 +970,7 @@ export default function RandomizerPage() {
                                   <div key={idx} className="flex items-center gap-2 bg-zinc-950/50 px-3 py-1.5 rounded-lg border border-white/5 group w-fit">
                                     <span className="text-sm font-medium text-zinc-200">{p}</span>
                                     <button onClick={() => setPeople(people.filter((_, i) => i !== idx))} className="text-zinc-600 hover:text-red-400">
-                                      <X size={14} />
+                                      <Icon name="close" size={14} />
                                     </button>
                                   </div>
                                 ))}
@@ -991,7 +992,7 @@ export default function RandomizerPage() {
                                   <div key={idx} className="flex items-center gap-2 bg-zinc-950/50 px-3 py-1.5 rounded-lg border border-white/5 group w-fit">
                                     <span className="text-sm font-medium text-zinc-200">{t}</span>
                                     <button onClick={() => setTasks(tasks.filter((_, i) => i !== idx))} className="text-zinc-600 hover:text-red-400">
-                                      <X size={14} />
+                                      <Icon name="close" size={14} />
                                     </button>
                                   </div>
                                 ))}
@@ -1002,10 +1003,10 @@ export default function RandomizerPage() {
                           <div className="w-full">
                             <Button 
                               variant="primary" 
-                              className="w-full md:max-w-md mx-auto flex bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] border-none font-bold py-4 text-lg rounded-xl shadow-[0_0_20px_var(--theme-glow1)]"
+                              className="w-full mx-auto flex bg-[var(--theme-heading)] hover:bg-white text-[var(--theme-bg)] border-none font-bold py-4 text-lg rounded-xl shadow-[0_0_20px_var(--theme-glow1)]"
                               onClick={() => setIsAssigning(true)}
                               disabled={Math.max(people.length, tasks.length) < 2 || isAssigning}
-                              icon={isAssigning ? <RefreshCw className="animate-spin" size={20} /> : <Play size={20} />}
+                              icon={isAssigning ? <Icon name="refresh" className="animate-spin" size={20} /> : <Icon name="play_arrow" size={20} />}
                             >
                               {isAssigning ? "DRAWING" : "START GHOST LEG"}
                             </Button>

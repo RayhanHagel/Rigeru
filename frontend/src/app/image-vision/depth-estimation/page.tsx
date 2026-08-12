@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Settings, Image as ImageIcon, Film, Download, Play, StopCircle, Video, LayoutTemplate, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ImageCompareSlider } from "@/components/ui/ImageCompareSlider";
@@ -9,6 +8,8 @@ import { ModernTabs } from "@/components/ui/ModernTabs";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ImageZoomModal } from "@/components/ui/ImageZoomModal";
+import { VirtualCameraBroadcast } from "@/components/ui/VirtualCameraBroadcast";
+import { Icon } from "@/lib/utils";
 
 export default function DepthEstimationPage() {
   const [activeTab, setActiveTab] = useState("Image");
@@ -31,8 +32,11 @@ export default function DepthEstimationPage() {
   // Webcam State
   const [cameras, setCameras] = useState<number[]>([]);
   const [cameraIndex, setCameraIndex] = useState(0);
+  const [aiFps, setAiFps] = useState(5);
   const [webcamActive, setWebcamActive] = useState(false);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  
+  const streamImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     // Fetch cameras
@@ -67,6 +71,7 @@ export default function DepthEstimationPage() {
     let endpoint = "http://127.0.0.1:8000/api/media-vision/depth-image";
     if (activeTab === "Video") {
       formData.append("encoder", "libx264"); // Default encoder
+      formData.append("ai_fps", aiFps.toString());
       endpoint = "http://127.0.0.1:8000/api/media-vision/depth-video";
     }
 
@@ -94,15 +99,32 @@ export default function DepthEstimationPage() {
     if (webcamActive) {
       setWebcamActive(false);
       setStreamUrl(null);
+      const fd = new FormData();
+      fd.append("camera_index", cameraIndex.toString());
+      fetch("http://127.0.0.1:8000/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
     } else {
       setWebcamActive(true);
       const url = new URL("http://127.0.0.1:8000/api/media-vision/depth-estimation/webcam-stream");
       url.searchParams.append("camera_index", cameraIndex.toString());
       url.searchParams.append("colormap", colormap);
       url.searchParams.append("invert", invert.toString());
+      url.searchParams.append("ai_fps", aiFps.toString());
+      url.searchParams.append("_t", Date.now().toString());
       setStreamUrl(url.toString());
     }
   };
+
+  useEffect(() => {
+    if (webcamActive) {
+      const url = new URL("http://127.0.0.1:8000/api/media-vision/depth-estimation/webcam-stream");
+      url.searchParams.append("camera_index", cameraIndex.toString());
+      url.searchParams.append("colormap", colormap);
+      url.searchParams.append("invert", invert.toString());
+      url.searchParams.append("ai_fps", aiFps.toString());
+      url.searchParams.append("_t", Date.now().toString());
+      setStreamUrl(url.toString());
+    }
+  }, [cameraIndex, colormap, invert, aiFps]);
 
   const downloadBlob = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -114,52 +136,86 @@ export default function DepthEstimationPage() {
   const renderSettings = () => (
     <div className="flex flex-col gap-2 mt-8">
       <SectionHeader title="Configuration" />
-      <div className="flex flex-col gap-2">
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-zinc-300">Depth Colormap</label>
-          <select 
-            value={colormap} 
-            onChange={e => setColormap(e.target.value)}
-            className="w-full bg-zinc-950 border border-white/10 rounded-md py-2 px-3 text-white focus:border-primary outline-none text-sm"
-          >
-            <option value="inferno">Inferno (Standard)</option>
-            <option value="plasma">Plasma</option>
-            <option value="magma">Magma</option>
-            <option value="viridis">Viridis</option>
-            <option value="cividis">Cividis</option>
-            <option value="twilight">Twilight</option>
-            <option value="gray">Grayscale (Linear Depth)</option>
-          </select>
+      
+      <div className="grid grid-cols-1 gap-6 mt-4">
+        
+        {/* CARD 1: Depth Details */}
+        <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
+          <div className="flex items-center gap-2 font-medium pb-2 border-b" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+            <h3 className="text-[var(--theme-heading)]">Depth Map Settings</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-[var(--theme-text)]">Depth Colormap</label>
+              <select value={colormap} 
+                onChange={e => setColormap(e.target.value)}
+                className="w-full bg-[var(--theme-bg)] rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors border"
+                style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
+              >
+                <option value="inferno">Inferno (Standard)</option>
+                <option value="plasma">Plasma</option>
+                <option value="magma">Magma</option>
+                <option value="viridis">Viridis</option>
+                <option value="cividis">Cividis</option>
+                <option value="twilight">Twilight</option>
+                <option value="gray">Grayscale (Linear Depth)</option>
+              </select>
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer pt-2">
+              <input 
+                type="checkbox" 
+                checked={invert} 
+                onChange={(e) => setInvert(e.target.checked)}
+                className="rounded accent-[var(--theme-heading)] border border-[var(--theme-ui-border)] w-4 h-4 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-[var(--theme-text)]">Invert Depth Map</span>
+            </label>
+
+            {activeTab !== "Image" && (
+              <div className="space-y-1.5 pt-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-[var(--theme-heading)]">Video Processing Rate (FPS)</label>
+                  <span className="text-xs font-mono text-[var(--theme-text)] bg-[var(--theme-bg)] px-2 py-1 rounded-md border" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
+                    {aiFps}
+                  </span>
+                </div>
+                <input 
+                  type="range" min="1" max="60" step="1" value={aiFps} 
+                  onChange={(e) => {
+                    setAiFps(parseInt(e.target.value));
+                    if (webcamActive) {
+                      setWebcamActive(false);
+                      setStreamUrl(null);
+                    }
+                  }}
+                  className="w-full accent-[var(--theme-heading)] bg-white/10 h-2 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <label className="flex items-center gap-2 cursor-pointer pt-2">
-          <input 
-            type="checkbox" 
-            checked={invert} 
-            onChange={(e) => setInvert(e.target.checked)}
-            className="rounded bg-zinc-900 border-white/20 text-primary focus:ring-primary focus:ring-offset-zinc-950"
-          />
-          <span className="text-sm font-medium text-zinc-300">Invert Depth Map</span>
-        </label>
       </div>
-    </div>
     </div>
   );
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Depth Estimation</h1>
-          <p className="text-zinc-400 text-sm font-medium">Generate high-quality monocular depth maps from images, videos, and webcams.</p>
+          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">Depth Estimation</h1>
+          <p className="text-[var(--theme-text)] text-sm font-medium">Generate high-quality monocular depth maps from images, videos, and webcams.</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
           <ModernTabs 
             tabs={[
-              { id: "Image", label: "Image Depth", icon: <ImageIcon size={18} /> },
-              { id: "Video", label: "Video Depth", icon: <Film size={18} /> },
-              { id: "Live Camera", label: "Live Camera", icon: <Video size={18} /> }
+              { id: "Image", label: "Image Depth", icon: <Icon name="image" size={18} /> },
+              { id: "Video", label: "Video Depth", icon: <Icon name="movie" size={18} /> },
+              { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
             ]} 
             activeTab={activeTab} 
             setActiveTab={(tab) => {
@@ -197,12 +253,11 @@ export default function DepthEstimationPage() {
                   </div>
                 )}
 
-                <Button
-                  variant="primary"
-                  className="w-full h-12 text-lg mt-2"
+                <Button variant="primary"
+                  className="w-full h-12 text-lg mt-2 border-none !shadow-none !ring-0 !outline-none transition-colors"
                   onClick={processMedia}
                   disabled={!mediaHash || isProcessing}
-                >
+                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isProcessing ? "Processing..." : `Process ${activeTab}`}
                 </Button>
               </div>
@@ -212,10 +267,10 @@ export default function DepthEstimationPage() {
             <div className="flex flex-col gap-2 mt-8 h-full">
               <SectionHeader title="Download Output" />
 
-                <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+                <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
                   {!mediaDepthUrl ? (
-                    <div className="flex flex-col items-center justify-center text-zinc-600 gap-3">
-                      {activeTab === "Image" ? <ImageIcon size={48} className="opacity-30" /> : <Film size={48} className="opacity-30" />}
+                    <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                      {activeTab === "Image" ? <Icon name="image" size={48} className="opacity-30" /> : <Icon name="movie" size={48} className="opacity-30" />}
                       <p>Processed {activeTab.toLowerCase()} will appear here.</p>
                     </div>
                   ) : activeTab === "Image" && mediaOriginalUrl ? (
@@ -223,6 +278,7 @@ export default function DepthEstimationPage() {
                       <ImageCompareSlider 
                         originalImage={mediaOriginalUrl}
                         processedImage={mediaDepthUrl}
+                        processedLabel="Depth Map"
                       />
                       <Button 
                         variant="ghost" 
@@ -237,12 +293,12 @@ export default function DepthEstimationPage() {
                     <video src={mediaDepthUrl} controls className="w-full h-full object-contain" />
                   )}
                 </div>
-                <Button
-                    variant="primary"
-                    className="w-full mt-4 h-12 text-lg"
+                <Button variant="primary"
+                    className="w-full mt-4 h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
+                    style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
                     onClick={() => mediaDepthUrl && downloadBlob(mediaDepthUrl, `depth_${activeTab.toLowerCase()}.${activeTab === "Image" ? 'png' : 'mp4'}`)}
                     disabled={!mediaDepthUrl}
-                    icon={<Download size={16} />}
+                    icon={<Icon name="download" size={16} />}
                   >
                     Download
                   </Button>
@@ -257,11 +313,13 @@ export default function DepthEstimationPage() {
                 <SectionHeader title="Upload media" />
                   
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-300">Select Camera Index</label>
-                    <select 
-                      value={cameraIndex} 
+                    <label className="text-sm font-medium text-[var(--theme-text)]">Select Camera Index</label>
+                    <select value={cameraIndex} 
                       onChange={(e) => setCameraIndex(Number(e.target.value))}
-                      className="w-full bg-zinc-950 border border-white/10 rounded-md py-2 px-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-[var(--theme-bg)] rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors border"
+                      style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
                       {cameras.length === 0 ? <option value={0}>Camera 0</option> : cameras.map(c => (
                         <option key={c} value={c}>Camera {c}</option>
@@ -271,10 +329,9 @@ export default function DepthEstimationPage() {
 
                   {renderSettings()}
 
-                  <Button 
-                    variant="primary" 
-                    onClick={toggleWebcam} 
-                    icon={webcamActive ? <StopCircle size={18} /> : <Play size={18} />}
+                  <Button variant="primary" 
+                    onClick={toggleWebcam}
+                    icon={webcamActive ? <Icon name="stop_circle" size={18} /> : <Icon name="play_arrow" size={18} />}
                     className={`w-full h-12 text-lg border-none transition-colors mt-2 ${webcamActive ? 'bg-red-600 hover:bg-red-500' : 'bg-primary hover:bg-primary/90'}`}
                   >
                     {webcamActive ? "Stop Webcam" : "Start Webcam Stream"}
@@ -284,23 +341,33 @@ export default function DepthEstimationPage() {
 
             <div className="flex flex-col gap-2 mt-8 h-full">
               <SectionHeader title="Download Output" />
-                <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+                <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
                   {!streamUrl ? (
-                    <div className="flex flex-col items-center justify-center text-zinc-600 gap-3">
-                      <Video size={48} className="opacity-30" />
+                    <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                      <Icon name="videocam" size={48} className="opacity-30" />
                       <p>Webcam stream is inactive.</p>
                     </div>
                   ) : (
                     <img 
+                      ref={streamImageRef}
+                      crossOrigin="anonymous"
                       src={streamUrl} 
                       alt="Live Stream" 
-                      className="w-full h-full object-contain" 
+                      className="w-full h-full object-contain transition-opacity duration-300" 
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   )}
                 </div>
+                
+                {streamUrl && (
+                  <VirtualCameraBroadcast 
+                    sourceRef={streamImageRef} 
+                    isStreamActive={webcamActive} 
+                    mode="backend"
+                  />
+                )}
               </div>
             </div>
         )}

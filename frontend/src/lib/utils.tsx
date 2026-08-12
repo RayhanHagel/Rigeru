@@ -26,3 +26,20 @@ export function MaterialIcon({ name, className = "", style }: { name: string; cl
     </span>
   );
 }
+
+/**
+ * Enhanced icon component with explicit size prop — drop-in Lucide replacement.
+ * Usage: <Icon name="download" size={20} className="text-white" />
+ */
+export function Icon({ name, size = 20, className = "", style }: {
+  name: string; size?: number; className?: string; style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      className={`material-symbols-outlined ${className}`}
+      style={{ fontSize: `${size}px`, lineHeight: 1, ...style }}
+    >
+      {name}
+    </span>
+  );
+}

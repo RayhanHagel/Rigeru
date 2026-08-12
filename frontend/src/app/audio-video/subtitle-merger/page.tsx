@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileText, Plus, CheckCircle2, Download } from "lucide-react";
+
 import { Header } from "@/components/ui/Header";
 import { Container } from "@/components/ui/Container";
 import { Columns, Column } from "@/components/ui/Columns";
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 export default function SubtitleMergerPage() {
   const [baseFileHash, setBaseFileHash] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function SubtitleMergerPage() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="ASS Subtitle Merger" subtitle="Combine two .ass subtitle files together. Automatically handles coordinate scaling." />
 
-      <Container title="Upload Subtitles" icon={<FileText className="text-secondary" size={20} />}>
+      <Container title="Upload Subtitles" icon={<Icon name="description" className="text-secondary" size={20} />}>
         <div className="space-y-6">
           <div className="flex flex-col gap-6">
             <div className="w-full">
@@ -92,7 +93,7 @@ export default function SubtitleMergerPage() {
                 ) : (
                   <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <FileText size={20} className="text-zinc-400" />
+                      <Icon name="description" size={20} className="text-zinc-400" />
                       <span className="text-zinc-200 font-medium truncate max-w-[200px]">{baseFileName}</span>
                     </div>
                     <button
@@ -133,7 +134,7 @@ export default function SubtitleMergerPage() {
                 ) : (
                   <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <FileText size={20} className="text-zinc-400" />
+                      <Icon name="description" size={20} className="text-zinc-400" />
                       <span className="text-zinc-200 font-medium truncate max-w-[200px]">{overlayFileName}</span>
                     </div>
                     <button
@@ -169,11 +170,11 @@ export default function SubtitleMergerPage() {
           {resultUrl && (
             <div className="p-6 bg-zinc-900/50 border border-white/5 rounded-xl space-y-4 animate-in slide-in-from-bottom-4 text-center">
               <div className="flex items-center justify-center gap-2 text-green-400 font-medium text-lg">
-                <CheckCircle2 size={24} />
+                <Icon name="check_circle" size={24} />
                 Successfully merged subtitles!
               </div>
               <Button onClick={downloadResult} variant="secondary" className="w-full bg-zinc-800 hover:bg-zinc-700">
-                <Download size={18} className="mr-2" />
+                <Icon name="download" size={18} className="mr-2" />
                 Download Merged Subtitle
               </Button>
             </div>

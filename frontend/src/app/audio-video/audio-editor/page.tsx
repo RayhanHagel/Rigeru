@@ -2,11 +2,12 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Music, Upload, Scissors, Download, Play, Pause, AlertCircle, Loader2, Volume2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 export default function AudioEditorPage() {
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -181,7 +182,7 @@ export default function AudioEditorPage() {
       <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 shadow-xl backdrop-blur-sm min-h-[400px]">
         {errorMsg && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-            <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={18} />
+            <Icon name="error" className="text-red-400 shrink-0 mt-0.5" size={18} />
             <p className="text-red-400 text-sm">{errorMsg}</p>
           </div>
         )}
@@ -227,7 +228,7 @@ export default function AudioEditorPage() {
                 <Button 
                   variant="secondary" 
                   onClick={togglePlay}
-                  icon={isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                  icon={isPlaying ? <Icon name="pause" size={16} /> : <Icon name="play_arrow" size={16} />}
                 >
                   {isPlaying ? "Pause" : "Play"}
                 </Button>
@@ -235,7 +236,7 @@ export default function AudioEditorPage() {
                   {currentTime} / {totalTime}
                 </div>
                 <div className="flex items-center gap-2 ml-2 hidden sm:flex">
-                  <Volume2 size={16} className="text-zinc-500" />
+                  <Icon name="volume_up" size={16} className="text-zinc-500" />
                   <input
                     type="range"
                     min="0"
@@ -259,7 +260,7 @@ export default function AudioEditorPage() {
                 className="bg-primary hover:bg-purple-700 text-white" 
                 onClick={handleTrim}
                 disabled={isProcessing}
-                icon={isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Scissors size={16} />}
+                icon={isProcessing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="content_cut" size={16} />}
               >
                 {isProcessing ? "Processing" : "Trim Selected Region"}
               </Button>
@@ -272,7 +273,7 @@ export default function AudioEditorPage() {
           <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6">
             <div className="w-full max-w-md bg-zinc-950/80 rounded-xl border border-white/10 p-8 text-center space-y-6 shadow-2xl">
               <div className="inline-flex p-4 bg-emerald-500/10 text-emerald-400 rounded-full mb-2">
-                <Scissors size={32} />
+                <Icon name="content_cut" size={32} />
               </div>
               
               <div>
@@ -300,7 +301,7 @@ export default function AudioEditorPage() {
                   download={resultFilename}
                   className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-primary hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  <Download size={16} /> Download
+                  <Icon name="download" size={16} /> Download
                 </a>
               </div>
             </div>

@@ -3,9 +3,10 @@ import { Header } from "@/components/ui/Header";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useRef } from "react";
-import { Palette, ImageIcon, Crosshair, Copy, Check, Sparkles } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 type ColorResult = {
   hex: string;
@@ -167,13 +168,12 @@ export default function ColorPickerPage() {
                   </div>
                 )}
 
-                <Button
-                  variant="primary"
-                  className="w-full h-12 text-lg mt-2"
+                <Button variant="primary"
+                  className="w-full h-12 text-lg mt-2 border-none !shadow-none !ring-0 !outline-none transition-colors"
                   onClick={generatePalette}
                   disabled={!file || isPaletteLoading}
                   isLoading={isPaletteLoading}
-                >
+                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isPaletteLoading ? "Generating Palette..." : "Generate Full Palette"}
                 </Button>
               </div>
@@ -186,10 +186,10 @@ export default function ColorPickerPage() {
               <SectionHeader title="Download Output" className="mb-0" />
             </div>
 
-            <div className="flex-1 w-full bg-black/50 rounded-xl border border-white/5 relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+            <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
               {!previewUrl ? (
-                <div className="flex flex-col items-center justify-center text-zinc-600 gap-3">
-                  <Palette size={48} className="opacity-30" />
+                <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                  <Icon name="palette" size={48} className="opacity-30" />
                   <p>Upload an image to start picking colors.</p>
                 </div>
               ) : (
@@ -207,9 +207,9 @@ export default function ColorPickerPage() {
                   
                   {isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-zinc-900/80 p-4 rounded-full backdrop-blur shadow-2xl flex items-center gap-3 border border-white/10">
-                        <Crosshair className="animate-spin text-primary" />
-                        <span className="font-semibold text-zinc-200">Extracting Exact Pixel...</span>
+                      <div className="bg-[var(--theme-ui-bg)] p-4 rounded-full backdrop-blur shadow-sm flex items-center gap-3 border border-[var(--theme-ui-border)]">
+                        <Icon name="my_location" className="animate-spin text-primary" />
+                        <span className="font-semibold text-[var(--theme-heading)]">Extracting Exact Pixel...</span>
                       </div>
                     </div>
                   )}
@@ -219,41 +219,41 @@ export default function ColorPickerPage() {
 
             {/* Results Display */}
             {colorResult && (
-              <div className="animate-in slide-in-from-bottom-4 p-5 bg-zinc-900 border border-white/10 rounded-xl mt-4">
-                <h4 className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Crosshair size={18} className="text-primary" /> Selected Color
+              <div className="animate-in slide-in-from-bottom-4 p-5 bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-xl mt-4 shadow-sm">
+                <h4 className="text-[var(--theme-heading)] font-medium mb-4 flex items-center gap-2">
+                  <Icon name="my_location" size={18} className="text-primary" /> Selected Color
                 </h4>
                 <div className="flex items-center gap-6">
                   <div 
-                    className="w-20 h-20 rounded-xl shadow-inner border border-white/10 flex-shrink-0"
+                    className="w-20 h-20 rounded-xl shadow-inner border border-[var(--theme-ui-border)] flex-shrink-0"
                     style={{ backgroundColor: colorResult.hex }}
                   />
                   
                   <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-white/5">
-                      <span className="text-zinc-400 font-mono text-sm">HEX</span>
+                    <div className="flex items-center justify-between bg-[var(--theme-bg)] p-2.5 rounded-lg border border-[var(--theme-ui-border)] shadow-sm">
+                      <span className="text-[var(--theme-text)] font-mono text-sm">HEX</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-white font-mono font-medium">{colorResult.hex}</span>
+                        <span className="text-[var(--theme-heading)] font-mono font-medium">{colorResult.hex}</span>
                         <button 
                           onClick={() => handleCopy(colorResult.hex, "hex")}
-                          className="text-zinc-500 hover:text-white transition-colors"
+                          className="text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
                           title="Copy HEX"
                         >
-                          {copiedText === "hex" ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                          {copiedText === "hex" ? <Icon name="check" size={16} className="text-emerald-500" /> : <Icon name="content_copy" size={16} />}
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-zinc-950 p-2.5 rounded-lg border border-white/5">
-                      <span className="text-zinc-400 font-mono text-sm">RGB</span>
+                    <div className="flex items-center justify-between bg-[var(--theme-bg)] p-2.5 rounded-lg border border-[var(--theme-ui-border)] shadow-sm">
+                      <span className="text-[var(--theme-text)] font-mono text-sm">RGB</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-white font-mono font-medium">{colorResult.rgb}</span>
+                        <span className="text-[var(--theme-heading)] font-mono font-medium">{colorResult.rgb}</span>
                         <button 
                           onClick={() => handleCopy(colorResult.rgb, "rgb")}
-                          className="text-zinc-500 hover:text-white transition-colors"
+                          className="text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
                           title="Copy RGB"
                         >
-                          {copiedText === "rgb" ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                          {copiedText === "rgb" ? <Icon name="check" size={16} className="text-emerald-500" /> : <Icon name="content_copy" size={16} />}
                         </button>
                       </div>
                     </div>
@@ -263,12 +263,12 @@ export default function ColorPickerPage() {
             )}
 
             {paletteResult && (
-              <div className="animate-in slide-in-from-bottom-4 p-5 bg-zinc-900 border border-white/10 rounded-xl mt-4">
-                <h4 className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Palette size={18} className="text-primary" /> Generated Palette
+              <div className="animate-in slide-in-from-bottom-4 p-5 bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-xl mt-4 shadow-sm">
+                <h4 className="text-[var(--theme-heading)] font-medium mb-4 flex items-center gap-2">
+                  <Icon name="palette" size={18} className="text-primary" /> Generated Palette
                 </h4>
                 
-                <div className="flex w-full h-24 rounded-lg overflow-hidden border border-white/10 shadow-inner mb-4">
+                <div className="flex w-full h-24 rounded-lg overflow-hidden border border-[var(--theme-ui-border)] shadow-inner mb-4">
                   {paletteResult.map((c, i) => (
                     <div 
                       key={i} 
@@ -279,13 +279,13 @@ export default function ColorPickerPage() {
                       }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 backdrop-blur-sm transition-opacity">
-                        {copiedText === `palette-${i}` ? <Check size={20} className="text-white drop-shadow-md" /> : <Copy size={20} className="text-white drop-shadow-md" />}
+                        {copiedText === `palette-${i}` ? <Icon name="check" size={20} className="text-[var(--theme-heading)] drop-shadow-md" /> : <Icon name="content_copy" size={20} className="text-[var(--theme-heading)] drop-shadow-md" />}
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="grid grid-cols-5 gap-2 text-center text-xs font-mono text-zinc-400 mt-2">
+                <div className="grid grid-cols-5 gap-2 text-center text-xs font-mono text-[var(--theme-text)] mt-2">
                   {paletteResult.map((c, i) => (
                     <div key={i}>{c?.hex}</div>
                   ))}

@@ -36,11 +36,12 @@ import { VisualizeNode } from './nodes/VisualizeNode';
 import { CustomEdge } from './CustomEdge';
 import { ALGORITHM_CONFIGS } from './algorithms';
 
-import { AlertTriangle, X, Network, Search, Save, Download, Upload, LayoutPanelLeft, LayoutPanelTop } from 'lucide-react';
+
 import { DirectUploadBox } from '@/components/ui/DirectUploadBox';
 import { Button } from '@/components/ui/Button';
 
 import { LayoutContext } from './LayoutContext';
+import { Icon } from "@/lib/utils";
 
 const initialNodes: Node[] = [
   {
@@ -302,14 +303,14 @@ export function FlowEditor() {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-zinc-100">Toolbox</h2>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={handleExport} title="Export Pipeline"><Download size={16} /></Button>
-          <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} title="Import Pipeline"><Upload size={16} /></Button>
+          <Button variant="ghost" size="sm" onClick={handleExport} title="Export Pipeline"><Icon name="download" size={16} /></Button>
+          <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} title="Import Pipeline"><Icon name="upload" size={16} /></Button>
           <input type="file" ref={fileInputRef} onChange={handleImport} accept=".json" className="hidden" />
         </div>
       </div>
       
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input 
           type="text" 
           placeholder="Search nodes..." 
@@ -539,7 +540,7 @@ export function FlowEditor() {
                   className="w-full mt-1 border-dashed border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20"
                   onClick={() => setIsSubCanvasOpen(true)}
                 >
-                  <Network size={16} className="mr-2" /> Open Visual Graph Builder
+                  <Icon name="hub" size={16} className="mr-2" /> Open Visual Graph Builder
                 </Button>
                 <div className="text-center text-xs text-zinc-400 p-4 bg-black/40 rounded-lg border border-white/5">
                   {data.layers?.length ? `${data.layers.length} Layer Nodes Configured` : 'No layers configured.'}
@@ -717,14 +718,14 @@ export function FlowEditor() {
               className={`p-1.5 rounded-md transition-colors ${layoutDir === 'horizontal' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}
               title="Horizontal Layout"
             >
-              <LayoutPanelLeft size={16} />
+              <Icon name="view_sidebar" size={16} />
             </button>
             <button 
               onClick={() => setLayoutDir('vertical')}
               className={`p-1.5 rounded-md transition-colors ${layoutDir === 'vertical' ? 'bg-cyan-500/20 text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'}`}
               title="Vertical Layout"
             >
-              <LayoutPanelTop size={16} />
+              <Icon name="view_agenda" size={16} />
             </button>
           </div>
 
@@ -748,7 +749,7 @@ export function FlowEditor() {
         
         {nodes.length > 1 && nodes.some(node => !edges.some(edge => edge.source === node.id || edge.target === node.id)) && (
           <div className="absolute bottom-6 right-6 bg-red-500/10 border border-red-500/50 rounded-xl px-4 py-3 text-red-400 flex items-center gap-3 shadow-lg backdrop-blur-md z-40 animate-pulse pointer-events-none">
-            <AlertTriangle size={18} />
+            <Icon name="warning" size={18} />
             <span className="text-sm font-semibold">Warning: You have unconnected nodes</span>
           </div>
         )}

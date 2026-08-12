@@ -4,8 +4,9 @@ import { Header } from "@/components/ui/Header";
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 
-import { Palette, Trash2, Download, Image as ImageIcon, FileText, Bot, Undo, Plus, ChevronLeft, ChevronRight, Settings, Maximize } from "lucide-react";
+
 import { WhiteboardCanvas, Stroke } from "@/components/whiteboard/WhiteboardCanvas";
+import { Icon } from "@/lib/utils";
 
 const PAGE_SIZES = {
   A4: { name: "A4", width: 794, height: 1123 },
@@ -225,8 +226,8 @@ export default function DigitalWhiteboardPage() {
               </div>
               
               <div className="flex gap-2 pt-2 border-t border-white/10">
-                <Button variant="secondary" onClick={handleUndo} icon={<Undo size={16} />} className="flex-1">Undo</Button>
-                <Button variant="secondary" onClick={handleClear} icon={<Trash2 size={16} />} className="flex-1 text-red-400 hover:text-red-300">Clear</Button>
+                <Button variant="secondary" onClick={handleUndo} icon={<Icon name="undo" size={16} />} className="flex-1">Undo</Button>
+                <Button variant="secondary" onClick={handleClear} icon={<Icon name="delete" size={16} />} className="flex-1 text-red-400 hover:text-red-300">Clear</Button>
               </div>
             </div>
           </div>
@@ -245,7 +246,7 @@ export default function DigitalWhiteboardPage() {
           <div className="bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 shadow-xl transition-all hover:bg-zinc-900/90">
             <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">AI Transcription
             </h3>
-            <Button variant="primary" onClick={transcribeNote} isLoading={isTranscribing} className="w-full text-xs" icon={<FileText size={16} />}>
+            <Button variant="primary" onClick={transcribeNote} isLoading={isTranscribing} className="w-full text-xs" icon={<Icon name="description" size={16} />}>
               Transcribe Handwriting
             </Button>
             
@@ -294,7 +295,7 @@ export default function DigitalWhiteboardPage() {
             className="p-1 text-zinc-400 hover:text-white transition-colors"
             title="Fit to Height"
           >
-            <Maximize size={18} />
+            <Icon name="fullscreen" size={18} />
           </button>
 
           <div className="w-px h-4 bg-white/10 mx-1"></div>
@@ -304,7 +305,7 @@ export default function DigitalWhiteboardPage() {
             disabled={currentPageIndex === 0}
             className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
           >
-            <ChevronLeft size={20} />
+            <Icon name="chevron_left" size={20} />
           </button>
           <span className="text-sm font-medium text-zinc-300 min-w-[60px] text-center">
             {currentPageIndex + 1} / {pages.length}
@@ -314,7 +315,7 @@ export default function DigitalWhiteboardPage() {
             disabled={currentPageIndex === pages.length - 1}
             className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
           >
-            <ChevronRight size={20} />
+            <Icon name="chevron_right" size={20} />
           </button>
           
           <div className="w-px h-4 bg-white/10 mx-2"></div>
@@ -324,14 +325,14 @@ export default function DigitalWhiteboardPage() {
             className="p-1 text-zinc-400 hover:text-green-400 transition-colors"
             title="Add Page"
           >
-            <Plus size={18} />
+            <Icon name="add" size={18} />
           </button>
           <button 
             onClick={deletePage}
             className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
             title="Delete Page"
           >
-            <Trash2 size={18} />
+            <Icon name="delete" size={18} />
           </button>
         </div>
       </div>

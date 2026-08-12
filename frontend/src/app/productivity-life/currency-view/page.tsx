@@ -2,11 +2,12 @@
 import { Header } from "@/components/ui/Header";
 
 import { useEffect, useState, useMemo } from "react";
-import { Coins, ArrowRightLeft, TrendingUp, RefreshCw, AlertCircle, Info } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import { Select } from "@/components/ui/Select";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { Icon } from "@/lib/utils";
 
 export default function CurrencyView() {
   const [currencies, setCurrencies] = useState<Record<string, string>>({});
@@ -135,7 +136,7 @@ export default function CurrencyView() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       {errorMsg && (
         <div className="fixed top-4 right-4 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg animate-slide-up flex items-center gap-2">
-          <AlertCircle size={18} />
+          <Icon name="error" size={18} />
           {errorMsg}
           <button onClick={() => setErrorMsg("")} className="ml-2 font-bold hover:text-red-200">✕</button>
         </div>
@@ -145,7 +146,7 @@ export default function CurrencyView() {
 
       {loadingCurrencies ? (
         <div className="flex justify-center p-12">
-          <RefreshCw className="animate-spin text-zinc-500" size={32} />
+          <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
         </div>
       ) : (
         <div className="flex flex-col gap-6 animate-slide-up w-full">
@@ -181,7 +182,7 @@ export default function CurrencyView() {
                   className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors border border-white/5"
                   title="Swap currencies"
                 >
-                  <ArrowRightLeft size={20} />
+                  <Icon name="swap_horiz" size={20} />
                 </button>
               </div>
               
@@ -201,7 +202,7 @@ export default function CurrencyView() {
                   disabled={converting}
                   className="w-full md:w-32"
                 >
-                  {converting ? <RefreshCw size={18} className="animate-spin" /> : "Convert"}
+                  {converting ? <Icon name="refresh" size={18} className="animate-spin" /> : "Convert"}
                 </Button>
               </div>
             </div>
@@ -223,24 +224,24 @@ export default function CurrencyView() {
               </h3>
               
               <Button variant="secondary" onClick={() => fetchTrend()} disabled={loadingTrend} size="sm">
-                {loadingTrend ? <RefreshCw size={16} className="animate-spin mr-2" /> : <RefreshCw size={16} className="mr-2" />}
+                {loadingTrend ? <Icon name="refresh" size={16} className="animate-spin mr-2" /> : <Icon name="refresh" size={16} className="mr-2" />}
                 Load Trend
               </Button>
             </div>
             
             {base === target ? (
               <div className="p-8 bg-zinc-800/50 rounded-lg text-center text-zinc-400 border border-white/5">
-                <Info size={32} className="mx-auto mb-3 opacity-50" />
+                <Icon name="info" size={32} className="mx-auto mb-3 opacity-50" />
                 Select two different currencies to view a trend chart.
               </div>
             ) : loadingTrend ? (
               <div className="h-80 flex items-center justify-center">
-                <RefreshCw size={32} className="animate-spin text-zinc-500" />
+                <Icon name="refresh" size={32} className="animate-spin text-zinc-500" />
               </div>
             ) : chartData.length > 0 ? (
               <div>
                 <div className="text-xs text-zinc-500 mb-6 flex items-center gap-2 bg-zinc-950/50 p-2 rounded-md border border-white/5 inline-flex">
-                  <Info size={14} /> 
+                  <Icon name="info" size={14} /> 
                   {cachedTime === "Just now" 
                     ? "Displaying live data fetched just now." 
                     : `Displaying cached data from ${cachedTime}. Fetching latest data in background`}
@@ -294,7 +295,7 @@ export default function CurrencyView() {
               </div>
             ) : (
               <div className="p-8 bg-zinc-800/50 rounded-lg text-center text-zinc-400 border border-white/5">
-                <AlertCircle size={32} className="mx-auto mb-3 opacity-50" />
+                <Icon name="error" size={32} className="mx-auto mb-3 opacity-50" />
                 No trend data available for this pair. Click "Load Trend" to try fetching.
               </div>
             )}

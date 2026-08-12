@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Music, RefreshCw, Radio } from "lucide-react";
+
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type ScrobbleTrack = [string, string | null, string, string, string | null];
 
@@ -102,7 +103,7 @@ export default function SpotifyScrobbler() {
         
         <div className="flex items-center gap-2">
           {spotifyConfig.username && (
-            <Button variant="secondary" onClick={fetchFeed} isLoading={isFetching} icon={<RefreshCw size={16} />}>
+            <Button variant="secondary" onClick={fetchFeed} isLoading={isFetching} icon={<Icon name="refresh" size={16} />}>
               Force Sync
             </Button>
           )}
@@ -112,7 +113,7 @@ export default function SpotifyScrobbler() {
       {!spotifyConfig.username ? (
         <div className="flex flex-col items-center justify-center h-64 text-center rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/30 backdrop-blur-sm">
           <div className="p-4 bg-zinc-900/50 rounded-full mb-4">
-            <Music size={32} className="text-zinc-600" />
+            <Icon name="music_note" size={32} className="text-zinc-600" />
           </div>
           <p className="text-zinc-400 text-lg">No Last.fm username configured.</p>
           <p className="text-zinc-500 text-sm">Open the Page Settings sidebar on the right to configure.</p>

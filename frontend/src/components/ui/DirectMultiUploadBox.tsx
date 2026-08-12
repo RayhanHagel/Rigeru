@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
-import { Upload, X, FileText, CheckCircle2 } from "lucide-react";
+
 import { directUploadFile } from "./DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 interface UploadedFileInfo {
   hash_name: string;
@@ -91,7 +92,7 @@ export function DirectMultiUploadBox({
         className={`flex flex-col items-center justify-center w-full min-h-[7rem] border rounded-3xl cursor-pointer transition-all duration-500 relative overflow-hidden backdrop-blur-md
           ${uploading ? 'border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-[0_0_30px_var(--theme-glow1)]' 
           : isDragging ? 'border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-[0_0_30px_var(--theme-glow2)] scale-[1.02]' 
-          : 'border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] bg-zinc-900/40 hover:bg-zinc-800/60 shadow-lg hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}
+          : 'border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] bg-[var(--theme-ui-bg)] shadow-lg hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}
       >
         <input
           ref={inputRef}
@@ -105,12 +106,12 @@ export function DirectMultiUploadBox({
         
         {uploading ? (
           <div className="flex flex-col items-center w-full z-10 transition-all duration-500 py-6">
-            <Upload size={40} className="mb-4 text-[var(--theme-heading)] animate-bounce drop-shadow-[0_0_10px_var(--theme-glow1)]" />
+            <Icon name="upload" size={40} className="mb-4 text-[var(--theme-heading)] animate-bounce drop-shadow-[0_0_10px_var(--theme-glow1)]" />
             <div className="text-base font-semibold tracking-wide text-[var(--theme-heading)] mb-4">Uploading files</div>
             <div className="w-full max-w-sm flex flex-col gap-3">
               {Object.entries(progresses).map(([name, p]) => (
                 <div key={name} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between text-xs text-zinc-300 font-medium px-1">
+                  <div className="flex justify-between text-xs text-[var(--theme-text)] font-medium px-1">
                     <span className="truncate max-w-[220px]">{name}</span>
                     <span className="text-[var(--theme-heading)]">{p}%</span>
                   </div>
@@ -124,9 +125,9 @@ export function DirectMultiUploadBox({
         ) : uploadedFiles.length > 0 ? (
           <div className="flex flex-col items-center w-full z-10 transition-transform duration-300 scale-105 py-6">
             <div className="p-4 bg-[var(--theme-ui-bg)] rounded-2xl shadow-[0_0_15px_var(--theme-glow1)] mb-4">
-              <CheckCircle2 size={40} className="text-[var(--theme-heading)] drop-shadow-[0_0_10px_var(--theme-glow1)]" />
+              <Icon name="check_circle" size={40} className="text-[var(--theme-heading)] drop-shadow-[0_0_10px_var(--theme-glow1)]" />
             </div>
-            <div className="text-lg font-semibold text-zinc-100 mb-5 tracking-wide text-center">{uploadedFiles.length} files successfully uploaded</div>
+            <div className="text-lg font-semibold text-[var(--theme-heading)] mb-5 tracking-wide text-center">{uploadedFiles.length} files successfully uploaded</div>
             <div className="flex flex-wrap justify-center gap-4">
               <label className="cursor-pointer flex items-center gap-2 text-sm font-medium text-[var(--theme-heading)] hover:text-[var(--theme-text)] bg-[var(--theme-ui-bg)] px-5 py-2.5 rounded-xl transition-all shadow-sm border border-[var(--theme-ui-border)]">
                 Add More
@@ -136,32 +137,32 @@ export function DirectMultiUploadBox({
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClear(); }}
                 className="flex items-center gap-2 text-sm font-medium text-[var(--theme-text)] hover:text-red-400 bg-[var(--theme-ui-bg)] hover:bg-red-500/15 px-5 py-2.5 rounded-xl transition-all shadow-sm border border-[var(--theme-ui-border)]"
               >
-                <X size={16} /> Clear All
+                <Icon name="close" size={16} /> Clear All
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-center w-full px-4 py-6 z-10 transition-transform duration-300 group-hover:scale-[1.01] gap-4 sm:gap-6">
-            <div className={`p-3 sm:p-4 rounded-2xl shrink-0 transition-all duration-500 ${isDragging ? 'bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] shadow-[0_0_20px_var(--theme-glow1)]' : 'bg-zinc-800/50 text-zinc-400 group-hover:bg-[var(--theme-ui-bg)] group-hover:text-[var(--theme-heading)] group-hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}>
-              <Upload size={28} className={`w-8 h-8 sm:w-9 sm:h-9 ${isDragging ? 'animate-bounce' : 'group-hover:scale-110 transition-transform duration-500'}`} />
+            <div className={`flex items-center justify-center p-3 sm:p-4 rounded-2xl shrink-0 transition-all duration-500 ${isDragging ? 'bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] shadow-[0_0_20px_var(--theme-glow1)]' : 'bg-[var(--theme-bg)] text-[var(--theme-text)] group-hover:bg-[var(--theme-ui-bg)] group-hover:text-[var(--theme-heading)] group-hover:shadow-[0_0_20px_var(--theme-glow1)]'}`}>
+              <Icon name="upload" size={32} className={`${isDragging ? 'animate-bounce' : 'group-hover:scale-110 transition-transform duration-500'}`} />
             </div>
             
             <div className="flex flex-col items-center text-center">
-              <p className="text-base sm:text-lg text-zinc-300 group-hover:text-white transition-colors duration-300"><span className="font-bold tracking-wide">Drag and Drop</span></p>
-              <p className="text-xs sm:text-sm font-medium text-zinc-500 group-hover:text-[var(--theme-heading)] transition-colors duration-300 mt-1">or Select Here</p>
+              <p className="text-base sm:text-lg text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors duration-300"><span className="font-bold tracking-wide">Drag and Drop</span></p>
+              <p className="text-xs sm:text-sm font-normal text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors duration-300 mt-1">or Select Here</p>
               
               <div className="flex flex-wrap gap-1.5 mt-3 items-center justify-center">
                 {accept === "*" || !accept ? (
-                  <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium border border-white/5">ANY FORMAT</span>
+                  <span className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium border border-[var(--theme-ui-border)]">ANY FORMAT</span>
                 ) : (
                   <>
                     {accept.split(',').slice(0, 6).map((ext, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium uppercase border border-white/5">
+                      <span key={i} className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium uppercase border border-[var(--theme-ui-border)]">
                         {ext.trim().replace('.', '')}
                       </span>
                     ))}
                     {accept.split(',').length > 6 && (
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-400 text-[10px] sm:text-xs font-medium border border-white/5">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--theme-bg)] text-[var(--theme-text)] text-[10px] sm:text-xs font-medium border border-[var(--theme-ui-border)]">
                         +{accept.split(',').length - 6}
                       </span>
                     )}
@@ -175,7 +176,7 @@ export function DirectMultiUploadBox({
       
       {error && (
         <div className="flex items-center justify-center gap-2 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] p-3 rounded-2xl shadow-[0_0_15px_var(--theme-glow1)] w-full max-w-sm mx-auto animate-in fade-in slide-in-from-top-2 duration-300">
-          <X size={16} className="shrink-0" />
+          <Icon name="close" size={16} className="shrink-0" />
           <span>{error}</span>
         </div>
       )}

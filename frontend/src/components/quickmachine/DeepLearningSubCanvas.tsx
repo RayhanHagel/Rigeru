@@ -11,10 +11,11 @@ import {
   ReactFlowProvider
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Layers, X, Network, Save, Settings2 } from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
 import { CustomEdge } from './CustomEdge';
 import { LayerNode } from './nodes/LayerNode';
+import { Icon } from "@/lib/utils";
 const nodeTypes = {
   layerNode: LayerNode,
 };
@@ -453,15 +454,15 @@ function SubCanvasInternal({ nodeData, onUpdateNodeData, onClose, mainGraphEdges
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b" style={{ borderColor: 'var(--theme-ui-border)', backgroundColor: 'color-mix(in srgb, var(--theme-bg) 50%, transparent)' }}>
         <div className="flex items-center gap-3">
-          <Network className="text-cyan-400" />
+          <Icon name="hub" className="text-cyan-400" />
           <div>
             <h2 className="text-xl font-bold text-zinc-100">Deep Learning Sub-Canvas</h2>
             <p className="text-xs text-zinc-400">Design your neural network architecture visually.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={onClose}><X size={16} className="mr-2"/> Cancel</Button>
-          <Button variant="primary" onClick={handleSaveAndClose} className="bg-cyan-600 hover:bg-cyan-700 text-white"><Save size={16} className="mr-2"/> Save Graph</Button>
+          <Button variant="secondary" onClick={onClose}><Icon name="close" size={16} className="mr-2"/> Cancel</Button>
+          <Button variant="primary" onClick={handleSaveAndClose} className="bg-cyan-600 hover:bg-cyan-700 text-white"><Icon name="save" size={16} className="mr-2"/> Save Graph</Button>
         </div>
       </div>
 

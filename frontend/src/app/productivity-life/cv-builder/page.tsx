@@ -2,11 +2,12 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
-import { FileText, User, Briefcase, GraduationCap, Star, Settings } from "lucide-react";
+
 import { TextInput } from "@/components/ui/TextInput";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { PopupModal } from '@/components/ui/PopupModal';
+import { Icon } from "@/lib/utils";
 
 export default function CVBuilderPage() {
   const [name, setName] = useState("");

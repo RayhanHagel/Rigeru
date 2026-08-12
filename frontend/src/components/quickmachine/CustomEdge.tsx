@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow } from '@xyflow/react';
-import { Trash2 } from 'lucide-react';
+import { Icon } from "@/lib/utils";
 
 export function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd, label, labelStyle, labelBgStyle, labelBgPadding, labelBgBorderRadius, selected }: any) {
   const { setEdges } = useReactFlow();
@@ -54,7 +54,7 @@ export function CustomEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosit
             onClick={() => setEdges((eds) => eds.filter(e => e.id !== id))}
             style={{ marginTop: label ? '-50px' : '0px' }}
           >
-            <Trash2 size={12} />
+            <Icon name="delete" size={12} />
           </button>
         </div>
       </EdgeLabelRenderer>

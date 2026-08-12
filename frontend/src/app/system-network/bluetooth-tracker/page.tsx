@@ -2,18 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
-import { Network, Power, Settings2, RefreshCw, MapPin, Crosshair, Search, X, Trash2 } from 'lucide-react';
+
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TextInput } from '@/components/ui/TextInput';
 import toast from 'react-hot-toast';
 
 // Dynamically import Map to prevent SSR issues with Leaflet
+import { Icon } from "@/lib/utils";
 const MapComponent = dynamic(() => import('./Map'), { 
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-zinc-900/50 rounded-xl border border-white/5">
-      <RefreshCw className="animate-spin text-zinc-500" size={24} />
+      <Icon name="refresh" className="animate-spin text-zinc-500" size={24} />
     </div>
   )
 });
@@ -202,7 +203,7 @@ export default function BluetoothTrackerPage() {
           <Button 
             variant="secondary" 
             onClick={() => setShowLocationModal(true)}
-            icon={<MapPin size={16} />}
+            icon={<Icon name="location_on" size={16} />}
           >
             Set Location
           </Button>
@@ -212,7 +213,7 @@ export default function BluetoothTrackerPage() {
               onClick={startTracking}
               disabled={isRunning}
               className={isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Start
             </Button>
@@ -221,7 +222,7 @@ export default function BluetoothTrackerPage() {
               onClick={stopTracking}
               disabled={!isRunning}
               className={!isRunning ? "opacity-50" : ""}
-              icon={<Power size={16} />}
+              icon={<Icon name="power_settings_new" size={16} />}
             >
               Stop
             </Button>
@@ -236,10 +237,10 @@ export default function BluetoothTrackerPage() {
             <h3 className="text-sm font-medium text-zinc-400">Detected Devices ({devices.length})</h3>
             <div className="flex gap-1">
               <Button variant="ghost" className="!p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={clearHistory} title="Clear History">
-                <Trash2 size={14} />
+                <Icon name="delete" size={14} />
               </Button>
               <Button variant="ghost" className="!p-2" onClick={fetchData} title="Refresh">
-                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                <Icon name="refresh" size={14} className={loading ? "animate-spin" : ""} />
               </Button>
             </div>
           </div>
@@ -330,7 +331,7 @@ export default function BluetoothTrackerPage() {
         <div className="w-full min-h-[600px] flex-1 relative rounded-xl border border-white/10 bg-zinc-950/50 shadow-2xl flex flex-col overflow-hidden">
           {center[0] === 0 && center[1] === 0 && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm text-center p-6">
-              <MapPin className="text-zinc-500 mb-4" size={48} />
+              <Icon name="location_on" className="text-zinc-500 mb-4" size={48} />
               <h3 className="text-lg font-medium text-white mb-2">Location Unavailable</h3>
               <p className="text-zinc-400 text-sm max-w-md">
                 We haven't detected your location yet. Set a custom location to see the map.
@@ -351,7 +352,7 @@ export default function BluetoothTrackerPage() {
                 onClick={() => setShowLocationModal(false)}
                 className="text-zinc-400 hover:text-white transition-colors p-1"
               >
-                <X size={20} />
+                <Icon name="close" size={20} />
               </button>
             </div>
             <div className="flex gap-2 mb-2">
@@ -364,7 +365,7 @@ export default function BluetoothTrackerPage() {
                 />
               </div>
               <Button variant="primary" onClick={searchLocation} disabled={searching} className="!px-4">
-                {searching ? <RefreshCw className="animate-spin" size={20} /> : <Search size={20} />}
+                {searching ? <Icon name="refresh" className="animate-spin" size={20} /> : <Icon name="search" size={20} />}
               </Button>
             </div>
             
@@ -388,7 +389,7 @@ export default function BluetoothTrackerPage() {
             
             <div className="flex gap-3 mt-4 pt-4 border-t border-white/5 shrink-0">
               <Button variant="ghost" className="flex-1" onClick={() => setShowLocationModal(false)}>Cancel</Button>
-              <Button variant="secondary" className="flex-1" onClick={useBrowserLocation} icon={<Crosshair size={16} />}>Use Browser</Button>
+              <Button variant="secondary" className="flex-1" onClick={useBrowserLocation} icon={<Icon name="my_location" size={16} />}>Use Browser</Button>
             </div>
           </Card>
         </div>

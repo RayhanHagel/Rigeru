@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Package, Search, Download, Trash, RefreshCw, AlertTriangle, PlayCircle, Terminal, CheckCircle2, Circle } from "lucide-react";
+
 import { Header } from "@/components/ui/Header";
 import { Container } from "@/components/ui/Container";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 type PackageInfo = {
   name: string;
@@ -235,7 +236,7 @@ export default function PackageManagerPage() {
                 triggerRevalidate();
               }} 
               disabled={isProcessing} 
-              icon={<RefreshCw size={16} />}
+              icon={<Icon name="refresh" size={16} />}
             >
               Force Fetch Updates
             </Button>
@@ -245,7 +246,7 @@ export default function PackageManagerPage() {
         {/* Search for Installed Packages & Batch Actions */}
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="flex-1 w-full relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
             <input 
               type="text" 
               value={installedSearchQuery}
@@ -256,15 +257,15 @@ export default function PackageManagerPage() {
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" onClick={() => handleAction(pm, "upgrade-all", [])} disabled={isProcessing} icon={<RefreshCw size={16} />}>
+            <Button variant="secondary" onClick={() => handleAction(pm, "upgrade-all", [])} disabled={isProcessing} icon={<Icon name="refresh" size={16} />}>
               Upgrade ALL
             </Button>
             {selected.size > 0 && (
               <>
-                <Button variant="primary" onClick={() => handleAction(pm, "update", Array.from(selected))} disabled={isProcessing} icon={<RefreshCw size={16} />}>
+                <Button variant="primary" onClick={() => handleAction(pm, "update", Array.from(selected))} disabled={isProcessing} icon={<Icon name="refresh" size={16} />}>
                   Update Selected ({selected.size})
                 </Button>
-                <Button variant="danger" onClick={() => handleAction(pm, "uninstall", Array.from(selected))} disabled={isProcessing} icon={<Trash size={16} />}>
+                <Button variant="danger" onClick={() => handleAction(pm, "uninstall", Array.from(selected))} disabled={isProcessing} icon={<Icon name="delete" size={16} />}>
                   Uninstall Selected ({selected.size})
                 </Button>
               </>
@@ -320,9 +321,9 @@ export default function PackageManagerPage() {
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex-shrink-0 transition-colors">
                         {isSelected ? (
-                          <CheckCircle2 size={18} className="text-secondary" />
+                          <Icon name="check_circle" size={18} className="text-secondary" />
                         ) : (
-                          <Circle size={18} className="text-zinc-600 hover:text-zinc-400 transition-colors" />
+                          <Icon name="circle" size={18} className="text-zinc-600 hover:text-zinc-400 transition-colors" />
                         )}
                       </div>
                       <div className="flex flex-col overflow-hidden w-full">
@@ -341,7 +342,7 @@ export default function PackageManagerPage() {
         </div>
 
         {/* Search & Install */}
-        <Container title={`Install new ${pm} package`} icon={<Search size={18} className="text-secondary"/>}>
+        <Container title={`Install new ${pm} package`} icon={<Icon name="search" size={18} className="text-secondary"/>}>
           <div className="flex gap-2 mb-4">
             <input 
               type="text" 
@@ -427,7 +428,7 @@ export default function PackageManagerPage() {
       <div className="w-full flex flex-col space-y-4">
         <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden min-h-[300px] flex flex-col">
           <div className="bg-zinc-900 border-b border-zinc-800 p-3 flex items-center gap-2">
-            <Terminal size={16} className="text-zinc-400" />
+            <Icon name="terminal" size={16} className="text-zinc-400" />
             <span className="text-sm font-medium text-zinc-300">Terminal Log</span>
           </div>
           <div 

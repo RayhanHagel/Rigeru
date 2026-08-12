@@ -23,7 +23,7 @@ export function Card({ href, title, description, icon, children, className = "" 
         {(icon || title || description) && (
           <div className="flex items-start gap-4 z-10">
             {icon && (
-              <div className="p-3 rounded-xl bg-black/20 border border-[var(--theme-ui-border)] text-[var(--theme-text)] shadow-inner group-hover:scale-110 transition-transform duration-300">
+              <div className="flex items-center justify-center shrink-0 p-3 rounded-xl bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] shadow-inner group-hover:scale-110 transition-transform duration-300">
                 {icon}
               </div>
             )}

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { FolderArchive, Trash2, Plus, ArrowUp, ArrowDown, List, FileText, AlertTriangle, Zap, Download } from "lucide-react";
+
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 interface LinkResult {
   link: string;
@@ -143,7 +144,7 @@ export default function LinkCleanerPage() {
           <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
             Target Links
           </label>
-          <Button variant="secondary" size="sm" onClick={addLink} icon={<Plus size={14} />} className="h-8 text-xs">
+          <Button variant="secondary" size="sm" onClick={addLink} icon={<Icon name="add" size={14} />} className="h-8 text-xs">
             Add Link
           </Button>
         </div>
@@ -165,7 +166,7 @@ export default function LinkCleanerPage() {
                   onClick={() => moveLink(idx, 'up')}
                   disabled={idx === 0}
                 >
-                  <ArrowUp size={16} />
+                  <Icon name="arrow_upward" size={16} />
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -174,7 +175,7 @@ export default function LinkCleanerPage() {
                   onClick={() => moveLink(idx, 'down')}
                   disabled={idx === links.length - 1}
                 >
-                  <ArrowDown size={16} />
+                  <Icon name="arrow_downward" size={16} />
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -182,7 +183,7 @@ export default function LinkCleanerPage() {
                   className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                   onClick={() => removeLink(idx)}
                 >
-                  <Trash2 size={16} />
+                  <Icon name="delete" size={16} />
                 </Button>
               </div>
             </div>
@@ -229,7 +230,7 @@ export default function LinkCleanerPage() {
 
         {errorMsg && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl flex items-start gap-3 text-sm">
-            <AlertTriangle className="shrink-0 mt-0.5" size={16} />
+            <Icon name="warning" className="shrink-0 mt-0.5" size={16} />
             <p>{errorMsg}</p>
           </div>
         )}
@@ -247,7 +248,7 @@ export default function LinkCleanerPage() {
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <Zap size={18} />
+              <Icon name="bolt" size={18} />
               Clean Links
             </span>
           )}
@@ -293,7 +294,7 @@ export default function LinkCleanerPage() {
                                 <td className="px-4 py-3 whitespace-nowrap text-emerald-400">{res.error ? "-" : formatBytes(res.cleaned_size_bytes)}</td>
                                 <td className="px-4 py-3 max-w-[200px]">
                                     {res.error ? (
-                                        <span className="text-red-400 flex items-center gap-1 text-xs"><AlertTriangle size={12}/> {res.error}</span>
+                                        <span className="text-red-400 flex items-center gap-1 text-xs"><Icon name="warning" size={12}/> {res.error}</span>
                                     ) : (
                                         <span className="text-emerald-400 text-xs">Success</span>
                                     )}
@@ -324,7 +325,7 @@ export default function LinkCleanerPage() {
                 <Button 
                   variant="secondary" 
                   size="sm"
-                  icon={<Download size={14} />}
+                  icon={<Icon name="download" size={14} />}
                   onClick={() => {
                     const content = activeTab === 'raw' ? aggregatedRaw : activeTab === 'named' ? aggregatedNamed : aggregatedLogs;
                     const blob = new Blob([content], { type: "text/plain" });

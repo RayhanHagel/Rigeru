@@ -2,10 +2,11 @@
 import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
-import { Search, Eraser, CheckCircle2, AlertTriangle, FileImage } from "lucide-react";
+
 
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { Icon } from "@/lib/utils";
 
 export default function ExifRemoverPage() {
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export default function ExifRemoverPage() {
         ) : (
           <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl mb-6">
             <div className="flex items-center gap-3">
-              <FileImage size={24} className="text-secondary" />
+              <Icon name="image" size={24} className="text-secondary" />
               <span className="text-zinc-200 font-medium truncate max-w-[200px]">{fileName}</span>
             </div>
             <button
@@ -168,13 +169,13 @@ export default function ExifRemoverPage() {
                   {!isAnalyzing && exifData && (
                     Object.keys(exifData).length === 0 ? (
                       <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-sm flex items-center gap-2">
-                        <CheckCircle2 size={18} />
+                        <Icon name="check_circle" size={18} />
                         This image is completely clean! No EXIF data was found.
                       </div>
                     ) : (
                       <div className="space-y-6">
                         <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-lg text-sm flex items-center gap-2">
-                          <AlertTriangle size={18} />
+                          <Icon name="warning" size={18} />
                           Found {Object.keys(exifData).length} metadata tags in this image.
                         </div>
                         
@@ -205,7 +206,7 @@ export default function ExifRemoverPage() {
                         
                         {stripSuccess && (
                           <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-sm flex items-center gap-2">
-                            <CheckCircle2 size={18} />
+                            <Icon name="check_circle" size={18} />
                             {stripSuccess}
                           </div>
                         )}
@@ -216,7 +217,7 @@ export default function ExifRemoverPage() {
                           disabled={isStripping}
                           className="w-full py-4 shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-shadow"
                         >
-                          <Eraser size={18} className="mr-2" />
+                          <Icon name="ink_eraser" size={18} className="mr-2" />
                           {isStripping ? "Sanitizing image locally..." : "🧹 Strip Metadata & Download Clean Image"}
                         </Button>
                       </div>

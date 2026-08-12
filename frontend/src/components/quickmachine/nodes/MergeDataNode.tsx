@@ -1,6 +1,7 @@
 import { Handle, Position, useReactFlow } from '@xyflow/react';
-import { Combine, Trash2 } from 'lucide-react';
+
 import { useLayoutUpdate } from '../useLayoutUpdate';
+import { Icon } from "@/lib/utils";
 
 export function MergeDataNode({ id, data, selected }: any) {
   const { deleteElements, getNodes } = useReactFlow();
@@ -23,7 +24,7 @@ export function MergeDataNode({ id, data, selected }: any) {
         }}
         className="absolute -top-3 -right-3 p-1.5 bg-red-500/20 text-red-500 rounded-full border border-red-500/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/40 z-10"
       >
-        <Trash2 size={12} />
+        <Icon name="delete" size={12} />
       </button>
 
       {isVert ? (
@@ -44,7 +45,7 @@ export function MergeDataNode({ id, data, selected }: any) {
       
       <div className="flex items-center gap-2">
         <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
-          <Combine size={16} />
+          <Icon name="merge" size={16} />
         </div>
         <div className="flex flex-col">
           <div className="text-sm font-bold text-zinc-100">{data.label || 'Merge Data'}</div>

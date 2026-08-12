@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus, BookOpen } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/lib/utils";
 
 export default function MangaSearch() {
   const router = useRouter();
@@ -67,14 +68,14 @@ export default function MangaSearch() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b border-primary/30 pb-6">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-primary/20 text-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <Search size={32} />
+            <Icon name="search" size={32} />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Manga Search</h1>
             <p className="text-zinc-400 text-sm font-medium">Find and add new manga to your library.</p>
           </div>
         </div>
-        <Button variant="secondary" icon={<BookOpen size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')}>
+        <Button variant="secondary" icon={<Icon name="menu_book" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')}>
           Library
         </Button>
       </div>
@@ -92,7 +93,7 @@ export default function MangaSearch() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="flex-1 bg-zinc-950 border border-white/10 rounded-xl p-3 text-white focus:border-primary outline-none transition-all"
               />
-              <Button variant="primary" icon={<Search size={16} />} onClick={handleSearch} isLoading={loading} className="bg-primary hover:bg-primary text-white border-none px-6">
+              <Button variant="primary" icon={<Icon name="search" size={16} />} onClick={handleSearch} isLoading={loading} className="bg-primary hover:bg-primary text-white border-none px-6">
                 Search
               </Button>
             </div>
@@ -141,7 +142,7 @@ export default function MangaSearch() {
                   <div className="mt-auto pt-4 flex justify-end">
                     <Button 
                       variant="secondary" 
-                      icon={<Plus size={16} />} 
+                      icon={<Icon name="add" size={16} />} 
                       onClick={() => handleAdd(title, urlStr)}
                       isLoading={adding[title]}
                       className="text-xs py-1.5 px-3 h-auto"

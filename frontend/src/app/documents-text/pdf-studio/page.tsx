@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { DirectMultiUploadBox } from "@/components/ui/DirectMultiUploadBox";
-import { ArrowLeft, Minimize2, Eraser, Lock, Layers, Info, ImageDown, Search, GitCompare, Scissors, Image, Globe, Trash2, RotateCw, ListOrdered, Crop, Unlock, Droplets, PenTool, Maximize, Zap, Wrench } from "lucide-react";
+import { Icon } from "@/lib/utils";
+
 
 type ToolType = "merge" | "split" | "compress" | "pdf-to-image" | "extract-images" | "web-to-pdf" | "remove-pages" | "rotate-pages" | "organize" | "crop" | "protect" | "unlock" | "redact" | "watermark" | "sign" | "metadata" | "resize" | "flatten" | "optimize" | "repair" | "search" | "compare" | null;
 
@@ -12,33 +13,33 @@ export default function PDFStudioPage() {
   const [activeTool, setActiveTool] = useState<ToolType>(null);
 
   const tools = [
-    { id: "merge" as ToolType, name: "Merge PDF", icon: <Layers size={24} className="text-secondary" />, desc: "Combine multiple PDFs into one unified document." },
-    { id: "split" as ToolType, name: "Split PDF", icon: <Scissors size={24} className="text-primary" />, desc: "Extract pages or split a PDF into multiple files." },
-    { id: "compress" as ToolType, name: "Compress PDF", icon: <Minimize2 size={24} className="text-green-400" />, desc: "Reduce file size while preserving quality." },
-    { id: "pdf-to-image" as ToolType, name: "PDF to Image", icon: <ImageDown size={24} className="text-yellow-400" />, desc: "Convert PDF pages into high-quality images." },
-    { id: "extract-images" as ToolType, name: "Extract Images", icon: <Image size={24} className="text-cyan-400" />, desc: "Extract all embedded images from your PDF." },
-    { id: "web-to-pdf" as ToolType, name: "Web to PDF", icon: <Globe size={24} className="text-secondary" />, desc: "Convert any public webpage into a PDF." },
+    { id: "merge" as ToolType, name: "Merge PDF", icon: <Icon name="layers" size={24} className="text-secondary" />, desc: "Combine multiple PDFs into one unified document." },
+    { id: "split" as ToolType, name: "Split PDF", icon: <Icon name="content_cut" size={24} className="text-primary" />, desc: "Extract pages or split a PDF into multiple files." },
+    { id: "compress" as ToolType, name: "Compress PDF", icon: <Icon name="fullscreen_exit" size={24} className="text-green-400" />, desc: "Reduce file size while preserving quality." },
+    { id: "pdf-to-image" as ToolType, name: "PDF to Image", icon: <Icon name="photo_size_select_large" size={24} className="text-yellow-400" />, desc: "Convert PDF pages into high-quality images." },
+    { id: "extract-images" as ToolType, name: "Extract Images", icon: <Icon name="image" size={24} className="text-cyan-400" />, desc: "Extract all embedded images from your PDF." },
+    { id: "web-to-pdf" as ToolType, name: "Web to PDF", icon: <Icon name="language" size={24} className="text-secondary" />, desc: "Convert any public webpage into a PDF." },
     
-    { id: "remove-pages" as ToolType, name: "Remove Pages", icon: <Trash2 size={24} className="text-red-400" />, desc: "Delete unwanted pages from a PDF." },
-    { id: "rotate-pages" as ToolType, name: "Rotate Pages", icon: <RotateCw size={24} className="text-orange-400" />, desc: "Rotate specific or all pages in a PDF." },
-    { id: "organize" as ToolType, name: "Organize PDF", icon: <ListOrdered size={24} className="text-emerald-400" />, desc: "Rearrange the page order of your document." },
-    { id: "crop" as ToolType, name: "Crop PDF", icon: <Crop size={24} className="text-pink-400" />, desc: "Crop margins from your PDF pages." },
+    { id: "remove-pages" as ToolType, name: "Remove Pages", icon: <Icon name="delete" size={24} className="text-red-400" />, desc: "Delete unwanted pages from a PDF." },
+    { id: "rotate-pages" as ToolType, name: "Rotate Pages", icon: <Icon name="redo" size={24} className="text-orange-400" />, desc: "Rotate specific or all pages in a PDF." },
+    { id: "organize" as ToolType, name: "Organize PDF", icon: <Icon name="format_list_numbered" size={24} className="text-emerald-400" />, desc: "Rearrange the page order of your document." },
+    { id: "crop" as ToolType, name: "Crop PDF", icon: <Icon name="crop" size={24} className="text-pink-400" />, desc: "Crop margins from your PDF pages." },
     
-    { id: "protect" as ToolType, name: "Protect PDF", icon: <Lock size={24} className="text-red-500" />, desc: "Add a password to secure your document." },
-    { id: "unlock" as ToolType, name: "Unlock PDF", icon: <Unlock size={24} className="text-green-500" />, desc: "Remove passwords and security restrictions." },
-    { id: "redact" as ToolType, name: "Redact PDF", icon: <Eraser size={24} className="text-zinc-400" />, desc: "Permanently censor sensitive information." },
-    { id: "watermark" as ToolType, name: "Add Watermark", icon: <Droplets size={24} className="text-secondary" />, desc: "Stamp an image or text over your PDF." },
-    { id: "sign" as ToolType, name: "Sign PDF", icon: <PenTool size={24} className="text-primary" />, desc: "Add a signature to your PDF document." },
+    { id: "protect" as ToolType, name: "Protect PDF", icon: <Icon name="lock" size={24} className="text-red-500" />, desc: "Add a password to secure your document." },
+    { id: "unlock" as ToolType, name: "Unlock PDF", icon: <Icon name="lock_open" size={24} className="text-green-500" />, desc: "Remove passwords and security restrictions." },
+    { id: "redact" as ToolType, name: "Redact PDF", icon: <Icon name="ink_eraser" size={24} className="text-zinc-400" />, desc: "Permanently censor sensitive information." },
+    { id: "watermark" as ToolType, name: "Add Watermark", icon: <Icon name="water_drop" size={24} className="text-secondary" />, desc: "Stamp an image or text over your PDF." },
+    { id: "sign" as ToolType, name: "Sign PDF", icon: <Icon name="draw" size={24} className="text-primary" />, desc: "Add a signature to your PDF document." },
     
-    { id: "metadata" as ToolType, name: "Edit Metadata", icon: <Info size={24} className="text-yellow-500" />, desc: "View and modify author, title, and PDF metadata." },
-    { id: "resize" as ToolType, name: "Change Page Size", icon: <Maximize size={24} className="text-cyan-500" />, desc: "Standardize your pages to A4 or Letter sizes." },
+    { id: "metadata" as ToolType, name: "Edit Metadata", icon: <Icon name="info" size={24} className="text-yellow-500" />, desc: "View and modify author, title, and PDF metadata." },
+    { id: "resize" as ToolType, name: "Change Page Size", icon: <Icon name="fullscreen" size={24} className="text-cyan-500" />, desc: "Standardize your pages to A4 or Letter sizes." },
     
-    { id: "flatten" as ToolType, name: "Flatten PDF", icon: <Layers size={24} className="text-orange-500" />, desc: "Flatten forms and annotations into the document." },
-    { id: "optimize" as ToolType, name: "Optimize PDF", icon: <Zap size={24} className="text-emerald-500" />, desc: "Linearize and optimize for fast web viewing." },
-    { id: "repair" as ToolType, name: "Repair PDF", icon: <Wrench size={24} className="text-gray-400" />, desc: "Fix and recover data from corrupted PDFs." },
+    { id: "flatten" as ToolType, name: "Flatten PDF", icon: <Icon name="layers" size={24} className="text-orange-500" />, desc: "Flatten forms and annotations into the document." },
+    { id: "optimize" as ToolType, name: "Optimize PDF", icon: <Icon name="bolt" size={24} className="text-emerald-500" />, desc: "Linearize and optimize for fast web viewing." },
+    { id: "repair" as ToolType, name: "Repair PDF", icon: <Icon name="build" size={24} className="text-gray-400" />, desc: "Fix and recover data from corrupted PDFs." },
     
-    { id: "search" as ToolType, name: "Search PDF", icon: <Search size={24} className="text-blue-300" />, desc: "Advanced full-text search across documents." },
-    { id: "compare" as ToolType, name: "Compare PDFs", icon: <GitCompare size={24} className="text-purple-300" />, desc: "Find visual and textual differences between files." }
+    { id: "search" as ToolType, name: "Search PDF", icon: <Icon name="search" size={24} className="text-blue-300" />, desc: "Advanced full-text search across documents." },
+    { id: "compare" as ToolType, name: "Compare PDFs", icon: <Icon name="compare_arrows" size={24} className="text-purple-300" />, desc: "Find visual and textual differences between files." }
   ];
 
   return (
@@ -72,7 +73,7 @@ export default function PDFStudioPage() {
             onClick={() => setActiveTool(null)}
             className="w-fit text-zinc-400 hover:text-white px-0"
           >
-            <ArrowLeft size={16} className="mr-2" /> Back to Studio
+            <Icon name="arrow_back" size={16} className="mr-2" /> Back to Studio
           </Button>
           
           <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">

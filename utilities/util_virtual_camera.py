@@ -42,6 +42,28 @@ def stop_virtual_camera():
         _active_camera = None
         print("Stopped virtual camera.")
 
+def send_frame_bgr(frame_bgr: np.ndarray):
+    """
+    Sends an OpenCV BGR numpy array directly to the virtual camera.
+    """
+    global _active_camera
+    if _active_camera is None:
+        return
+        
+    try:
+        h, w = frame_bgr.shape[:2]
+        cam_w, cam_h = _active_camera.width, _active_camera.height
+        
+        # We need the frame to match the virtual camera size exactly
+        if w != cam_w or h != cam_h:
+            frame_bgr = cv2.resize(frame_bgr, (cam_w, cam_h))
+            
+        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        _active_camera.send(frame_rgb)
+        # We don't sleep here since the AI loops (e.g., cap.read()) provide their own pacing
+    except Exception as e:
+        print(f"Error sending BGR frame to virtual camera: {e}")
+
 def send_frame(frame_bytes: bytes, width: int, height: int):
     """
     Sends a raw RGB frame to the virtual camera.

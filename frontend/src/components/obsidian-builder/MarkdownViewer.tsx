@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { FileText, X, Loader2 } from 'lucide-react';
+import { Icon } from "@/lib/utils";
+
 
 interface MarkdownViewerProps {
   content: string;
@@ -16,7 +17,7 @@ export default function MarkdownViewer({ content, title, isLoading, onClose, onI
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-zinc-500 space-y-3">
-                <Loader2 className="animate-spin text-purple-400" size={32} />
+                <Icon name="progress_activity" className="animate-spin text-purple-400" size={32} />
                 <p>Loading Markdown...</p>
             </div>
         );
@@ -106,7 +107,7 @@ export default function MarkdownViewer({ content, title, isLoading, onClose, onI
         <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2 truncate pr-4"><span className="truncate">{title}</span>
         </h3>
         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors shrink-0">
-            <X size={20} />
+            <Icon name="close" size={20} />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-6 custom-scrollbar break-words whitespace-pre-wrap">

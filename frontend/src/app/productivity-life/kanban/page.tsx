@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { LayoutDashboard, Plus, Calendar, GripVertical, AlertCircle, RefreshCw } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -132,7 +133,7 @@ export default function KanbanPage() {
             variant="secondary" 
             onClick={handleSyncCalendar} 
             disabled={syncing}
-            icon={syncing ? <RefreshCw size={18} className="animate-spin text-primary" /> : <Calendar size={18} className="text-primary" />}
+            icon={syncing ? <Icon name="refresh" size={18} className="animate-spin text-primary" /> : <Icon name="calendar_today" size={18} className="text-primary" />}
           >
             {syncing ? "Syncing" : "Sync to Calendar"}
           </Button>
@@ -141,7 +142,7 @@ export default function KanbanPage() {
 
       {syncMsg.text && (
         <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${syncMsg.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'}`}>
-          <AlertCircle className="shrink-0 mt-0.5" size={18} />
+          <Icon name="error" className="shrink-0 mt-0.5" size={18} />
           <p className="text-sm font-medium">{syncMsg.text}</p>
         </div>
       )}
@@ -158,7 +159,7 @@ export default function KanbanPage() {
                   onClick={() => setIsAdding(col.id)}
                   className="p-1.5 hover:bg-white/10 rounded transition-colors text-zinc-400 hover:text-white"
                 >
-                  <Plus size={18} />
+                  <Icon name="add" size={18} />
                 </button>
               </div>
               
@@ -196,7 +197,7 @@ export default function KanbanPage() {
                         <h4 className="text-sm font-medium text-zinc-200">{task.title}</h4>
                         {task.due_date && (
                           <div className="flex items-center gap-1.5 mt-3 text-xs text-zinc-500 bg-zinc-950 inline-flex px-2 py-1 rounded-md border border-white/5">
-                            <Calendar size={12} />
+                            <Icon name="calendar_today" size={12} />
                             {task.due_date}
                           </div>
                         )}

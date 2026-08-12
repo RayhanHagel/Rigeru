@@ -2,7 +2,8 @@
 import React from 'react';
 
 import { FlowEditor } from '@/components/quickmachine/FlowEditor';
-import { Network } from 'lucide-react';
+import { Icon } from "@/lib/utils";
+
 
 export default function QuickMachinePage() {
   return (
@@ -10,7 +11,7 @@ export default function QuickMachinePage() {
       <div className="px-6 py-4 flex-shrink-0 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-secondary/20 text-secondary">
-            <Network size={24} />
+            <Icon name="hub" size={24} />
           </div>
           <div>
             <h1 className="text-xl font-bold text-zinc-100">Visual ML Builder</h1>
