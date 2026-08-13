@@ -461,9 +461,9 @@ export default function ObsidianBuilderPage() {
                   onChange={e => setSortVault(e.target.value)}
                   className="bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-sm text-zinc-200 focus:outline-none"
                 >
-                  <option value="date">Newest</option>
-                  <option value="a-z">A - Z</option>
-                  <option value="z-a">Z - A</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="date">Newest</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="a-z">A - Z</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="z-a">Z - A</option>
                 </select>
               </div>
 

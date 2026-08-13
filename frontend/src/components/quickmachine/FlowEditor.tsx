@@ -373,9 +373,9 @@ export function FlowEditor() {
                 
                 <label className="text-sm text-zinc-400 mt-2">Missing Value Handling</label>
                 <select value={data.missingVal || 'drop'} onChange={(e) => updateNodeData(selectedNode.id, { missingVal: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                  <option value="drop">Drop Rows</option>
-                  <option value="mean">Impute (Mean)</option>
-                  <option value="median">Impute (Median)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="drop">Drop Rows</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="mean">Impute (Mean)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="median">Impute (Median)</option>
                 </select>
               </div>
             )}
@@ -404,17 +404,17 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Numerical Scaler</label>
               <select value={data.scaler || 'StandardScaler'} onChange={(e) => updateNodeData(selectedNode.id, { scaler: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>StandardScaler</option>
-                <option>MinMaxScaler</option>
-                <option>RobustScaler</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">StandardScaler</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">MinMaxScaler</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">RobustScaler</option>
               </select>
             </div>
             <div className="flex flex-col gap-2 mt-2">
               <label className="text-sm text-zinc-400">Categorical Encoder</label>
               <select value={data.encoder || 'OneHotEncoder'} onChange={(e) => updateNodeData(selectedNode.id, { encoder: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>OneHotEncoder</option>
-                <option>LabelEncoder</option>
-                <option>OrdinalEncoder</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">OneHotEncoder</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">LabelEncoder</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">OrdinalEncoder</option>
               </select>
             </div>
           </div>
@@ -431,14 +431,14 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Task Type</label>
               <select value={taskType} onChange={(e) => updateNodeData(selectedNode.id, { taskType: e.target.value, model: Object.keys(ALGORITHM_CONFIGS[e.target.value])[0], params: {} })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Classification</option>
-                <option>Regression</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Classification</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Regression</option>
               </select>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Algorithm</label>
               <select value={modelName} onChange={(e) => updateNodeData(selectedNode.id, { model: e.target.value, params: {} })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                {algos.map(a => <option key={a} value={a}>{a}</option>)}
+                {algos.map(a => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={a} value={a}>{a}</option>)}
               </select>
             </div>
             
@@ -456,8 +456,8 @@ export function FlowEditor() {
                           onChange={(e) => updateNodeData(selectedNode.id, { params: { ...data.params, [pKey]: { ...paramState, mode: e.target.value } } })}
                           className="text-[10px] bg-black/40 border border-white/10 rounded px-1.5 py-0.5 text-zinc-400"
                         >
-                          <option value="static">Static</option>
-                          <option value="tune">Tune</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="static">Static</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="tune">Tune</option>
                         </select>
                       </div>
                       {paramState.mode === 'static' ? (
@@ -466,7 +466,7 @@ export function FlowEditor() {
                           onChange={(e) => updateNodeData(selectedNode.id, { params: { ...data.params, [pKey]: { ...paramState, value: e.target.value } } })}
                           className="bg-black/40 border border-white/10 rounded p-1.5 text-xs text-white"
                         >
-                          {params[pKey].map((opt: any) => <option key={opt} value={opt}>{opt}</option>)}
+                          {params[pKey].map((opt: any) => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={opt} value={opt}>{opt}</option>)}
                         </select>
                       ) : (
                         <div className="text-[10px] text-zinc-500 italic">Will be tuned by Hypertune Node</div>
@@ -502,10 +502,10 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Final Estimator (Meta-Model)</label>
               <select value={data.final_estimator || 'Logistic Regression'} onChange={(e) => updateNodeData(selectedNode.id, { final_estimator: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Logistic Regression</option>
-                <option>Ridge Classifier</option>
-                <option>Random Forest</option>
-                <option>Gradient Boosting</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Logistic Regression</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Ridge Classifier</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Random Forest</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Gradient Boosting</option>
               </select>
             </div>
             <div className="flex flex-col gap-2 mt-2">
@@ -523,8 +523,8 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Framework</label>
               <select value={data.framework || 'PyTorch'} onChange={(e) => updateNodeData(selectedNode.id, { framework: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>PyTorch</option>
-                <option>TensorFlow</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">PyTorch</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">TensorFlow</option>
               </select>
             </div>
             
@@ -565,8 +565,8 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Tuner Engine</label>
               <select value={data.tuner || 'Optuna'} onChange={(e) => updateNodeData(selectedNode.id, { tuner: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Optuna</option>
-                <option>KT Bayesian Optimization</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Optuna</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">KT Bayesian Optimization</option>
               </select>
             </div>
             <div className="flex flex-col gap-2 mt-2">
@@ -576,9 +576,9 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2 mt-2">
               <label className="text-sm text-zinc-400">Objective</label>
               <select value={data.objective || 'val_loss'} onChange={(e) => updateNodeData(selectedNode.id, { objective: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>val_loss</option>
-                <option>val_accuracy</option>
-                <option>f1_score</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">val_loss</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">val_accuracy</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">f1_score</option>
               </select>
             </div>
           </div>
@@ -614,14 +614,14 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Plot Type</label>
               <select value={data.plotType || 'Distribution Plot'} onChange={(e) => updateNodeData(selectedNode.id, { plotType: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Distribution Plot</option>
-                <option>Box Plot</option>
-                <option>Violin Plot</option>
-                <option>Scatter Plot</option>
-                <option>Bar Plot</option>
-                <option>Heatmap</option>
-                <option>Venn Diagram</option>
-                <option>Silhouette Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Distribution Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Box Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Violin Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Scatter Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Bar Plot</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Heatmap</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Venn Diagram</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Silhouette Plot</option>
               </select>
             </div>
           </div>
@@ -632,8 +632,8 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Split Strategy</label>
               <select value={data.splitStrategy || 'Auto (Num/Cat)'} onChange={(e) => updateNodeData(selectedNode.id, { splitStrategy: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Auto (Num/Cat)</option>
-                <option>Custom Columns</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Auto (Num/Cat)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Custom Columns</option>
               </select>
             </div>
             {data.splitStrategy === 'Custom Columns' && (
@@ -650,9 +650,9 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Operation</label>
               <select value={data.operation || 'Drop Columns'} onChange={(e) => updateNodeData(selectedNode.id, { operation: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Drop Columns</option>
-                <option>Keep Only Columns</option>
-                <option>Filter Rows by Condition</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Drop Columns</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Keep Only Columns</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Filter Rows by Condition</option>
               </select>
             </div>
             <div className="flex flex-col gap-2 mt-2">
@@ -667,12 +667,12 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Merge Type</label>
               <select value={data.mergeType || 'Inner Join'} onChange={(e) => updateNodeData(selectedNode.id, { mergeType: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Inner Join</option>
-                <option>Outer Join</option>
-                <option>Left Join</option>
-                <option>Right Join</option>
-                <option>Concatenate Rows</option>
-                <option>Concatenate Columns</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Inner Join</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Outer Join</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Left Join</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Right Join</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Concatenate Rows</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Concatenate Columns</option>
               </select>
             </div>
             {!data.mergeType?.includes('Concatenate') && (
@@ -689,12 +689,12 @@ export function FlowEditor() {
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-400">Primary Metric</label>
               <select value={data.metric || 'Accuracy'} onChange={(e) => updateNodeData(selectedNode.id, { metric: e.target.value })} className="bg-zinc-900/50 border border-white/10 rounded-lg p-2 text-white">
-                <option>Accuracy</option>
-                <option>F1 Score</option>
-                <option>Precision</option>
-                <option>Recall</option>
-                <option>Loss</option>
-                <option>ROC-AUC</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Accuracy</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">F1 Score</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Precision</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Recall</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Loss</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">ROC-AUC</option>
               </select>
             </div>
             <div className="p-3 bg-black/20 rounded-lg border border-white/5 text-xs text-zinc-400 text-center mt-2">

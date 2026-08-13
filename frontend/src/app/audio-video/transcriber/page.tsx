@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
+import { Header } from "@/components/ui/Header";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { Icon } from "@/lib/utils";
 
@@ -240,16 +241,9 @@ export default function TranscriberPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-indigo-500/30 pb-4">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Transcriber</h1>
-            <p className="text-zinc-400 text-sm font-medium">Transcribe media, identify speakers, and style subtitles.</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+        <Header title="Transcriber" subtitle="Transcribe media, identify speakers, and style subtitles." />
+        <div className="flex items-center gap-2">
           <ModernTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -261,28 +255,27 @@ export default function TranscriberPage() {
           />
         </div>
       </div>
-      <div className="bg-zinc-900/50 border border-white/5 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
 
-        {/* Tab Content */}
-        <div className="p-6 min-h-[500px]">
+      <div className="flex-1 w-full flex flex-col min-h-0">
+        <div className="flex flex-col min-h-[500px]">
           {/* TRANSCRIBE TAB */}
           <ModernTabContent activeTab={activeTab}>
                   {activeTab === "transcribe" && (
                               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                <h2 className="text-xl font-semibold text-zinc-100">Upload & Transcribe</h2>
+                                <h2 className="text-xl font-semibold text-[var(--theme-heading)]">Upload & Transcribe</h2>
                                 
-                                <div className="bg-zinc-950/50 border border-white/5 rounded-xl p-6 mb-6">
-                                  <h3 className="font-medium text-zinc-100 mb-4 flex items-center gap-2">Diarization Settings</h3>
-                                  <label className="flex items-center gap-3 cursor-pointer p-3 bg-zinc-900 border border-white/5 rounded-lg hover:border-white/10 transition-colors">
+                                <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 mb-6">
+                                  <h3 className="font-bold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Diarization Settings</h3>
+                                  <label className="flex items-center gap-3 cursor-pointer p-3 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg hover:border-[var(--theme-ui-border)] transition-colors">
                                     <input 
                                       type="checkbox" 
                                       checked={doDiarize}
                                       onChange={(e) => setDoDiarize(e.target.checked)}
-                                      className="w-5 h-5 rounded border-zinc-700 text-secondary focus:ring-secondary bg-zinc-800"
+                                      className="w-5 h-5 rounded border-[var(--theme-ui-border)] text-secondary focus:ring-[var(--theme-heading)] bg-[var(--theme-ui-bg)]"
                                     />
                                     <div>
-                                      <div className="text-zinc-200 font-medium text-sm">Identify Individual Speakers</div>
-                                      <div className="text-zinc-500 text-xs mt-0.5">Requires Hugging Face token</div>
+                                      <div className="text-[var(--theme-heading)] font-bold text-sm">Identify Individual Speakers</div>
+                                      <div className="text-[var(--theme-text)] font-bold text-xs mt-0.5">Requires Hugging Face token</div>
                                     </div>
                                   </label>
                                   
@@ -293,27 +286,27 @@ export default function TranscriberPage() {
                                         placeholder="hf_xxxxxxxx"
                                         value={hfToken}
                                         onChange={(e) => setHfToken(e.target.value)}
-                                        className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-zinc-100 focus:border-secondary outline-none transition-colors"
+                                        className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-colors"
                                       />
-                                      <p className="text-xs text-zinc-500">Required for Pyannote diarization.</p>
+                                      <p className="text-xs text-[var(--theme-text)]">Required for Pyannote diarization.</p>
                                     </div>
                                   )}
                                 </div>
 
                                 <div className="flex flex-col gap-6 animate-slide-up">
-                                  <div className="bg-zinc-950/50 border border-white/5 rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]">
+                                  <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]">
                                     {fileHash ? (
                                       <div className="w-full space-y-4">
-                                        <div className="flex items-center justify-between bg-zinc-900 p-3 rounded-lg border border-white/5">
+                                        <div className="flex items-center justify-between bg-[var(--theme-bg)] p-3 rounded-lg border border-[var(--theme-ui-border)]">
                                           <div className="flex items-center gap-3 overflow-hidden">
                                             <Icon name="video_file" className="text-secondary shrink-0" size={24} />
-                                            <span className="text-zinc-200 font-medium truncate">{filename}</span>
+                                            <span className="text-[var(--theme-text)] font-medium truncate">{filename}</span>
                                           </div>
                                           <Icon name="check_circle" className="text-emerald-500 shrink-0" size={20} />
                                         </div>
                                         
                                         {previewFrame && (
-                                          <img src={previewFrame} alt="Preview" className="w-full aspect-video object-cover rounded-lg shadow-lg border border-white/10" />
+                                          <img src={previewFrame} alt="Preview" className="w-full aspect-video object-cover rounded-lg shadow-lg border border-[var(--theme-ui-border)]" />
                                         )}
                                         
                                         <button 
@@ -323,7 +316,7 @@ export default function TranscriberPage() {
                                             setFilename("");
                                             setPreviewFrame(null);
                                           }}
-                                          className="text-sm text-zinc-500 hover:text-zinc-300 w-full text-center"
+                                          className="text-sm text-[var(--theme-text)] hover:text-[var(--theme-text)] w-full text-center"
                                         >
                                           Change File
                                         </button>
@@ -345,26 +338,26 @@ export default function TranscriberPage() {
                                     )}
                                   </div>
                                   
-                                  <div className="bg-zinc-950/50 border border-white/5 rounded-xl p-6 flex flex-col justify-between">
+                                  <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 flex flex-col justify-between">
                                     <div>
-                                      <h3 className="font-medium text-zinc-100 mb-4">Pipeline Status</h3>
+                                      <h3 className="font-bold text-[var(--theme-heading)] mb-4">Pipeline Status</h3>
                                       
                                       <div className="space-y-4 mb-6">
                                         <div className="flex items-center justify-between text-sm">
-                                          <span className="text-zinc-400">Media Loaded:</span>
-                                          <span className={fileId ? "text-emerald-400 font-medium" : "text-zinc-500"}>{fileId ? "Yes" : "No"}</span>
+                                          <span className="text-[var(--theme-text)]">Media Loaded:</span>
+                                          <span className={fileId ? "text-emerald-400 font-medium" : "text-[var(--theme-text)]"}>{fileId ? "Yes" : "No"}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
-                                          <span className="text-zinc-400">Model Selected:</span>
-                                          <span className="text-zinc-200 font-medium">{modelSize}</span>
+                                          <span className="text-[var(--theme-text)]">Model Selected:</span>
+                                          <span className="text-[var(--theme-text)] font-medium">{modelSize}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
-                                          <span className="text-zinc-400">Diarization:</span>
-                                          <span className="text-zinc-200 font-medium">{doDiarize ? "Enabled" : "Disabled"}</span>
+                                          <span className="text-[var(--theme-text)]">Diarization:</span>
+                                          <span className="text-[var(--theme-text)] font-medium">{doDiarize ? "Enabled" : "Disabled"}</span>
                                         </div>
                                         {segments.length > 0 && (
-                                          <div className="flex items-center justify-between text-sm pt-4 border-t border-white/5">
-                                            <span className="text-zinc-400">Segments:</span>
+                                          <div className="flex items-center justify-between text-sm pt-4 border-t border-[var(--theme-ui-border)]">
+                                            <span className="text-[var(--theme-text)]">Segments:</span>
                                             <span className="text-secondary font-medium">{segments.length} transcribed</span>
                                           </div>
                                         )}
@@ -390,26 +383,26 @@ export default function TranscriberPage() {
           <ModernTabContent activeTab={activeTab}>
                   {activeTab === "speakers" && (
                               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                <h2 className="text-xl font-semibold text-zinc-100">Speaker Identification</h2>
+                                <h2 className="text-xl font-semibold text-[var(--theme-heading)]">Speaker Identification</h2>
                                 
                                 {rawSpeakerIds.length === 0 ? (
-                                  <div className="p-8 bg-zinc-950/50 border border-white/5 rounded-xl text-center">
-                                    <Icon name="group" className="mx-auto text-zinc-600 mb-4" size={48} />
-                                    <h3 className="text-lg font-medium text-zinc-300">No Speakers Detected</h3>
-                                    <p className="text-zinc-500">Run transcription with Diarization enabled to detect speakers.</p>
+                                  <div className="p-8 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl text-center">
+                                    <Icon name="group" className="mx-auto text-[var(--theme-text)] mb-4" size={48} />
+                                    <h3 className="text-lg font-bold text-[var(--theme-heading)]">No Speakers Detected</h3>
+                                    <p className="text-[var(--theme-text)]">Run transcription with Diarization enabled to detect speakers.</p>
                                   </div>
                                 ) : (
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {rawSpeakerIds.map(sid => (
-                                      <div key={sid} className="bg-zinc-950/50 border border-white/5 rounded-xl p-4 flex items-center gap-4">
+                                      <div key={sid} className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 flex items-center gap-4">
                                         <div 
-                                          className="relative w-16 h-16 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer group"
+                                          className="relative w-16 h-16 rounded-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] flex items-center justify-center shrink-0 overflow-hidden cursor-pointer group"
                                           onClick={() => handlePlaySpeaker(sid)}
                                         >
                                           {speakerThumbnails[sid] ? (
                                             <img src={speakerThumbnails[sid]} alt={sid} className={`w-full h-full object-cover transition-all ${playingSpeakerId === sid ? 'scale-110 opacity-75' : 'group-hover:opacity-75'}`} />
                                           ) : (
-                                            <Icon name="mic" className="text-zinc-500" size={24} />
+                                            <Icon name="mic" className="text-[var(--theme-text)]" size={24} />
                                           )}
                                           
                                           {/* Play Overlay */}
@@ -421,32 +414,32 @@ export default function TranscriberPage() {
                                                 <div className="w-1 h-2 bg-primary animate-pulse delay-150"></div>
                                               </div>
                                             ) : (
-                                              <Icon name="play_arrow" className="text-white fill-white" size={20} />
+                                              <Icon name="play_arrow" className="text-[var(--theme-bg)] fill-[var(--theme-bg)]" size={20} />
                                             )}
                                           </div>
                                         </div>
                                         <div className="flex-1 grid grid-cols-2 gap-4">
                                           <div>
-                                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1 block">Rename Speaker</label>
+                                            <label className="text-xs font-bold text-[var(--theme-heading)] uppercase tracking-wider mb-1 block">Rename Speaker</label>
                                             <input
                                               type="text"
                                               value={speakerMapping[sid] || sid}
                                               onChange={(e) => setSpeakerMapping({...speakerMapping, [sid]: e.target.value})}
-                                              className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-zinc-200 focus:border-secondary outline-none transition-colors"
+                                              className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-2 text-[var(--theme-text)] focus:border-[var(--theme-heading)] outline-none transition-colors"
                                             />
-                                            <div className="text-xs text-zinc-500 mt-1">Original ID: {sid}</div>
+                                            <div className="text-xs text-[var(--theme-text)] mt-1">Original ID: {sid}</div>
                                           </div>
                                           <div>
-                                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1 block">Subtitle Style Preset</label>
+                                            <label className="text-xs font-bold text-[var(--theme-heading)] uppercase tracking-wider mb-1 block">Subtitle Style Preset</label>
                                             <select
                                               value={speakerStyles[sid] || stylePreset}
                                               onChange={(e) => setSpeakerStyles({...speakerStyles, [sid]: e.target.value})}
-                                              className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-zinc-200 focus:border-secondary outline-none transition-colors"
+                                              className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-2 text-[var(--theme-text)] focus:border-[var(--theme-heading)] outline-none transition-colors"
                                             >
-                                              <option value="Cinema Black">Cinema Black</option>
-                                              <option value="Neon Pop">Neon Pop</option>
-                                              <option value="Vlog Friendly">Vlog Friendly</option>
-                                              <option value="Classic Yellow">Classic Yellow</option>
+                                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Cinema Black">Cinema Black</option>
+                                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Neon Pop">Neon Pop</option>
+                                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Vlog Friendly">Vlog Friendly</option>
+                                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Classic Yellow">Classic Yellow</option>
                                             </select>
                                           </div>
                                         </div>
@@ -462,33 +455,33 @@ export default function TranscriberPage() {
           <ModernTabContent activeTab={activeTab}>
                   {activeTab === "export" && (
                               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                <h2 className="text-xl font-semibold text-zinc-100">Export Subtitles</h2>
+                                <h2 className="text-xl font-semibold text-[var(--theme-heading)]">Export Subtitles</h2>
                                 
                                 <div className="flex flex-col gap-6 animate-slide-up">
                                   <div className="w-full space-y-6">
-                                    <div className="bg-zinc-950/50 border border-white/5 rounded-xl p-6 space-y-4">
+                                    <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 space-y-4">
                                       <div>
-                                        <label className="block text-sm font-medium text-zinc-300 mb-2">Export Format</label>
+                                        <label className="block text-sm font-bold text-[var(--theme-heading)] mb-2">Export Format</label>
                                         <select 
                                           value={exportFormat}
                                           onChange={(e) => setExportFormat(e.target.value)}
-                                          className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-zinc-100 focus:border-secondary outline-none transition-colors"
+                                          className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-colors"
                                         >
-                                          <option value="srt">SRT (Standard)</option>
-                                          <option value="ass">ASS (Styled)</option>
+                                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="srt">SRT (Standard)</option>
+                                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="ass">ASS (Styled)</option>
                                         </select>
                                       </div>
 
                                       {exportFormat === "ass" && !doDiarize && (
                                         <div className="pt-2">
-                                          <label className="block text-sm font-medium text-zinc-300 mb-2">Style Preset</label>
+                                          <label className="block text-sm font-bold text-[var(--theme-heading)] mb-2">Style Preset</label>
                                           <select 
                                             value={stylePreset}
                                             onChange={(e) => setStylePreset(e.target.value)}
-                                            className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-zinc-100 focus:border-secondary outline-none transition-colors"
+                                            className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-colors"
                                           >
                                             {["Cinema Black", "Neon Pop", "Soft Pastel", "Minimal White"].map(s => (
-                                              <option key={s} value={s}>{s}</option>
+                                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={s} value={s}>{s}</option>
                                             ))}
                                           </select>
                                         </div>
@@ -503,24 +496,24 @@ export default function TranscriberPage() {
                                   </div>
 
                                   <div className="w-full">
-                                    <div className="bg-zinc-950/50 border border-white/5 rounded-xl p-6 h-full min-h-[300px]">
-                                      <h3 className="font-medium text-zinc-100 mb-4 flex items-center gap-2">Transcript Preview</h3>
-                                      <div className="bg-zinc-900 rounded-lg border border-white/5 p-4 h-[300px] overflow-y-auto">
+                                    <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 h-full min-h-[300px]">
+                                      <h3 className="font-bold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Transcript Preview</h3>
+                                      <div className="bg-[var(--theme-bg)] rounded-lg border border-[var(--theme-ui-border)] p-4 h-[300px] overflow-y-auto">
                                         {segments.length === 0 ? (
-                                          <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+                                          <div className="h-full flex items-center justify-center text-[var(--theme-text)] text-sm">
                                             No segments transcribed yet
                                           </div>
                                         ) : (
                                           <div className="space-y-3">
                                             {segments.slice(0, 50).map((seg, idx) => (
                                               <div key={idx} className="text-sm">
-                                                <span className="text-zinc-500 mr-3">[{new Date(seg.start * 1000).toISOString().substr(14, 5)}]</span>
+                                                <span className="text-[var(--theme-text)] mr-3">[{new Date(seg.start * 1000).toISOString().substr(14, 5)}]</span>
                                                 {seg.speaker && <span className="text-secondary font-medium mr-2">{speakerMapping[seg.speaker] || seg.speaker}:</span>}
-                                                <span className="text-zinc-300">{seg.text}</span>
+                                                <span className="text-[var(--theme-text)]">{seg.text}</span>
                                               </div>
                                             ))}
                                             {segments.length > 50 && (
-                                              <div className="text-zinc-500 text-center text-sm pt-4 italic">
+                                              <div className="text-[var(--theme-text)] text-center text-sm pt-4 italic">
                                                 ... and {segments.length - 50} more segments. Download to view full transcript.
                                               </div>
                                             )}

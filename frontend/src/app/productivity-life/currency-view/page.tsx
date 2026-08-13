@@ -119,10 +119,6 @@ export default function CurrencyView() {
       date: d.date,
       historical: d.type === "Historical" ? d.rate : null,
       extrapolation: d.type === "Extrapolation" ? d.rate : null,
-      // Connect the lines by having one point with both if needed, 
-      // but Recharts handles it gracefully if we just map it.
-      // Wait, Recharts lines break if there are nulls and connectNulls is false.
-      // We will set connectNulls={true}
     }));
   }, [trendData]);
 
@@ -144,164 +140,142 @@ export default function CurrencyView() {
 
       <Header title="Currency Converter & Tracker" subtitle="Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast." />
 
-      {loadingCurrencies ? (
-        <div className="flex justify-center p-12">
-          <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-6 animate-slide-up w-full">
-          {/* Calculator Section */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">Conversion Calculator
-            </h3>
-            
-            <div className="flex flex-col md:flex-row items-end gap-4 w-full">
-              <div className="flex-1 w-full">
-                <label className="text-sm text-zinc-400 mb-1 block">Amount</label>
-                <TextInput 
-                  type="number"
-                  value={amount.toString()}
-                  onChange={e => setAmount(parseFloat(e.target.value) || 0)}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              
-              <div className="flex-[2] w-full">
-                <label className="text-sm text-zinc-400 mb-1 block">From</label>
-                <Select
-                  value={base}
-                  onChange={e => setBase(e.target.value)}
-                  options={currencyOptions}
-                />
-              </div>
-              
-              <div className="flex pb-2 justify-center">
-                <button 
-                  onClick={handleSwap}
-                  className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors border border-white/5"
-                  title="Swap currencies"
-                >
-                  <Icon name="swap_horiz" size={20} />
-                </button>
-              </div>
-              
-              <div className="flex-[2] w-full">
-                <label className="text-sm text-zinc-400 mb-1 block">To</label>
-                <Select
-                  value={target}
-                  onChange={e => setTarget(e.target.value)}
-                  options={currencyOptions}
-                />
-              </div>
-              
-              <div className="w-full md:w-auto">
-                <Button 
-                  variant="primary" 
-                  onClick={() => handleConvert()}
-                  disabled={converting}
-                  className="w-full md:w-32"
-                >
-                  {converting ? <Icon name="refresh" size={18} className="animate-spin" /> : "Convert"}
-                </Button>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md p-6 rounded-xl border border-[var(--theme-ui-border)] shadow-sm mb-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-[var(--theme-text)] font-semibold text-sm">Amount & Base Currency</label>
+            <div className="flex gap-2">
+              <TextInput 
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                className="w-24 text-center font-mono font-semibold"
+                placeholder="1.0"
+              />
+              <div className="flex-1">
+                {loadingCurrencies ? (
+                  <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-md w-full" />
+                ) : (
+                  <Select 
+                    options={currencyOptions}
+                    value={base}
+                    onChange={(e) => setBase(e.target.value)}
+                  />
+                )}
               </div>
             </div>
-            
-            {convertResult !== null && (
-              <div className="mt-4 p-6 bg-zinc-950 border border-white/10 shadow-lg rounded-xl flex items-center justify-center text-center animate-slide-up">
-                <div className="text-3xl md:text-4xl">
-                  <span className="font-light text-zinc-300">{amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {base} = </span>
-                  <span className="font-bold text-primary">{convertResult.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {target}</span>
-                </div>
-              </div>
-            )}
+          </div>
+          
+          <div className="flex items-center justify-center mt-6">
+            <Button variant="secondary" onClick={handleSwap} icon={<Icon name="swap_horiz" size={24} />} title="Swap Currencies" className="rounded-full w-12 h-12 p-0 flex items-center justify-center" />
           </div>
 
-          {/* Trend Section */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">30-Day Trend & 7-Day Forecast: {base} to {target}
-              </h3>
-              
-              <Button variant="secondary" onClick={() => fetchTrend()} disabled={loadingTrend} size="sm">
-                {loadingTrend ? <Icon name="refresh" size={16} className="animate-spin mr-2" /> : <Icon name="refresh" size={16} className="mr-2" />}
-                Load Trend
-              </Button>
+          <div className="flex flex-col gap-2">
+            <label className="text-[var(--theme-text)] font-semibold text-sm">Target Currency & Result</label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                {loadingCurrencies ? (
+                  <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-md w-full" />
+                ) : (
+                  <Select 
+                    options={currencyOptions}
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                  />
+                )}
+              </div>
+              <div className="w-40 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg flex items-center justify-center px-4 font-mono font-bold text-[var(--theme-heading)] overflow-hidden shrink-0">
+                {converting ? (
+                  <Icon name="sync" size={18} className="animate-spin text-[var(--theme-text)]" />
+                ) : convertResult !== null ? (
+                  convertResult.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                ) : (
+                  "0.00"
+                )}
+              </div>
             </div>
-            
-            {base === target ? (
-              <div className="p-8 bg-zinc-800/50 rounded-lg text-center text-zinc-400 border border-white/5">
-                <Icon name="info" size={32} className="mx-auto mb-3 opacity-50" />
-                Select two different currencies to view a trend chart.
-              </div>
-            ) : loadingTrend ? (
-              <div className="h-80 flex items-center justify-center">
-                <Icon name="refresh" size={32} className="animate-spin text-zinc-500" />
-              </div>
-            ) : chartData.length > 0 ? (
-              <div>
-                <div className="text-xs text-zinc-500 mb-6 flex items-center gap-2 bg-zinc-950/50 p-2 rounded-md border border-white/5 inline-flex">
-                  <Icon name="info" size={14} /> 
-                  {cachedTime === "Just now" 
-                    ? "Displaying live data fetched just now." 
-                    : `Displaying cached data from ${cachedTime}. Fetching latest data in background`}
-                </div>
-                
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="rgba(255,255,255,0.4)" 
-                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} 
-                      />
-                      <YAxis 
-                        domain={['auto', 'auto']} 
-                        stroke="rgba(255,255,255,0.4)" 
-                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
-                        tickFormatter={(val) => val.toLocaleString()}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
-                        labelStyle={{ color: '#a1a1aa', marginBottom: '5px' }}
-                        formatter={(value: any, name: any) => [Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), String(name).charAt(0).toUpperCase() + String(name).slice(1)]}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="historical" 
-                        name="Historical"
-                        stroke="#a855f7" 
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: '#18181b', stroke: '#a855f7', strokeWidth: 2 }}
-                        activeDot={{ r: 6, fill: '#a855f7' }}
-                        connectNulls
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="extrapolation" 
-                        name="Extrapolation"
-                        stroke="#d8b4fe" 
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ r: 3, fill: '#18181b', stroke: '#d8b4fe', strokeWidth: 2 }}
-                        activeDot={{ r: 6, fill: '#d8b4fe' }}
-                        connectNulls
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 bg-zinc-800/50 rounded-lg text-center text-zinc-400 border border-white/5">
-                <Icon name="error" size={32} className="mx-auto mb-3 opacity-50" />
-                No trend data available for this pair. Click "Load Trend" to try fetching.
-              </div>
-            )}
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="flex-1 bg-[var(--theme-ui-bg)] backdrop-blur-md p-6 rounded-xl border border-[var(--theme-ui-border)] shadow-sm min-h-[400px] flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-[var(--theme-heading)]">Exchange Rate Trend ({base} to {target})</h3>
+          {cachedTime && (
+            <span className="text-xs text-[var(--theme-text)] opacity-70">
+              Last updated: {new Date(cachedTime).toLocaleString()}
+            </span>
+          )}
+        </div>
+        
+        {loadingTrend ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-[var(--theme-text)]">
+            <Icon name="sync" size={48} className="animate-spin opacity-50 mb-4" />
+            <p>Loading market data...</p>
+          </div>
+        ) : chartData.length > 0 ? (
+          <div className="flex-1 w-full min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-ui-border)" vertical={false} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="var(--theme-text)" 
+                  tick={{ fill: 'var(--theme-text)', fontSize: 12 }} 
+                  tickMargin={10} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  minTickGap={30}
+                />
+                <YAxis 
+                  stroke="var(--theme-text)" 
+                  tick={{ fill: 'var(--theme-text)', fontSize: 12 }} 
+                  domain={['auto', 'auto']} 
+                  tickMargin={10} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--theme-ui-bg)', 
+                    borderColor: 'var(--theme-ui-border)', 
+                    borderRadius: '8px',
+                    color: 'var(--theme-text)'
+                  }} 
+                  itemStyle={{ fontWeight: 'bold' }} 
+                />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="historical" 
+                  name="Historical Rate" 
+                  stroke="var(--theme-heading)" 
+                  strokeWidth={3} 
+                  dot={false} 
+                  activeDot={{ r: 6 }} 
+                  connectNulls={true}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="extrapolation" 
+                  name="Forecast (7 Days)" 
+                  stroke="var(--theme-heading)" 
+                  strokeWidth={3} 
+                  strokeDasharray="5 5" 
+                  dot={false} 
+                  connectNulls={true}
+                  opacity={0.6}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-[var(--theme-text)] opacity-70">
+            <Icon name="query_stats" size={48} className="mb-4" />
+            <p>No trend data available for this pair.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

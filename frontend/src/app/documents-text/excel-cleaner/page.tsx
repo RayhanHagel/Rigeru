@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useRef } from "react";
 
@@ -183,16 +184,15 @@ export default function ExcelCleanerPage() {
     return (
       <div className="mt-8 animate-slide-up">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">{title}
-          </h3>
-          <span className="bg-zinc-800 text-zinc-300 text-xs px-3 py-1 rounded-full font-mono">
+          <SectionHeader title={title} className="mb-0 w-auto flex-1" />
+          <span className="bg-[var(--theme-ui-bg)] text-[var(--theme-text)] text-xs px-3 py-1 rounded-full font-mono shrink-0 ml-4 border border-[var(--theme-ui-border)]">
             {tableData.rows} rows × {tableData.cols} columns
           </span>
         </div>
         
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-zinc-950/50 max-h-[400px] overflow-y-auto custom-scrollbar">
-          <table className="w-full text-sm text-left text-zinc-300">
-            <thead className="text-xs text-zinc-400 uppercase bg-zinc-900/80 sticky top-0 z-10 backdrop-blur-md">
+        <div className="overflow-x-auto rounded-xl border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] max-h-[400px] overflow-y-auto custom-scrollbar">
+          <table className="w-full text-sm text-left text-[var(--theme-text)]">
+            <thead className="text-xs text-[var(--theme-text)] uppercase bg-[var(--theme-ui-bg)] sticky top-0 z-10 backdrop-blur-md">
               <tr>
                 {tableData.columns.map((col, idx) => (
                   <th key={idx} className="px-4 py-3 font-medium whitespace-nowrap">
@@ -204,18 +204,18 @@ export default function ExcelCleanerPage() {
             <tbody>
               {tableData.data.length === 0 ? (
                 <tr>
-                  <td colSpan={tableData.cols} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={tableData.cols} className="px-4 py-8 text-center text-[var(--theme-text)]">
                     No data to display
                   </td>
                 </tr>
               ) : (
                 tableData.data.map((row, rowIdx) => (
-                  <tr key={rowIdx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <tr key={rowIdx} className="border-b border-[var(--theme-ui-border)] hover:bg-white/5 transition-colors">
                     {tableData.columns.map((col, colIdx) => {
                       const val = row[col];
                       return (
                         <td key={colIdx} className="px-4 py-2 whitespace-nowrap max-w-xs truncate" title={val !== null ? String(val) : ""}>
-                          {val !== null ? String(val) : <span className="text-zinc-600 italic">NaN</span>}
+                          {val !== null ? String(val) : <span className="text-[var(--theme-text)] italic">NaN</span>}
                         </td>
                       );
                     })}
@@ -225,7 +225,7 @@ export default function ExcelCleanerPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-zinc-500 text-xs italic text-right">Showing first 50 rows preview</p>
+        <p className="text-[var(--theme-text)] text-xs italic text-right">Showing first 50 rows preview</p>
       </div>
     );
   };
@@ -239,19 +239,19 @@ export default function ExcelCleanerPage() {
         {/* Controls Section: Stacked above data preview */}
         <div className="flex flex-col gap-6">
           {/* Upload Data */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm h-fit">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">Upload Data
-            </h3>
-            
-            <label className="flex items-center gap-2 cursor-pointer mb-4 text-sm text-zinc-300">
-              <input 
-                type="checkbox" 
-                checked={hasHeader} 
-                onChange={handleHeaderChange}
-                className="w-4 h-4 rounded border-white/20 bg-zinc-900 text-secondary focus:ring-secondary focus:ring-offset-zinc-900"
-              />
-              File has Headers
-            </label>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <SectionHeader title="Upload Data" icon={<Icon name="upload" size={18} />} className="mb-0" />
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--theme-text)]">
+                <input 
+                  type="checkbox" 
+                  checked={hasHeader} 
+                  onChange={handleHeaderChange}
+                  className="w-4 h-4 rounded border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] focus:ring-[var(--theme-heading)]"
+                />
+                File has Headers
+              </label>
+            </div>
             
             <DirectUploadBox
               accept=".csv,.xlsx,.xls"
@@ -267,38 +267,31 @@ export default function ExcelCleanerPage() {
               }}
               defaultFileName={fileInfo?.original_name}
             />
-            
-            
-            {errorMsg && (
-              <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
-                <Icon name="info" size={16} className="mt-0.5 shrink-0" />
-                <p>{errorMsg}</p>
-              </div>
-            )}
           </div>
           
           {/* Cleaning Options */}
           {originalData && (
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm animate-slide-up">
-              <h3 className="text-lg font-semibold text-white mb-4">Cleaning Options</h3>
+            <div className="flex flex-col gap-4 animate-slide-up">
+              <SectionHeader title="Cleaning Options" icon={<Icon name="cleaning_services" size={18} />} />
+              <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md p-6 rounded-xl border border-[var(--theme-ui-border)] shadow-sm">
               
               <div className="space-y-3 mb-6">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300 hover:text-white transition-colors">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors">
                   <input 
                     type="checkbox" 
                     checked={dropNa} 
                     onChange={(e) => setDropNa(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-zinc-900 text-secondary focus:ring-secondary"
+                    className="w-4 h-4 rounded border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] focus:ring-secondary"
                   />
                   Drop Empty Rows
                 </label>
                 
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-300 hover:text-white transition-colors">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors">
                   <input 
                     type="checkbox" 
                     checked={dropDuplicates} 
                     onChange={(e) => setDropDuplicates(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-zinc-900 text-secondary focus:ring-secondary"
+                    className="w-4 h-4 rounded border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] focus:ring-secondary"
                   />
                   Drop Duplicates
                 </label>
@@ -306,19 +299,19 @@ export default function ExcelCleanerPage() {
               
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium text-[var(--theme-heading)]">
                     Data Filters
                   </label>
                   <button 
                     onClick={addRule}
-                    className="text-xs flex items-center gap-1 text-secondary hover:text-blue-300 transition-colors bg-secondary/10 px-2 py-1 rounded"
+                    className="text-xs flex items-center gap-1 text-[var(--theme-heading)] hover:text-blue-300 transition-colors bg-[var(--theme-heading)] px-2 py-1 rounded"
                   >
                     <Icon name="add" size={14} /> Add Rule
                   </button>
                 </div>
                 
                 {rules.length === 0 ? (
-                  <div className="text-center py-4 border border-dashed border-white/10 rounded-xl text-zinc-500 text-sm">
+                  <div className="text-center py-4 border border-dashed border-[var(--theme-ui-border)] rounded-xl text-[var(--theme-text)] text-sm">
                     No filters active. Click "Add Rule" to filter rows.
                   </div>
                 ) : (
@@ -326,76 +319,76 @@ export default function ExcelCleanerPage() {
                     {rules.map((rule) => {
                       const colType = originalData?.columnTypes?.[rule.column] || "text";
                       return (
-                        <div key={rule.id} className="flex flex-col sm:flex-row items-end gap-3 bg-zinc-950/50 border border-white/5 p-3 rounded-lg">
+                        <div key={rule.id} className="flex flex-col sm:flex-row items-end gap-3 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] p-3 rounded-lg">
                           <div className="w-full sm:w-1/3 flex flex-col gap-1">
-                            <label className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider flex justify-between">
+                            <label className="text-[10px] uppercase text-[var(--theme-text)] font-semibold tracking-wider flex justify-between">
                               <span>Column</span>
-                              <span className="text-secondary/70">{colType}</span>
+                              <span className="text-[var(--theme-heading)]">{colType}</span>
                             </label>
                             <select 
                               value={rule.column}
                               onChange={(e) => updateRule(rule.id, "column", e.target.value)}
-                              className="w-full bg-zinc-900 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                              className="w-full bg-[var(--theme-bg)] border border-[color-mix(in_srgb,var(--theme-heading)_20%,transparent)] rounded px-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] focus:ring-1 focus:ring-[var(--theme-heading)] transition-colors"
                             >
                               {originalData?.columns.map(col => (
-                                <option key={col} value={col}>{col}</option>
+                                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={col} value={col}>{col}</option>
                               ))}
                             </select>
                           </div>
                           
                           <div className="w-full sm:w-1/4 flex flex-col gap-1">
-                            <label className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Operator</label>
+                            <label className="text-[10px] uppercase text-[var(--theme-text)] font-semibold tracking-wider">Operator</label>
                             <select 
                               value={rule.operator}
                               onChange={(e) => updateRule(rule.id, "operator", e.target.value)}
-                              className="w-full bg-zinc-900 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                              className="w-full bg-[var(--theme-bg)] border border-[color-mix(in_srgb,var(--theme-heading)_20%,transparent)] rounded px-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] focus:ring-1 focus:ring-[var(--theme-heading)] transition-colors"
                             >
-                              <option value="==">Equals (==)</option>
-                              <option value="!=">Not Equals (!=)</option>
+                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="==">Equals (==)</option>
+                              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="!=">Not Equals (!=)</option>
                               {colType === "number" && (
                                 <>
-                                  <option value=">">Greater Than (&gt;)</option>
-                                  <option value="<">Less Than (&lt;)</option>
-                                  <option value=">=">Greater/Equal (&gt;=)</option>
-                                  <option value="<=">Less/Equal (&lt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">">Greater Than (&gt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<">Less Than (&lt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">=">Greater/Equal (&gt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<=">Less/Equal (&lt;=)</option>
                                 </>
                               )}
                               {colType === "date" && (
                                 <>
-                                  <option value=">">Newer Than (&gt;)</option>
-                                  <option value="<">Older Than (&lt;)</option>
-                                  <option value=">=">Newer/Equal (&gt;=)</option>
-                                  <option value="<=">Older/Equal (&lt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">">Newer Than (&gt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<">Older Than (&lt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">=">Newer/Equal (&gt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<=">Older/Equal (&lt;=)</option>
                                 </>
                               )}
                               {colType === "time" && (
                                 <>
-                                  <option value=">">Later Than (&gt;)</option>
-                                  <option value="<">Earlier Than (&lt;)</option>
-                                  <option value=">=">Later/Equal (&gt;=)</option>
-                                  <option value="<=">Earlier/Equal (&lt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">">Later Than (&gt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<">Earlier Than (&lt;)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value=">=">Later/Equal (&gt;=)</option>
+                                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="<=">Earlier/Equal (&lt;=)</option>
                                 </>
                               )}
                               {colType === "text" && (
-                                <option value="contains">Contains Text</option>
+                                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="contains">Contains Text</option>
                               )}
                             </select>
                           </div>
                           
                           <div className="w-full sm:flex-1 flex flex-col gap-1">
-                            <label className="text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Value</label>
+                            <label className="text-[10px] uppercase text-[var(--theme-text)] font-semibold tracking-wider">Value</label>
                             <input 
                               type={colType === "date" ? "date" : colType === "time" ? "time" : "text"}
                               placeholder={(colType === "date" || colType === "time") ? "" : "Type value..."}
                               value={rule.value}
                               onChange={(e) => updateRule(rule.id, "value", e.target.value)}
-                              className="w-full bg-zinc-900 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                              className="w-full bg-[var(--theme-bg)] border border-[color-mix(in_srgb,var(--theme-heading)_20%,transparent)] rounded px-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] focus:ring-1 focus:ring-[var(--theme-heading)] transition-colors"
                             />
                           </div>
                           
                           <button 
                             onClick={() => removeRule(rule.id)}
-                            className="h-[38px] px-3 bg-red-500/10 text-red-400/80 hover:text-red-400 hover:bg-red-500/20 rounded flex items-center justify-center transition-colors"
+                            className="h-[38px] px-3 bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] hover:text-[var(--theme-heading)] hover:bg-[var(--theme-ui-bg)] rounded flex items-center justify-center transition-colors"
                             title="Remove Rule"
                           >
                             <Icon name="delete" size={16} />
@@ -417,16 +410,18 @@ export default function ExcelCleanerPage() {
                 Apply Cleaning & Filters
               </Button>
             </div>
+            </div>
           )}
           
           {/* Download section */}
           {processedData && (
-            <div className="bg-blue-900/10 border border-secondary/20 rounded-2xl p-6 backdrop-blur-sm animate-slide-up">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">Download Cleaned Data
-                </h3>
-                
-                <div className="flex gap-3 w-full sm:w-auto">
+            <div className="flex flex-col gap-4 animate-slide-up mt-4">
+              <SectionHeader title="Download Cleaned Data" icon={<Icon name="download" size={18} />} />
+              <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md p-6 rounded-xl border border-[var(--theme-heading)] shadow-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <span className="text-[var(--theme-text)] text-sm">Download your processed dataset in CSV or Excel format.</span>
+                  
+                  <div className="flex gap-3 w-full sm:w-auto">
                   <Button 
                     variant="secondary" 
                     onClick={() => handleDownload("CSV")}
@@ -446,14 +441,15 @@ export default function ExcelCleanerPage() {
                 </div>
               </div>
             </div>
+            </div>
           )}
         </div>
         
         {/* Data Preview Section: Placed underneath */}
         <div className="w-full">
           {!originalData ? (
-            <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl bg-zinc-900/20">
-              <div className="text-center text-zinc-500">
+            <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-[var(--theme-ui-border)] rounded-2xl bg-[var(--theme-ui-bg)]">
+              <div className="text-center text-[var(--theme-text)]">
                 <Icon name="table_chart" size={48} className="mx-auto mb-4 opacity-20" />
                 <p>Upload a file to see preview</p>
               </div>

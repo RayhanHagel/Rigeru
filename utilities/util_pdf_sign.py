@@ -1,7 +1,7 @@
 import io
 
-def sign_pdf(pdf_bytes: bytes, signature_text: str) -> tuple[bool, bytes | str]:
-    '''Adds a text watermark acting as a basic mock signature at the bottom right of the first page.'''
+def sign_pdf(pdf_bytes: bytes, sig_bytes: bytes, x: float = 10, y: float = 10, w: float = 150, h: float = 50) -> tuple[bool, bytes | str]:
+    '''Adds an image signature at the specified location of the first page.'''
     try:
         import fitz
     except ImportError:
@@ -15,12 +15,9 @@ def sign_pdf(pdf_bytes: bytes, signature_text: str) -> tuple[bool, bytes | str]:
         page = doc[0]
         rect = page.rect
         
-        # Bottom right
-        x = rect.width - 200
-        y = rect.height - 50
-        
-        # Insert text
-        page.insert_text((x, y), f"Signed: {signature_text}", fontsize=12, color=(0, 0, 0))
+        # Insert image
+        sig_rect = fitz.Rect(x, y, x + w, y + h)
+        page.insert_image(sig_rect, stream=sig_bytes)
         
         output_stream = io.BytesIO()
         doc.save(output_stream)

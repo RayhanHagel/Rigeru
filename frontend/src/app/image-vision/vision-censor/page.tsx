@@ -352,9 +352,9 @@ export default function VisionCensorPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                     onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   >
-                    <option>Gaussian</option>
-                    <option>Pixelate</option>
-                    <option>Solid Black</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Gaussian</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Pixelate</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Solid Black</option>
                   </select>
                 </div>
 
@@ -398,8 +398,8 @@ export default function VisionCensorPage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
-                      <option>Re-encode (Hard Blur)</option>
-                      <option>Subtitle Overlay (.ass)</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Re-encode (Hard Blur)</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Subtitle Overlay (.ass)</option>
                     </select>
                   </div>
 
@@ -417,7 +417,7 @@ export default function VisionCensorPage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
-                      {encoders.map(e => <option key={e} value={e}>{e}</option>)}
+                      {encoders.map(e => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={e} value={e}>{e}</option>)}
                     </select>
                   </div>
                 </div>

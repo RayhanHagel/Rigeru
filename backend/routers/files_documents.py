@@ -534,25 +534,29 @@ async def pdf_ops_merge_endpoint(file_hashes: List[str] = Form(...)):
 @router.post("/pdf-studio/ops/split")
 async def pdf_ops_split_endpoint(
     file_hash: str = Form(...),
-    start: int = Form(...),
-    end: int = Form(...)
+    buckets_json: str = Form(...)
 ):
-    
+    import json
+    try:
+        buckets = json.loads(buckets_json)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid buckets_json")
     tmp_path = os.path.join(".", "uploads", file_hash)
     if not os.path.exists(tmp_path):
         raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
     with open(tmp_path, "rb") as f:
         contents = f.read()
 
-    success, result = split_pdf(contents, start, end)
+    from utilities.util_pdf_ops import split_pdf_buckets
+    success, result = split_pdf_buckets(contents, buckets)
     
     if not success:
         raise HTTPException(status_code=400, detail=str(result))
         
     return Response(
         content=result,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="extracted_{file_hash}"'}
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="split_{file_hash}.zip"'}
     )
 
 @router.post("/pdf-studio/ops/remove")
@@ -1355,14 +1359,17 @@ async def pdf_ops_organize_endpoint(
 from utilities.util_pdf_images import extract_pdf_images, pdf_to_image
 
 @router.post("/pdf-studio/images/extract")
-async def pdf_images_extract_endpoint(file_hash: str = Form(...)):
+async def pdf_images_extract_endpoint(
+    file_hash: str = Form(...),
+    pages: str = Form("all")
+):
     tmp_path = os.path.join(".", "uploads", file_hash)
     if not os.path.exists(tmp_path):
         raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
     with open(tmp_path, "rb") as f:
         contents = f.read()
 
-    success, result = extract_pdf_images(contents)
+    success, result = extract_pdf_images(contents, pages=pages)
     if not success:
         raise HTTPException(status_code=400, detail=str(result))
         
@@ -1375,7 +1382,9 @@ async def pdf_images_extract_endpoint(file_hash: str = Form(...)):
 @router.post("/pdf-studio/images/pdf-to-image")
 async def pdf_images_pdf_to_image_endpoint(
     file_hash: str = Form(...),
-    dpi: int = Form(150)
+    dpi: int = Form(150),
+    pages: str = Form("all"),
+    fmt: str = Form("png")
 ):
     tmp_path = os.path.join(".", "uploads", file_hash)
     if not os.path.exists(tmp_path):
@@ -1383,14 +1392,14 @@ async def pdf_images_pdf_to_image_endpoint(
     with open(tmp_path, "rb") as f:
         contents = f.read()
 
-    success, result = pdf_to_image(contents, dpi)
+    success, result = pdf_to_image(contents, dpi, pages=pages, fmt=fmt)
     if not success:
         raise HTTPException(status_code=400, detail=str(result))
         
-    ext = "zip" if len(result) > 5000000 or result[:4] == b'PK\x03\x04' else "png"
+    ext = "zip" if len(result) > 5000000 or result[:4] == b'PK\x03\x04' else fmt
     return Response(
         content=result,
-        media_type="application/zip" if ext == "zip" else "image/png",
+        media_type="application/zip" if ext == "zip" else f"image/{fmt}",
         headers={"Content-Disposition": f'attachment; filename="converted.{ext}"'}
     )
 
@@ -1455,15 +1464,21 @@ from utilities.util_pdf_sign import sign_pdf
 @router.post("/pdf-studio/sign")
 async def pdf_sign_endpoint(
     file_hash: str = Form(...),
-    signature_text: str = Form(...)
+    signature: UploadFile = File(...),
+    x: str = Form("10"),
+    y: str = Form("10"),
+    w: str = Form("150"),
+    h: str = Form("50")
 ):
     tmp_path = os.path.join(".", "uploads", file_hash)
     if not os.path.exists(tmp_path):
         raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
     with open(tmp_path, "rb") as f:
         contents = f.read()
+        
+    sig_bytes = await signature.read()
 
-    success, result = sign_pdf(contents, signature_text)
+    success, result = sign_pdf(contents, sig_bytes, float(x), float(y), float(w), float(h))
     if not success:
         raise HTTPException(status_code=400, detail=str(result))
         
@@ -1474,17 +1489,31 @@ async def pdf_sign_endpoint(
     )
 
 from utilities.util_pdf_web import webpage_to_pdf
+from utilities.util_pdf_ops import merge_pdfs
+from typing import Optional
 
 @router.post("/pdf-studio/web-to-pdf")
 async def pdf_web_to_pdf_endpoint(
-    url: str = Form(...)
+    url: str = Form(...),
+    file_hash: Optional[str] = Form(None)
 ):
     success, result = await webpage_to_pdf(url)
     if not success:
         raise HTTPException(status_code=400, detail=str(result))
         
+    final_pdf_bytes = result
+    
+    if file_hash:
+        tmp_path = os.path.join(".", "uploads", file_hash)
+        if os.path.exists(tmp_path):
+            with open(tmp_path, "rb") as f:
+                existing_pdf_bytes = f.read()
+            merge_success, merge_result = merge_pdfs([existing_pdf_bytes, final_pdf_bytes])
+            if merge_success and isinstance(merge_result, bytes):
+                final_pdf_bytes = merge_result
+        
     return Response(
-        content=result,
+        content=final_pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="webpage.pdf"'}
     )

@@ -68,7 +68,7 @@ export default function TranslationPage() {
             className="bg-zinc-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 min-w-[150px]"
           >
             {LANGUAGES.map(lang => (
-              <option key={lang} value={lang}>{lang}</option>
+              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={lang} value={lang}>{lang}</option>
             ))}
           </select>
 
@@ -86,7 +86,7 @@ export default function TranslationPage() {
             className="bg-zinc-950 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 min-w-[150px]"
           >
             {LANGUAGES.map(lang => (
-              <option key={lang} value={lang}>{lang}</option>
+              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={lang} value={lang}>{lang}</option>
             ))}
           </select>
         </div>

@@ -1,9 +1,11 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import { useState, useEffect } from "react";
 
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
+import { TextInput } from "@/components/ui/TextInput";
 import { Icon } from "@/lib/utils";
 
 export default function RssManager() {
@@ -109,15 +111,10 @@ export default function RssManager() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">RSS Feed Manager</h1>
-            <p className="text-zinc-400 text-sm font-medium">Read and manage your RSS subscriptions.</p>
-          </div>
-        </div>
-        <div className="flex z-10">
+      <Header 
+        title="RSS Feed Manager" 
+        subtitle="Read and manage your RSS subscriptions." 
+        actions={
           <ModernTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab as (id: string) => void}
@@ -126,14 +123,14 @@ export default function RssManager() {
               { id: "subs", label: "Manage Subscriptions", icon: <Icon name="tune" size={16} /> }
             ]}
           />
-        </div>
-      </div>
+        }
+      />
       
       <ModernTabContent activeTab={activeTab}>
           {activeTab === "feed" ? (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h2 className="text-xl font-bold text-white">Latest Articles</h2>
+                      <h2 className="text-xl font-bold text-[var(--theme-heading)]">Latest Articles</h2>
                       <Button variant="secondary" icon={<Icon name="refresh" size={16} />} onClick={() => fetchFeeds(true)} isLoading={loadingFeeds}>
                         Refresh
                       </Button>
@@ -144,7 +141,7 @@ export default function RssManager() {
                     {loadingFeeds && articles.length === 0 ? (
                       <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-[var(--theme-ui-border)] border-t-[var(--theme-heading)] rounded-full animate-spin" /></div>
                     ) : articles.length === 0 ? (
-                      <div className="p-10 border border-dashed border-zinc-800 rounded-2xl text-center text-zinc-500">
+                      <div className="p-10 border border-dashed border-[var(--theme-ui-border)] rounded-2xl text-center text-[var(--theme-text)]">
                         No articles found. Add some subscriptions first.
                       </div>
                     ) : (
@@ -158,14 +155,14 @@ export default function RssManager() {
                             className="block bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-5 hover:border-[var(--theme-heading)] transition-all group"
                           >
                             <div className="flex justify-between items-start gap-4 mb-2">
-                              <h3 className="text-lg font-bold text-white group-hover:text-[var(--theme-heading)] transition-colors">{article.title}</h3>
-                              <Icon name="open_in_new" size={16} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                              <h3 className="text-lg font-bold text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors">{article.title}</h3>
+                              <Icon name="open_in_new" size={16} className="text-[var(--theme-text)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                             </div>
                             <div className="flex gap-3 text-xs font-medium mb-3">
                               <span className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] px-2 py-1 rounded-md">{article.source}</span>
-                              <span className="text-zinc-500 flex items-center">{article.date}</span>
+                              <span className="text-[var(--theme-text)] flex items-center">{article.date}</span>
                             </div>
-                            <p className="text-sm text-zinc-400 line-clamp-2" dangerouslySetInnerHTML={{ __html: article.summary }} />
+                            <p className="text-sm text-[var(--theme-text)] line-clamp-2" dangerouslySetInnerHTML={{ __html: article.summary }} />
                           </a>
                         ))}
                       </div>
@@ -173,27 +170,23 @@ export default function RssManager() {
                   </div>
                 ) : (
                   <div className="space-y-8">
-                    <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-                      <h2 className="text-xl font-bold text-white mb-6">Add New Subscription</h2>
+                    <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-sm shadow-sm">
+                      <h2 className="text-xl font-bold text-[var(--theme-heading)] mb-6">Add New Subscription</h2>
                       <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">Feed Title</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Hacker News" 
+                          <TextInput
+                            label="Feed Title"
+                            placeholder="e.g. Hacker News"
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--theme-heading)] outline-none transition-all"
                           />
                         </div>
                         <div className="flex-[2]">
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">RSS URL</label>
-                          <input 
-                            type="text" 
-                            placeholder="https://news.ycombinator.com/rss" 
+                          <TextInput
+                            label="RSS URL"
+                            placeholder="https://news.ycombinator.com/rss"
                             value={newUrl}
                             onChange={(e) => setNewUrl(e.target.value)}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--theme-heading)] outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -207,17 +200,17 @@ export default function RssManager() {
                     </div>
                     
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-4">Your Subscriptions ({subscriptions.length})</h2>
+                      <h2 className="text-xl font-bold text-[var(--theme-heading)] mb-4">Your Subscriptions ({subscriptions.length})</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {subscriptions.map(({title, url}) => (
-                          <div key={url} className="bg-zinc-900/30 border border-white/10 rounded-xl p-4 flex justify-between items-center group">
+                          <div key={url} className="bg-[var(--theme-bg)]/40 border border-[var(--theme-ui-border)] rounded-xl p-4 flex justify-between items-center group hover:border-[var(--theme-heading)] transition-all duration-300">
                             <div className="overflow-hidden pr-4">
-                              <h4 className="font-bold text-zinc-200 truncate">{title}</h4>
-                              <p className="text-xs text-zinc-500 truncate">{url}</p>
+                              <h4 className="font-bold text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] truncate transition-colors">{title}</h4>
+                              <p className="text-xs text-[var(--theme-text)] truncate">{url}</p>
                             </div>
                             <button 
                               onClick={() => handleRemoveSub(title, url)}
-                              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
+                              className="p-2 text-[var(--theme-text)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
                               title="Remove Subscription"
                             >
                               <Icon name="delete" size={18} />

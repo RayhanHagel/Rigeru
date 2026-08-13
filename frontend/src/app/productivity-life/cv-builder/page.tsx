@@ -122,9 +122,8 @@ export default function CVBuilderPage() {
     <div className="flex flex-col gap-6 animate-slide-up w-full">
       <Header title="Resume & CV Builder" subtitle="Fill out your details to instantly generate a clean, ATS-friendly PDF resume." />
       
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">Personal Information
-        </h3>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Personal Information</h3>
         <div className="flex flex-col md:flex-row gap-6 w-full">
           <div className="w-full">
             <TextInput label="Full Name" placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} />
@@ -142,9 +141,9 @@ export default function CVBuilderPage() {
           </div>
         </div>
         <div className="w-full">
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">Professional Summary</label>
+          <label className="block text-sm font-medium text-[var(--theme-text)] mb-1.5">Professional Summary</label>
           <textarea 
-            className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none transition-all h-24"
+            className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-all h-24"
             placeholder="A brief overview of your professional background, skills, and goals."
             value={summary}
             onChange={e => setSummary(e.target.value)}
@@ -152,12 +151,11 @@ export default function CVBuilderPage() {
         </div>
       </div>
 
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">Experience
-        </h3>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Experience</h3>
         {experiences.map((exp, idx) => (
-          <div key={idx} className="mb-6 pb-6 border-b border-white/10 last:border-0 last:mb-0 last:pb-0">
-            <h4 className="text-white font-medium mb-4">Role {idx + 1}</h4>
+          <div key={idx} className="mb-6 pb-6 border-b border-[var(--theme-ui-border)] last:border-0 last:mb-0 last:pb-0">
+            <h4 className="text-[var(--theme-heading)] font-bold mb-4">Role {idx + 1}</h4>
             <div className="flex flex-col md:flex-row gap-6 w-full mb-4">
               <div className="w-full">
                 <TextInput label="Job Title" placeholder="Software Engineer" value={exp.title} onChange={e => handleUpdateExperience(idx, "title", e.target.value)} />
@@ -170,9 +168,9 @@ export default function CVBuilderPage() {
               <TextInput label="Dates" placeholder="Jan 2020 - Present" value={exp.dates} onChange={e => handleUpdateExperience(idx, "dates", e.target.value)} />
             </div>
             <div className="w-full">
-              <label className="block text-sm font-medium text-zinc-300 mb-1.5">Description & Achievements</label>
+              <label className="block text-sm font-medium text-[var(--theme-text)] mb-1.5">Description & Achievements</label>
               <textarea 
-                className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none transition-all h-24"
+                className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-all h-24"
                 placeholder="- Developed REST APIs...&#10;- Led a team of 3..."
                 value={exp.description}
                 onChange={e => handleUpdateExperience(idx, "description", e.target.value)}
@@ -183,12 +181,11 @@ export default function CVBuilderPage() {
         <Button variant="secondary" onClick={handleAddExperience} className="w-full md:w-auto self-start mt-2">+ Add Another Role</Button>
       </div>
 
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">Education
-        </h3>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Education</h3>
         {educations.map((edu, idx) => (
-          <div key={idx} className="mb-6 pb-6 border-b border-white/10 last:border-0 last:mb-0 last:pb-0">
-            <h4 className="text-white font-medium mb-4">Degree {idx + 1}</h4>
+          <div key={idx} className="mb-6 pb-6 border-b border-[var(--theme-ui-border)] last:border-0 last:mb-0 last:pb-0">
+            <h4 className="text-[var(--theme-heading)] font-bold mb-4">Degree {idx + 1}</h4>
             <div className="flex flex-col md:flex-row gap-6 w-full mb-4">
               <div className="w-full">
                 <TextInput label="Degree / Certificate" placeholder="B.S. Computer Science" value={edu.degree} onChange={e => handleUpdateEducation(idx, "degree", e.target.value)} />
@@ -205,20 +202,18 @@ export default function CVBuilderPage() {
         <Button variant="secondary" onClick={handleAddEducation} className="w-full md:w-auto self-start mt-2">+ Add Another Degree</Button>
       </div>
 
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">Skills
-        </h3>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Skills</h3>
         <textarea 
-          className="w-full bg-zinc-900 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none transition-all h-24"
+          className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-all h-24"
           placeholder="Python, Project Management, Agile, SQL, Communication"
           value={skills}
           onChange={e => setSkills(e.target.value)}
         />
       </div>
 
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">Generation Settings
-        </h3>
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Generation Settings</h3>
         <div className="w-full md:w-80">
           <Select 
             options={[
@@ -271,7 +266,7 @@ export default function CVBuilderPage() {
       
       <PopupModal isOpen={!!previewUrl} onClose={closePreview} title={`Live Preview - ${template}`}>
         {previewUrl && (
-          <div className="flex-1 w-full bg-zinc-800 rounded-xl overflow-hidden min-h-[70vh]">
+          <div className="flex-1 w-full bg-[var(--theme-bg)] rounded-xl overflow-hidden min-h-[70vh]">
             <iframe 
               src={previewUrl} 
               className="w-full h-full border-none"
@@ -283,4 +278,3 @@ export default function CVBuilderPage() {
     </div>
   );
 }
-

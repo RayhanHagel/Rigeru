@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef, useEffect } from "react";
 
@@ -7,6 +8,7 @@ import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { FileExplorerModal } from "@/components/ui/FileExplorerModal";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { Icon } from "@/lib/utils";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 interface VerificationResults {
   ok: string[];
@@ -193,247 +195,248 @@ export default function HashIntegrityPage() {
       />
       
       <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-          <div className="flex items-center gap-0">
-            
-            <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">File Integrity Checker</h1>
-              <p className="text-zinc-400 text-sm font-medium">Take a digital fingerprint of your folders and verify them later to detect corruption or tampering.</p>
-            </div>
-          </div>
-          <ModernTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab as (id: string) => void}
-            tabs={[
-              { id: "snapshot", label: "Create Baseline Snapshot" },
-              { id: "verify", label: "Verify Integrity" }
-            ]}
-          />
-        </div>
+        <Header 
+          title="File Integrity Checker" 
+          subtitle="Take a digital fingerprint of your folders and verify them later to detect corruption or tampering." 
+          actions={
+            <ModernTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab as (id: string) => void}
+              tabs={[
+                { id: "snapshot", label: "Create Baseline Snapshot" },
+                { id: "verify", label: "Verify Integrity" }
+              ]}
+            />
+          }
+        />
 
         <div className="flex flex-col gap-6 w-full">
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
+          <ModernTabContent activeTab={activeTab}>
+            {activeTab === "snapshot" ? (
+              <div className="flex flex-col gap-8 animate-slide-up w-full">
+                <SectionHeader title="Create Snapshot" />
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
+                      Folder to Fingerprint (Absolute Path)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={snapTargetDir}
+                        onChange={(e) => setSnapTargetDir(e.target.value)}
+                        placeholder="e.g. C:\Users\Username\Documents"
+                        className="flex-1 border rounded-lg px-4 py-3 text-sm text-[var(--theme-text)] focus:outline-none transition-colors"
+                        style={{ 
+                          backgroundColor: "var(--theme-bg)",
+                          borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                        }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
+                      />
+                      <Button variant="secondary" onClick={() => openExplorer("snap")} className="px-4 shrink-0">
+                        <Icon name="folder_open" size={18} />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-[var(--theme-text)]">
+                      This will scan every file in the selected directory and generate a JSON file of SHA-256 hashes.
+                    </p>
+                  </div>
 
-          <div className="w-full">
-            <ModernTabContent activeTab={activeTab}>
-                      {activeTab === "snapshot" ? (
-                                    <div className="flex flex-col gap-8 animate-slide-up w-full">
-                                      {/* Create Form */}
-                                      <div className="flex flex-col gap-6 w-full">
-                                        <div className="flex flex-col gap-2">
-                                          <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
-                                            Folder to Fingerprint (Absolute Path)
-                                          </label>
-                                          <div className="flex gap-2">
-                                            <input
-                                              type="text"
-                                              value={snapTargetDir}
-                                              onChange={(e) => setSnapTargetDir(e.target.value)}
-                                              placeholder="e.g. C:\Users\Username\Documents"
-                                              className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-secondary transition-colors"
-                                            />
-                                            <Button variant="secondary" onClick={() => openExplorer("snap")} className="px-4 shrink-0">
-                                              <Icon name="folder_open" size={18} />
-                                            </Button>
-                                          </div>
-                                          <p className="text-xs text-zinc-500">
-                                            This will scan every file in the selected directory and generate a JSON file of SHA-256 hashes.
-                                          </p>
-                                        </div>
+                  {snapError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                      <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
+                      <p className="text-sm text-red-400">{snapError}</p>
+                    </div>
+                  )}
 
-                                        {snapError && (
-                                          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                                            <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
-                                            <p className="text-sm text-red-400">{snapError}</p>
-                                          </div>
-                                        )}
+                  <Button
+                    variant="primary"
+                    className="w-full py-6"
+                    onClick={handleCreateSnapshot}
+                    disabled={isSnapping}
+                  >
+                    {isSnapping ? "Calculating hashes... (may take a while)" : (
+                      <span className="flex items-center gap-2">
+                        <Icon name="archive" size={18} />
+                        Generate Fingerprint
+                      </span>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="w-full pt-6 flex flex-col">
+                  <SectionHeader title="Past Snapshots" />
+                  
+                  <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden flex flex-col shadow-sm backdrop-blur-md mt-4">
+                    {pastSnapshots.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-50">
+                        <Icon name="archive" size={24} className="text-[var(--theme-text)] mb-2" />
+                        <p className="text-sm text-[var(--theme-text)]">No past snapshots found.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-y-auto max-h-[300px] custom-scrollbar">
+                        {pastSnapshots.map((snap, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`p-3 flex items-center justify-between gap-2 group ${idx !== pastSnapshots.length - 1 ? 'border-b border-[var(--theme-ui-border)]' : ''} hover:bg-[var(--theme-bg)]/50 transition-colors`}
+                          >
+                            <div className="flex flex-col gap-1 overflow-hidden">
+                              <p className="text-xs font-semibold text-[var(--theme-heading)] truncate" title={snap.root_dir}>{snap.root_dir}</p>
+                              <div className="flex items-center gap-4 text-xs text-[var(--theme-text)]">
+                                <span className="flex items-center gap-1 font-mono">
+                                  <Icon name="schedule" size={12} />
+                                  {new Date(snap.timestamp).toLocaleString()}
+                                </span>
+                                <span>{formatBytes(snap.size_bytes)}</span>
+                              </div>
+                            </div>
+                            
+                            <button
+                              onClick={() => handleDeleteSnapshot(snap.filename)}
+                              className="p-2 bg-red-500/10 text-red-400 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 shrink-0"
+                              title="Delete snapshot"
+                            >
+                              <Icon name="delete" size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6 animate-slide-up w-full mx-auto">
+                <SectionHeader title="Verify Integrity" />
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
+                    Target Folder (To Verify)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={verifyTargetDir}
+                      onChange={(e) => setVerifyTargetDir(e.target.value)}
+                      placeholder="e.g. C:\Users\Username\Documents"
+                      className="flex-1 border rounded-lg px-4 py-3 text-sm text-[var(--theme-text)] focus:outline-none transition-colors"
+                      style={{ 
+                        backgroundColor: "var(--theme-bg)",
+                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
+                    />
+                    <Button variant="secondary" onClick={() => openExplorer("verify")} className="px-4 shrink-0">
+                      <Icon name="folder_open" size={18} />
+                    </Button>
+                  </div>
+                </div>
 
-                                        <Button
-                                          variant="primary"
-                                          className="w-full py-6"
-                                          onClick={handleCreateSnapshot}
-                                          disabled={isSnapping}
-                                        >
-                                          {isSnapping ? "Calculating hashes... (may take a while)" : (
-                                            <span className="flex items-center gap-2">
-                                              <Icon name="archive" size={18} />
-                                              Generate Fingerprint
-                                            </span>
-                                          )}
-                                        </Button>
-                                      </div>
-                                      
-                                      {/* Saved Snapshots */}
-                                      <div className="w-full pt-6 flex flex-col">
-                                        <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">Past Snapshots
-                                        </h3>
-                                        
-                                        <div className="flex-1 bg-zinc-950 border border-white/10 rounded-xl overflow-hidden flex flex-col">
-                                          {pastSnapshots.length === 0 ? (
-                                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-50">
-                                              <Icon name="archive" size={24} className="text-zinc-500 mb-2" />
-                                              <p className="text-sm text-zinc-400">No past snapshots found.</p>
-                                            </div>
-                                          ) : (
-                                            <div className="overflow-y-auto max-h-[300px]">
-                                              {pastSnapshots.map((snap, idx) => (
-                                                <div 
-                                                  key={idx} 
-                                                  className={`p-3 flex items-center justify-between gap-2 group ${idx !== pastSnapshots.length - 1 ? 'border-b border-white/5' : ''} hover:bg-white/5 transition-colors`}
-                                                >
-                                                  <div className="flex flex-col gap-1 overflow-hidden">
-                                                    <p className="text-xs font-semibold text-white truncate" title={snap.root_dir}>{snap.root_dir}</p>
-                                                    <div className="flex items-center gap-4 text-xs text-zinc-500">
-                                                      <span className="flex items-center gap-1 font-mono">
-                                                        <Icon name="schedule" size={12} />
-                                                        {new Date(snap.timestamp).toLocaleString()}
-                                                      </span>
-                                                      <span>{formatBytes(snap.size_bytes)}</span>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <button
-                                                    onClick={() => handleDeleteSnapshot(snap.filename)}
-                                                    className="p-2 bg-red-500/10 text-red-400 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 shrink-0"
-                                                    title="Delete snapshot"
-                                                  >
-                                                    <Icon name="delete" size={16} />
-                                                  </button>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex flex-col gap-6 animate-slide-up w-full mx-auto">
-                                      <div className="flex flex-col gap-2">
-                                        <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
-                                          Target Folder (To Verify)
-                                        </label>
-                                        <div className="flex gap-2">
-                                          <input
-                                            type="text"
-                                            value={verifyTargetDir}
-                                            onChange={(e) => setVerifyTargetDir(e.target.value)}
-                                            placeholder="e.g. C:\Users\Username\Documents"
-                                            className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-secondary transition-colors"
-                                          />
-                                          <Button variant="secondary" onClick={() => openExplorer("verify")} className="px-4 shrink-0">
-                                            <Icon name="folder_open" size={18} />
-                                          </Button>
-                                        </div>
-                                      </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
+                    Upload Snapshot JSON
+                  </label>
+                  <DirectUploadBox
+                    accept=".json"
+                    label="Upload Snapshot JSON"
+                    onUploadComplete={(info) => setSnapshotFileInfo(info)}
+                    onClear={() => setSnapshotFileInfo(null)}
+                    defaultFileName={snapshotFileInfo?.original_name}
+                  />
+                </div>
 
-                                      <div className="flex flex-col gap-2">
-                                        <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
-                                          Upload Snapshot JSON
-                                        </label>
-                                        <DirectUploadBox
-                                          accept=".json"
-                                          label="Upload Snapshot JSON"
-                                          onUploadComplete={(info) => setSnapshotFileInfo(info)}
-                                          onClear={() => setSnapshotFileInfo(null)}
-                                          defaultFileName={snapshotFileInfo?.original_name}
-                                        />
-                                      </div>
+                {verifyError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                    <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
+                    <p className="text-sm text-red-400">{verifyError}</p>
+                  </div>
+                )}
 
-                                      {verifyError && (
-                                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-                                          <Icon name="gpp_maybe" className="text-red-400 shrink-0 mt-0.5" size={16} />
-                                          <p className="text-sm text-red-400">{verifyError}</p>
-                                        </div>
-                                      )}
-
-                                      <Button
-                                        variant="primary"
-                                        className="w-full"
-                                        onClick={handleVerify}
-                                        disabled={!snapshotFileInfo || !verifyTargetDir || isVerifying}
-                                      >
-                                        {isVerifying ? "Verifying hashes" : (
-                                          <span className="flex items-center gap-2">
-                                            <Icon name="document_scanner" size={18} />
-                                            Run Integrity Scan
-                                          </span>
-                                        )}
-                                      </Button>
-                                      
-                                      {results && (
-                                        <div className="mt-4 flex flex-col gap-4 animate-slide-up">
-                                          <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">
-                                            Scan Results
-                                          </h3>
-                                          
-                                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="bg-zinc-950 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <Icon name="check_circle" className="text-emerald-400 mb-2" size={24} />
-                                              <p className="text-3xl font-bold text-emerald-400">{results.ok.length}</p>
-                                              <p className="text-xs text-zinc-400 uppercase tracking-wider">Verified OK</p>
-                                            </div>
-                                            
-                                            <div className="bg-zinc-950 border border-amber-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <Icon name="warning" className="text-amber-400 mb-2" size={24} />
-                                              <p className="text-3xl font-bold text-amber-400">{results.modified.length}</p>
-                                              <p className="text-xs text-zinc-400 uppercase tracking-wider">Modified</p>
-                                            </div>
-                                            
-                                            <div className="bg-zinc-950 border border-red-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <Icon name="help_center" className="text-red-400 mb-2" size={24} />
-                                              <p className="text-3xl font-bold text-red-400">{results.missing.length}</p>
-                                              <p className="text-xs text-zinc-400 uppercase tracking-wider">Missing</p>
-                                            </div>
-                                            
-                                            <div className="bg-zinc-950 border border-secondary/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                                              <Icon name="add_circle" className="text-secondary mb-2" size={24} />
-                                              <p className="text-3xl font-bold text-secondary">{results.new.length}</p>
-                                              <p className="text-xs text-zinc-400 uppercase tracking-wider">New Files</p>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Detailed lists for modified/missing/new */}
-                                          {(results.modified.length > 0 || results.missing.length > 0 || results.new.length > 0) && (
-                                            <div className="bg-zinc-950 border border-white/10 rounded-xl p-4 max-h-96 overflow-y-auto">
-                                              {results.modified.length > 0 && (
-                                                <div className="mb-4">
-                                                  <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">Modified Files
-                                                  </h4>
-                                                  <ul className="text-xs text-zinc-400 space-y-1 font-mono">
-                                                    {results.modified.map(p => <li key={p}>{p}</li>)}
-                                                  </ul>
-                                                </div>
-                                              )}
-                                              
-                                              {results.missing.length > 0 && (
-                                                <div className="mb-4">
-                                                  <h4 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">Missing Files
-                                                  </h4>
-                                                  <ul className="text-xs text-zinc-400 space-y-1 font-mono">
-                                                    {results.missing.map(p => <li key={p}>{p}</li>)}
-                                                  </ul>
-                                                </div>
-                                              )}
-                                              
-                                              {results.new.length > 0 && (
-                                                <div>
-                                                  <h4 className="text-sm font-semibold text-secondary mb-2 flex items-center gap-2">New Files (Not in snapshot)
-                                                  </h4>
-                                                  <ul className="text-xs text-zinc-400 space-y-1 font-mono">
-                                                    {results.new.map(p => <li key={p}>{p}</li>)}
-                                                  </ul>
-                                                </div>
-                                              )}
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                      </ModernTabContent>
-          </div>
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleVerify}
+                  disabled={!snapshotFileInfo || !verifyTargetDir || isVerifying}
+                >
+                  {isVerifying ? "Verifying hashes" : (
+                    <span className="flex items-center gap-2">
+                      <Icon name="document_scanner" size={18} />
+                      Run Integrity Scan
+                    </span>
+                  )}
+                </Button>
+                
+                {results && (
+                  <div className="mt-4 flex flex-col gap-4 animate-slide-up">
+                    <SectionHeader title="Scan Results" />
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                      <div className="bg-[var(--theme-bg)] border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <Icon name="check_circle" className="text-emerald-400 mb-2" size={24} />
+                        <p className="text-3xl font-bold text-emerald-400">{results.ok.length}</p>
+                        <p className="text-xs text-[var(--theme-text)] uppercase tracking-wider">Verified OK</p>
+                      </div>
+                      
+                      <div className="bg-[var(--theme-bg)] border border-amber-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <Icon name="warning" className="text-amber-400 mb-2" size={24} />
+                        <p className="text-3xl font-bold text-amber-400">{results.modified.length}</p>
+                        <p className="text-xs text-[var(--theme-text)] uppercase tracking-wider">Modified</p>
+                      </div>
+                      
+                      <div className="bg-[var(--theme-bg)] border border-red-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <Icon name="help_center" className="text-red-400 mb-2" size={24} />
+                        <p className="text-3xl font-bold text-red-400">{results.missing.length}</p>
+                        <p className="text-xs text-[var(--theme-text)] uppercase tracking-wider">Missing</p>
+                      </div>
+                      
+                      <div className="bg-[var(--theme-bg)] border border-[var(--theme-heading)]/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <Icon name="add_circle" className="text-[var(--theme-heading)] mb-2" size={24} />
+                        <p className="text-3xl font-bold text-[var(--theme-heading)]">{results.new.length}</p>
+                        <p className="text-xs text-[var(--theme-text)] uppercase tracking-wider">New Files</p>
+                      </div>
+                    </div>
+                    
+                    {/* Detailed lists for modified/missing/new */}
+                    {(results.modified.length > 0 || results.missing.length > 0 || results.new.length > 0) && (
+                      <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 max-h-96 overflow-y-auto custom-scrollbar mt-4">
+                        {results.modified.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">Modified Files
+                            </h4>
+                            <ul className="text-xs text-[var(--theme-text)] space-y-1 font-mono">
+                              {results.modified.map(p => <li key={p}>{p}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {results.missing.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">Missing Files
+                            </h4>
+                            <ul className="text-xs text-[var(--theme-text)] space-y-1 font-mono">
+                              {results.missing.map(p => <li key={p}>{p}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {results.new.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-[var(--theme-heading)] mb-2 flex items-center gap-2">New Files (Not in snapshot)
+                            </h4>
+                            <ul className="text-xs text-[var(--theme-text)] space-y-1 font-mono">
+                              {results.new.map(p => <li key={p}>{p}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </ModernTabContent>
         </div>
-      </div>
       </div>
     </>
   );

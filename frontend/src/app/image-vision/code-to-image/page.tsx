@@ -96,7 +96,7 @@ export default function CodeToImagePage() {
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
                       {LANGUAGES.map(l => (
-                        <option key={l} value={l}>{l}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={l} value={l}>{l}</option>
                       ))}
                     </select>
                   </div>
@@ -111,7 +111,7 @@ export default function CodeToImagePage() {
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
                       {THEMES.map(t => (
-                        <option key={t} value={t}>{t}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={t} value={t}>{t}</option>
                       ))}
                     </select>
                   </div>

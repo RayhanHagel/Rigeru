@@ -22,13 +22,9 @@ def flatten_pdf(pdf_bytes: bytes) -> tuple[bool, bytes | str]:
         # A more robust flattening converts pages to a new PDF. Let's do that.
         new_doc = fitz.open()
         for page in doc:
-            # this doesn't flatten forms unfortunately.
-            # To flatten properly in pure PyMuPDF:
-            # We can rasterize and rebuild. Let's just rasterize at high res for now.
             pix = page.get_pixmap(dpi=150)
-            img_pdf = fitz.open("pdf", pix.pdfocr_tobytes())
-            new_doc.insert_pdf(img_pdf)
-            img_pdf.close()
+            new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+            new_page.insert_image(page.rect, stream=pix.tobytes("png"))
             
         output_stream = io.BytesIO()
         new_doc.save(output_stream)
@@ -49,8 +45,7 @@ def optimize_pdf(pdf_bytes: bytes) -> tuple[bool, bytes | str]:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         output_stream = io.BytesIO()
         # garbage=4: remove unused objects, compress streams, clean up duplicate objects
-        # linear=True: optimize for web viewing
-        doc.save(output_stream, garbage=4, deflate=True, clean=True, linear=True)
+        doc.save(output_stream, garbage=4, deflate=True, clean=True)
         doc.close()
         return True, output_stream.getvalue()
     except Exception as e:

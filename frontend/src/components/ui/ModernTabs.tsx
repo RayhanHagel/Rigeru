@@ -88,10 +88,23 @@ export function ModernTabs({ tabs, activeTab, setActiveTab, className = "" }: Mo
   );
 }
 
+import { motion, AnimatePresence } from "framer-motion";
+
 export function ModernTabContent({ activeTab, children, className = "" }: { activeTab: string, children: React.ReactNode, className?: string }) {
   return (
-    <div key={activeTab} className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-mode-both ${className}`}>
-      {children}
+    <div className={`relative w-full ${className}`}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 20, filter: "blur(4px)" }}
+          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, x: -20, filter: "blur(4px)" }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="w-full"
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

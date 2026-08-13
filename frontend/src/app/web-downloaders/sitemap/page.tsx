@@ -129,44 +129,62 @@ export default function SitemapPage() {
         
         {/* Left Column: Controls & Stats */}
         <div className="w-full space-y-6">
-          <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-6 shadow-xl flex flex-col">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">Target Website
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm backdrop-blur-md flex flex-col">
+            <h3 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Target Website
             </h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-zinc-500 mb-1">Website URL</label>
+                <label className="block text-xs font-medium text-[var(--theme-text)] mb-1">Website URL</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://example.com"
-                    className="w-full bg-zinc-950/50 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-primary transition-colors"
+                    className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
+                    style={{ 
+                      backgroundColor: "var(--theme-bg)",
+                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
-                  <Icon name="search" size={16} className="absolute left-3 top-3 text-zinc-500" />
+                  <Icon name="search" size={16} className="absolute left-3 top-3 text-[var(--theme-text)]" />
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-500 mb-1">Max Pages</label>
+                  <label className="block text-xs font-medium text-[var(--theme-text)] mb-1">Max Pages</label>
                   <input
                     type="number"
                     value={maxPages}
                     onChange={(e) => setMaxPages(Number(e.target.value))}
                     min={1} max={1000}
-                    className="w-full bg-zinc-950/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-primary"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
+                    style={{ 
+                      backgroundColor: "var(--theme-bg)",
+                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-500 mb-1">Max Depth</label>
+                  <label className="block text-xs font-medium text-[var(--theme-text)] mb-1">Max Depth</label>
                   <input
                     type="number"
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(Number(e.target.value))}
                     min={1} max={10}
-                    className="w-full bg-zinc-950/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-primary"
+                    className="w-full rounded-lg px-3 py-2 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
+                    style={{ 
+                      backgroundColor: "var(--theme-bg)",
+                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
                 </div>
               </div>
@@ -187,7 +205,8 @@ export default function SitemapPage() {
               <Button
                 onClick={downloadJson}
                 disabled={nodesCount === 0}
-                className="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-medium flex items-center gap-2"
+                variant="secondary"
+                className="w-full font-medium flex items-center gap-2 border border-[var(--theme-ui-border)]"
               >
                 <Icon name="download" size={16} /> Save as JSON
               </Button>
@@ -195,32 +214,32 @@ export default function SitemapPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-5 shadow-lg">
-              <div className="flex items-center gap-2 text-zinc-500 mb-2">
+            <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-5 shadow-sm backdrop-blur-md">
+              <div className="flex items-center gap-2 text-[var(--theme-text)] mb-2">
                 <Icon name="description" size={16} />
                 <span className="text-xs font-medium">Pages Found</span>
               </div>
-              <div className="text-3xl font-bold text-zinc-200">{nodesCount}</div>
+              <div className="text-3xl font-bold text-[var(--theme-heading)]">{nodesCount}</div>
             </div>
             
-            <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-5 shadow-lg">
-              <div className="flex items-center gap-2 text-zinc-500 mb-2">
+            <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-5 shadow-sm backdrop-blur-md">
+              <div className="flex items-center gap-2 text-[var(--theme-text)] mb-2">
                 <Icon name="monitoring" size={16} />
                 <span className="text-xs font-medium">Max Depth</span>
               </div>
-              <div className="text-3xl font-bold text-zinc-200">{maxDepthReached}</div>
+              <div className="text-3xl font-bold text-[var(--theme-heading)]">{maxDepthReached}</div>
             </div>
           </div>
           
-          <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-4 shadow-lg flex items-center gap-3">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 shadow-sm flex items-center gap-3 backdrop-blur-md">
             {isCrawling ? (
-              <Icon name="progress_activity" size={18} className="text-primary animate-spin shrink-0" />
+              <Icon name="progress_activity" size={18} className="text-[var(--theme-heading)] animate-spin shrink-0" />
             ) : statusMsg.includes("Finished") ? (
               <Icon name="check_circle" size={18} className="text-green-400 shrink-0" />
             ) : (
-              <Icon name="language" size={18} className="text-zinc-500 shrink-0" />
+              <Icon name="language" size={18} className="text-[var(--theme-text)] shrink-0" />
             )}
-            <span className="text-sm text-zinc-400 line-clamp-2 leading-tight">
+            <span className="text-sm text-[var(--theme-text)] line-clamp-2 leading-tight">
               {statusMsg || "Ready to crawl. Enter a URL above."}
             </span>
           </div>
@@ -228,15 +247,15 @@ export default function SitemapPage() {
 
         {/* Right Column: Tree Map */}
         <div className="w-full">
-          <div className="bg-zinc-950/50 border border-white/10 rounded-xl p-6 shadow-xl h-[700px] flex flex-col">
-            <h3 className="text-lg font-semibold text-white mb-4 border-b border-white/10 pb-4 flex items-center gap-2">Structure Map
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm h-[700px] flex flex-col backdrop-blur-md">
+            <h3 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 border-b border-[var(--theme-ui-border)] pb-4 flex items-center gap-2">Structure Map
             </h3>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               {rootNode ? (
                 <TreeNode node={rootNode} isRoot />
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-3">
+                <div className="h-full flex flex-col items-center justify-center text-[var(--theme-text)] space-y-3">
                   <Icon name="hub" size={48} className="opacity-20" />
                   <p className="text-sm">The website structure will appear here.</p>
                 </div>
@@ -258,19 +277,19 @@ const TreeNode = ({ node, isRoot = false }: { node: NodeData, isRoot?: boolean }
     <div className="select-none">
       <div 
         className={`flex items-center gap-2 py-1.5 px-2 rounded-lg transition-colors group ${
-          hasChildren ? "cursor-pointer hover:bg-zinc-800/50" : "hover:bg-zinc-800/50"
+          hasChildren ? "cursor-pointer hover:bg-[var(--theme-bg)]/50" : "hover:bg-[var(--theme-bg)]/50"
         }`}
         onClick={() => hasChildren && setExpanded(!expanded)}
       >
-        <div className="shrink-0 w-4 h-4 flex items-center justify-center text-zinc-500">
+        <div className="shrink-0 w-4 h-4 flex items-center justify-center text-[var(--theme-text)]">
           {hasChildren ? (
             expanded ? <Icon name="expand_more" size={14} /> : <Icon name="chevron_right" size={14} />
           ) : (
-            <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+            <span className="w-1 h-1 rounded-full bg-[var(--theme-ui-border)]"></span>
           )}
         </div>
         
-        <Icon name="link" size={14} className={isRoot ? "text-primary" : "text-zinc-500 group-hover:text-primary transition-colors"} />
+        <Icon name="link" size={14} className={isRoot ? "text-[var(--theme-heading)]" : "text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors"} />
         
         <a
           href={node.url}
@@ -278,21 +297,21 @@ const TreeNode = ({ node, isRoot = false }: { node: NodeData, isRoot?: boolean }
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className={`text-sm truncate hover:underline ${
-            isRoot ? "font-bold text-primary" : "text-zinc-300 hover:text-primary"
+            isRoot ? "font-bold text-[var(--theme-heading)]" : "text-[var(--theme-text)] hover:text-[var(--theme-heading)]"
           }`}
         >
           {node.title}
         </a>
         
         {!isRoot && (
-          <span className="text-xs text-zinc-600 truncate ml-2 max-w-[200px] opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-xs text-[var(--theme-text)] truncate ml-2 max-w-[200px] opacity-0 group-hover:opacity-100 transition-opacity">
             {node.url}
           </span>
         )}
       </div>
       
       {expanded && hasChildren && (
-        <div className="ml-5 pl-2 border-l border-white/10 mt-1 flex flex-col gap-0.5">
+        <div className="ml-5 pl-2 border-l border-[var(--theme-ui-border)] mt-1 flex flex-col gap-0.5">
           {node.children.map((child, idx) => (
             <TreeNode key={idx} node={child} />
           ))}

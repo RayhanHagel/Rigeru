@@ -149,10 +149,10 @@ export default function WebScraperPage() {
       <Header title="Visual Web Scraper" subtitle="Use a local headless browser to extract specific elements from a list of websites." />
 
       <div className="flex flex-col gap-6 mb-8 animate-slide-up w-full">
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 flex flex-col max-h-[500px] shadow-xl">
-          <h2 className="text-lg font-semibold text-white mb-4">Target URLs</h2>
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col max-h-[500px] shadow-sm backdrop-blur-md">
+          <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-4">Target URLs</h2>
           
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4">
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4 custom-scrollbar">
             {urls.map((url, index) => (
               <div key={index} className="flex gap-2">
                 <input 
@@ -164,7 +164,13 @@ export default function WebScraperPage() {
                     setUrls(newUrls);
                   }}
                   placeholder="https://example.com"
-                  className="flex-1 bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none font-mono text-sm"
+                  className="flex-1 rounded-lg p-3 text-[var(--theme-text)] font-mono text-sm border focus:outline-none transition-colors"
+                  style={{ 
+                    backgroundColor: "var(--theme-bg)",
+                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 />
                 {urls.length > 1 && (
                   <Button 
@@ -172,14 +178,14 @@ export default function WebScraperPage() {
                     onClick={() => setUrls(urls.filter((_, i) => i !== index))}
                     className="px-3"
                   >
-                    <Icon name="delete" size={16} className="text-zinc-400 hover:text-red-400 transition-colors" />
+                    <Icon name="delete" size={16} className="text-[var(--theme-text)] hover:text-red-400 transition-colors" />
                   </Button>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="mt-auto pt-4 border-t border-white/5 flex gap-4">
+          <div className="mt-auto pt-4 border-t border-[var(--theme-ui-border)] flex gap-4">
             <Button variant="secondary" onClick={() => setUrls([...urls, ""])} icon={<Icon name="add" size={16} />}>
               Add URL
             </Button>
@@ -200,24 +206,30 @@ export default function WebScraperPage() {
           </div>
         </div>
 
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 flex flex-col shadow-xl">
-          <h2 className="text-lg font-semibold text-white mb-4">Configuration</h2>
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col shadow-sm backdrop-blur-md">
+          <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-4">Configuration</h2>
           
-          <label className="text-sm font-medium text-zinc-300 mb-2">CSS Selector to Extract</label>
+          <label className="text-sm font-medium text-[var(--theme-text)] mb-2">CSS Selector to Extract</label>
           <input 
             type="text" 
             value={cssSelector}
             onChange={(e) => setCssSelector(e.target.value)}
             placeholder="e.g., h1, .price, #main-content"
-            className="w-full bg-zinc-950 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none mb-4"
+            className="w-full rounded-lg p-3 text-[var(--theme-text)] border focus:outline-none mb-4 transition-colors"
+            style={{ 
+              backgroundColor: "var(--theme-bg)",
+              borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+            }}
+            onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+            onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
           />
           
-          <div className="bg-zinc-950/50 rounded-lg p-4 mb-4 text-sm text-zinc-400">
-            <p className="font-semibold text-zinc-300 mb-2">Common Selectors:</p>
+          <div className="bg-[var(--theme-bg)]/50 rounded-lg p-4 mb-4 text-sm text-[var(--theme-text)]">
+            <p className="font-semibold text-[var(--theme-text)] mb-2">Common Selectors:</p>
             <ul className="list-disc pl-4 space-y-1">
-              <li><code className="text-primary">h1</code>, <code className="text-primary">h2</code>, <code className="text-primary">p</code> (Tags)</li>
-              <li><code className="text-primary">.product-title</code> (Class)</li>
-              <li><code className="text-primary">#main-price</code> (ID)</li>
+              <li><code className="text-[var(--theme-heading)]">h1</code>, <code className="text-[var(--theme-heading)]">h2</code>, <code className="text-[var(--theme-heading)]">p</code> (Tags)</li>
+              <li><code className="text-[var(--theme-heading)]">.product-title</code> (Class)</li>
+              <li><code className="text-[var(--theme-heading)]">#main-price</code> (ID)</li>
             </ul>
           </div>
           
@@ -236,12 +248,12 @@ export default function WebScraperPage() {
       </div>
 
       {previewImages.length > 0 && !isInteractiveMode && (
-        <div className="mb-8 bg-zinc-900/50 border border-white/5 rounded-xl p-6 animate-slide-up">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">Live Preview ({previewImages.length})
+        <div className="mb-8 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 animate-slide-up backdrop-blur-md shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Live Preview ({previewImages.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {previewImages.map((img, idx) => (
-              <div key={idx} className="rounded-lg overflow-hidden border border-white/10 bg-black">
+              <div key={idx} className="rounded-lg overflow-hidden border border-[var(--theme-ui-border)] bg-black">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img} alt={`Preview ${idx+1}`} className="w-full h-auto object-contain max-h-[400px]" />
               </div>
@@ -251,13 +263,13 @@ export default function WebScraperPage() {
       )}
 
       {isInteractiveMode && urls[0] && (
-        <div className="mb-8 bg-zinc-900/50 border border-white/5 rounded-xl p-6 animate-slide-up">
-          <h2 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">Interactive Element Picker
+        <div className="mb-8 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 animate-slide-up backdrop-blur-md shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-2 flex items-center gap-2">Interactive Element Picker
           </h2>
-          <p className="text-sm text-zinc-400 mb-4">
+          <p className="text-sm text-[var(--theme-text)] mb-4">
             Hover over elements in the preview below. Click any highlighted element to automatically generate its CSS selector.
           </p>
-          <div className="rounded-lg overflow-hidden border border-white/10 bg-white h-[600px]">
+          <div className="rounded-lg overflow-hidden border border-[var(--theme-ui-border)] bg-white h-[600px]">
             <iframe 
               src={`/api/web-downloads/scraper/proxy?url=${encodeURIComponent(urls[0])}`}
               className="w-full h-full border-none"
@@ -268,13 +280,13 @@ export default function WebScraperPage() {
       )}
 
       {(isScraping || results.length > 0) && (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 animate-slide-up">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 animate-slide-up backdrop-blur-md shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">
               {isScraping ? (
-                <><Icon name="schedule" size={18} className="text-secondary animate-spin-slow" /> Scraping in Progress</>
+                <><Icon name="schedule" size={18} className="text-[var(--theme-heading)] animate-spin-slow" /> Scraping in Progress</>
               ) : (
-                <><Icon name="check_circle" size={18} className="text-green-400" /> Scraping Completed</>
+                <><Icon name="check_circle" size={18} className="text-[var(--theme-heading)]" /> Scraping Completed</>
               )}
             </h2>
             
@@ -286,30 +298,30 @@ export default function WebScraperPage() {
           </div>
           
           {isScraping && (
-            <div className="flex items-center gap-3 p-4 bg-secondary/10 border border-secondary/20 rounded-lg text-secondary mb-6">
-              <div className="w-4 h-4 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+            <div className="flex items-center gap-3 p-4 bg-[var(--theme-heading)]/10 border border-[var(--theme-heading)]/20 rounded-lg text-[var(--theme-heading)] mb-6">
+              <div className="w-4 h-4 rounded-full border-2 border-[var(--theme-heading)] border-t-transparent animate-spin" />
               {statusMessage}
             </div>
           )}
           
           {results.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-white/10">
+            <div className="overflow-x-auto rounded-lg border border-[var(--theme-ui-border)] custom-scrollbar">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-zinc-950 text-zinc-400 border-b border-white/10">
+                <thead className="text-xs uppercase bg-[var(--theme-bg)] text-[var(--theme-text)] border-b border-[var(--theme-ui-border)]">
                   <tr>
                     <th className="px-6 py-4 font-semibold w-1/3">Target URL</th>
-                    <th className="px-6 py-4 font-semibold border-l border-white/5">Extracted Data</th>
+                    <th className="px-6 py-4 font-semibold border-l border-[var(--theme-ui-border)]">Extracted Data</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 bg-zinc-900/30">
+                <tbody className="divide-y divide-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)]/30">
                   {results.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-zinc-800/50 transition-colors">
-                      <td className="px-6 py-4 text-zinc-300 max-w-[300px] truncate" title={row["Target URL"]}>
-                        <a href={row["Target URL"]} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                    <tr key={idx} className="hover:bg-[var(--theme-bg)]/50 transition-colors">
+                      <td className="px-6 py-4 text-[var(--theme-text)] max-w-[300px] truncate" title={row["Target URL"]}>
+                        <a href={row["Target URL"]} target="_blank" rel="noreferrer" className="text-[var(--theme-heading)] hover:underline">
                           {row["Target URL"]}
                         </a>
                       </td>
-                      <td className="px-6 py-4 text-zinc-200 border-l border-white/5 whitespace-pre-wrap">
+                      <td className="px-6 py-4 text-[var(--theme-text)] border-l border-[var(--theme-ui-border)] whitespace-pre-wrap">
                         {row["Extracted Data"]}
                       </td>
                     </tr>

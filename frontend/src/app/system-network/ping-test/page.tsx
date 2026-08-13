@@ -128,43 +128,52 @@ export default function PingTestPage() {
           <Container title="Standard Ping Test" icon={<Icon name="terminal" size={18} className="text-secondary" />}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Target Host / IP</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">Target Host / IP</label>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
                     value={target}
                     onChange={e => setTarget(e.target.value)}
-                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary"
+                    className="flex-1 rounded-lg p-2.5 text-[var(--theme-heading)] outline-none transition-all border"
+                    style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
                   <select
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary max-w-[150px]"
+                    className="rounded-lg p-2.5 text-[var(--theme-heading)] outline-none transition-all border max-w-[150px]"
+                    style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     onChange={e => {
                       if(e.target.value) setTarget(e.target.value);
                     }}
                     value=""
                   >
-                    <option value="" disabled>Presets...</option>
-                    <option value="google.com">Google</option>
-                    <option value="cloudflare.com">Cloudflare</option>
-                    <option value="github.com">GitHub</option>
-                    <option value="1.1.1.1">1.1.1.1</option>
-                    <option value="8.8.8.8">8.8.8.8</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="" disabled>Presets...</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="google.com">Google</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="cloudflare.com">Cloudflare</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="github.com">GitHub</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="1.1.1.1">1.1.1.1</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="8.8.8.8">8.8.8.8</option>
                   </select>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Ping Count</label>
+                  <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">Ping Count</label>
                   <input 
                     type="number" 
                     value={count}
                     onChange={e => setCount(parseInt(e.target.value) || 4)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-secondary"
+                    className="w-full rounded-lg p-2.5 text-[var(--theme-heading)] outline-none transition-all border"
+                    style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
                 </div>
                 <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-sm text-zinc-300 pb-3">
-                    <input type="checkbox" checked={ipv6} onChange={e => setIpv6(e.target.checked)} className="rounded border-zinc-800 bg-zinc-900 text-secondary" />
+                  <label className="flex items-center gap-2 text-sm text-[var(--theme-text)] pb-3">
+                    <input type="checkbox" checked={ipv6} onChange={e => setIpv6(e.target.checked)} className="rounded accent-[var(--theme-heading)] w-4 h-4" />
                     Use IPv6
                   </label>
                 </div>
@@ -174,7 +183,7 @@ export default function PingTestPage() {
               </Button>
 
               {pingLog && (
-                <div className="mt-4 bg-black border border-zinc-800 rounded-lg p-4 max-h-60 overflow-y-auto font-mono text-xs text-zinc-300 whitespace-pre-wrap">
+                <div className="mt-4 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-4 max-h-60 overflow-y-auto font-mono text-xs text-[var(--theme-text)] whitespace-pre-wrap custom-scrollbar">
                   {pingLog}
                 </div>
               )}
@@ -184,26 +193,32 @@ export default function PingTestPage() {
           <Container title="DNS Settings Override (Windows)" icon={<Icon name="settings" size={18} className="text-emerald-400" />}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Network Interface</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">Network Interface</label>
                 <select 
                   value={selectedIface}
                   onChange={e => setSelectedIface(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-lg p-2.5 text-[var(--theme-heading)] outline-none transition-all border"
+                  style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 >
-                  {interfaces.map(i => <option key={i} value={i}>{i}</option>)}
+                  {interfaces.map(i => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={i} value={i}>{i}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">DNS Server</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-1">DNS Server</label>
                 <select 
                   value={dnsPreset}
                   onChange={e => setDnsPreset(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-lg p-2.5 text-[var(--theme-heading)] outline-none transition-all border"
+                  style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 >
-                  <option value="1.1.1.1,1.0.0.1">Cloudflare (1.1.1.1, 1.0.0.1)</option>
-                  <option value="8.8.8.8,8.8.4.4">Google (8.8.8.8, 8.8.4.4)</option>
-                  <option value="9.9.9.9,149.112.112.112">Quad9 (9.9.9.9, 149.112.112.112)</option>
-                  <option value="208.67.222.222,208.67.220.220">OpenDNS (208.67.222.222, 208.67.220.220)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="1.1.1.1,1.0.0.1">Cloudflare (1.1.1.1, 1.0.0.1)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="8.8.8.8,8.8.4.4">Google (8.8.8.8, 8.8.4.4)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="9.9.9.9,149.112.112.112">Quad9 (9.9.9.9, 149.112.112.112)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="208.67.222.222,208.67.220.220">OpenDNS (208.67.222.222, 208.67.220.220)</option>
                 </select>
               </div>
               <Button variant="secondary" onClick={handleSetDns} disabled={isSettingDns || !selectedIface} className="w-full">
@@ -217,10 +232,10 @@ export default function PingTestPage() {
           <Container title="DNS Latency Benchmark" icon={<Icon name="dns" size={18} className="text-primary" />}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Select DNS Providers</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Select DNS Providers</label>
                 <div className="flex flex-wrap gap-2">
                   {dnsPresetsList.map(preset => (
-                    <label key={preset} className="flex items-center gap-2 text-sm text-zinc-300 bg-zinc-900/50 border border-zinc-800 px-3 py-1.5 rounded-full cursor-pointer hover:bg-zinc-800 transition-colors">
+                    <label key={preset} className="flex items-center gap-2 text-sm text-[var(--theme-heading)] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] px-3 py-1.5 rounded-full cursor-pointer hover:border-[var(--theme-heading)] transition-all duration-300">
                       <input 
                         type="checkbox" 
                         checked={selectedDnsPresets.includes(preset)}
@@ -231,7 +246,7 @@ export default function PingTestPage() {
                             setSelectedDnsPresets(selectedDnsPresets.filter(p => p !== preset));
                           }
                         }}
-                        className="rounded border-zinc-800 bg-zinc-900 text-primary focus:ring-primary"
+                        className="rounded accent-[var(--theme-heading)] w-4 h-4 focus:ring-[var(--theme-heading)]"
                       />
                       {preset}
                     </label>
@@ -244,19 +259,19 @@ export default function PingTestPage() {
               </Button>
 
               {Object.keys(dnsSpeeds).length > 0 && (
-                <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden mt-4">
+                <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden mt-4 custom-scrollbar">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-zinc-900 text-zinc-400">
+                    <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] border-b border-[var(--theme-ui-border)]">
                       <tr>
                         <th className="px-4 py-3 font-medium">Provider</th>
                         <th className="px-4 py-3 font-medium">IPv4 Latency</th>
                         <th className="px-4 py-3 font-medium">IPv6 Latency</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-[var(--theme-ui-border)]">
                       {Object.entries(dnsSpeeds).map(([name, speeds], i) => (
-                        <tr key={i} className="hover:bg-zinc-800/50">
-                          <td className="px-4 py-3 font-medium text-white">{name}</td>
+                        <tr key={i} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                          <td className="px-4 py-3 font-medium text-[var(--theme-heading)]">{name}</td>
                           <td className="px-4 py-3">{formatLatency(speeds.ipv4)}</td>
                           <td className="px-4 py-3">{formatLatency(speeds.ipv6)}</td>
                         </tr>
