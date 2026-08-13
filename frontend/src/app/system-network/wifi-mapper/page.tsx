@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 import { PopupModal } from '@/components/ui/PopupModal';
 import { Icon } from "@/lib/utils";
+import { Header } from "@/components/ui/Header";
 
 const MapComponent = dynamic(() => import('./Map'), { ssr: false });
 
@@ -163,19 +164,14 @@ export default function WifiMapperPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              Wi-Fi Network Mapper
-            </h1>
-            <p className="text-zinc-400 text-sm font-medium">Scan and map nearby Wi-Fi networks (Wardriving).</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <Header 
+          title="Wi-Fi Network Mapper"
+          subtitle="Scan and map nearby Wi-Fi networks (Wardriving)."
+        />
+        <div className="flex items-center gap-4 bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
           {isRunning && (
-            <span className="text-sm text-green-400 font-medium px-3 py-1.5 bg-green-500/10 rounded-lg border border-green-500/20">
+            <span className="text-sm text-green-400 font-bold px-3 py-1.5 bg-green-500/10 rounded-lg border border-green-500/20">
               Wi-Fi tracker is ON
             </span>
           )}
@@ -186,7 +182,7 @@ export default function WifiMapperPage() {
           >
             Set Location
           </Button>
-          <div className="flex gap-2 bg-black/20 p-1 rounded-xl">
+          <div className="flex gap-2">
             <Button 
               variant="primary" 
               onClick={startTracking}
@@ -211,12 +207,12 @@ export default function WifiMapperPage() {
 
       <div className="flex-1 min-h-0 flex flex-col gap-6 w-full">
         {/* Map Section */}
-        <div className="w-full h-[500px] relative rounded-xl border border-white/10 bg-zinc-950/50 shadow-2xl flex flex-col overflow-hidden shrink-0">
+        <div className="w-full h-[500px] relative rounded-xl border border-[var(--theme-ui-border)] bg-[var(--theme-bg)] shadow-sm flex flex-col overflow-hidden shrink-0">
           {center[0] === 0 && center[1] === 0 && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm text-center p-6">
-              <Icon name="location_on" className="text-zinc-500 mb-4" size={48} />
-              <h3 className="text-lg font-medium text-white mb-2">Location Unavailable</h3>
-              <p className="text-zinc-400 text-sm max-w-md">
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--theme-bg)]/80 backdrop-blur-md text-center p-6">
+              <Icon name="location_on" className="text-[var(--theme-text)] mb-4" size={48} />
+              <h3 className="text-lg font-bold text-[var(--theme-heading)] mb-2">Location Unavailable</h3>
+              <p className="text-[var(--theme-text)] text-sm max-w-md">
                 We haven't detected your location yet. Set a custom location to see the map.
               </p>
             </div>
@@ -225,9 +221,9 @@ export default function WifiMapperPage() {
         </div>
 
         {/* Networks List Section */}
-        <div className="w-full flex-1 flex flex-col gap-4 overflow-hidden bg-zinc-950/50 rounded-xl border border-white/10 p-6 shadow-2xl min-h-[400px]">
+        <div className="w-full flex-1 flex flex-col gap-4 overflow-hidden bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] p-6 shadow-sm min-h-[400px]">
           <div className="flex items-center justify-between px-2 shrink-0">
-            <h3 className="text-sm font-medium text-zinc-400">Detected Networks ({networks.length})</h3>
+            <h3 className="text-sm font-bold text-[var(--theme-heading)]">Detected Networks ({networks.length})</h3>
             <div className="flex gap-1">
               <Button variant="ghost" className="!p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={clearHistory} title="Clear History">
                 <Icon name="delete" size={16} />
@@ -236,19 +232,19 @@ export default function WifiMapperPage() {
           </div>
           
           <div className="relative px-2 shrink-0">
-            <Icon name="search" className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <Icon name="search" className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" size={16} />
             <input 
               type="text" 
               placeholder="Search SSID or BSSID..." 
               value={networkSearchQuery}
               onChange={(e) => setNetworkSearchQuery(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-secondary/50 transition-colors"
+              className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl py-2 pl-10 pr-4 text-sm text-[var(--theme-heading)] placeholder-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors"
             />
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-4 pb-4">
             {networks.length === 0 ? (
-              <div className="text-center text-zinc-500 text-sm py-8">
+              <div className="text-center text-[var(--theme-text)] text-sm py-8">
                 No networks detected yet.
               </div>
             ) : (
@@ -259,31 +255,31 @@ export default function WifiMapperPage() {
                 return (
                   <div 
                     key={net.bssid} 
-                    className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-white/20 ${isActive ? 'bg-secondary/10 border-secondary/30' : 'bg-white/5 border-white/10'}`}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-[var(--theme-heading)] hover:shadow-md ${isActive ? 'bg-[var(--theme-ui-bg)] border-[var(--theme-heading)]' : 'bg-[var(--theme-bg)] border-[var(--theme-ui-border)]'}`}
                     onClick={() => toggleNetworkHistory(net.bssid)}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-zinc-200 truncate pr-4" title={net.ssid}>{net.ssid}</h4>
-                      <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`} title={isActive ? "Currently in range" : "Out of range"} />
+                      <h4 className="font-bold text-[var(--theme-heading)] truncate pr-4" title={net.ssid}>{net.ssid}</h4>
+                      <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${isActive ? 'bg-[var(--theme-heading)] shadow-[0_0_8px_var(--theme-heading)]' : 'bg-[var(--theme-text)]'}`} title={isActive ? "Currently in range" : "Out of range"} />
                     </div>
-                    <div className="text-xs text-zinc-500 font-mono mb-3">{net.bssid}</div>
+                    <div className="text-xs text-[var(--theme-text)] font-mono mb-3">{net.bssid}</div>
                     <div className="flex flex-col gap-1 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-zinc-600">Signal:</span>
-                        <span className="text-zinc-400">{net.signal}</span>
+                        <span className="text-[var(--theme-text)] font-medium">Signal:</span>
+                        <span className="text-[var(--theme-heading)] opacity-80">{net.signal}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-600">Security:</span>
-                        <span className="text-zinc-400">{net.security}</span>
+                        <span className="text-[var(--theme-text)] font-medium">Security:</span>
+                        <span className="text-[var(--theme-heading)] opacity-80">{net.security}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-600">Last seen:</span>
-                        <span className="text-zinc-400">{new Date(net.last_seen * 1000).toLocaleTimeString()}</span>
+                        <span className="text-[var(--theme-text)] font-medium">Last seen:</span>
+                        <span className="text-[var(--theme-heading)] opacity-80">{new Date(net.last_seen * 1000).toLocaleTimeString()}</span>
                       </div>
                       {net.last_lat && net.last_lon && (
                         <div className="flex justify-between">
-                          <span className="text-zinc-600">Location:</span>
-                          <span className="text-zinc-400 font-mono text-[10px]">
+                          <span className="text-[var(--theme-text)] font-medium">Location:</span>
+                          <span className="text-[var(--theme-heading)] opacity-80 font-mono text-[10px]">
                             {net.last_lat.toFixed(4)}, {net.last_lon.toFixed(4)}
                           </span>
                         </div>
@@ -291,16 +287,16 @@ export default function WifiMapperPage() {
                     </div>
                     
                     {expandedNetwork === net.bssid && (
-                      <div className="mt-4 pt-4 border-t border-white/10">
-                        <h5 className="text-xs font-medium text-zinc-400 mb-2">Location History</h5>
+                      <div className="mt-4 pt-4 border-t border-[var(--theme-ui-border)]">
+                        <h5 className="text-xs font-bold text-[var(--theme-heading)] mb-2">Location History</h5>
                         {networkHistory.length === 0 ? (
-                          <div className="text-xs text-zinc-600">Loading history...</div>
+                          <div className="text-xs text-[var(--theme-text)]">Loading history...</div>
                         ) : (
                           <div className="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                             {networkHistory.map((h, i) => (
-                              <div key={i} className="text-[10px] bg-black/20 p-2 rounded flex justify-between items-center">
-                                <span className="text-zinc-300">{new Date(h.timestamp * 1000).toLocaleString()}</span>
-                                <span className="text-zinc-500 font-mono">
+                              <div key={i} className="text-[10px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] p-2 rounded flex justify-between items-center">
+                                <span className="text-[var(--theme-heading)]">{new Date(h.timestamp * 1000).toLocaleString()}</span>
+                                <span className="text-[var(--theme-text)] font-mono">
                                   {h.lat !== null && h.lon !== null ? `${h.lat.toFixed(4)}, ${h.lon.toFixed(4)}` : 'Unknown'}
                                 </span>
                               </div>
@@ -321,14 +317,14 @@ export default function WifiMapperPage() {
         <div className="flex flex-col gap-6 h-[70vh]">
           <div className="flex gap-4 shrink-0">
             <div className="flex-1 relative">
-              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" size={16} />
               <input 
                 type="text" 
                 placeholder="Search for a place (e.g. Times Square, New York)..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchLocation()}
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-secondary/50 transition-colors"
+                className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl py-3 pl-10 pr-4 text-sm text-[var(--theme-heading)] placeholder-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors"
               />
             </div>
             <Button variant="primary" onClick={searchLocation} disabled={searching}>
@@ -342,17 +338,17 @@ export default function WifiMapperPage() {
             {searchResults.map((res: any, idx) => (
               <div 
                 key={idx}
-                className="p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/10 cursor-pointer transition-colors"
+                className="p-4 rounded-xl border border-[var(--theme-ui-border)] bg-[var(--theme-bg)] hover:border-[var(--theme-heading)] cursor-pointer transition-colors shadow-sm"
                 onClick={() => selectLocation(parseFloat(res.lat), parseFloat(res.lon))}
               >
-                <div className="text-sm text-white font-medium mb-1">{res.display_name}</div>
-                <div className="text-xs text-zinc-500 font-mono">
+                <div className="text-sm text-[var(--theme-heading)] font-bold mb-1">{res.display_name}</div>
+                <div className="text-xs text-[var(--theme-text)] font-mono">
                   Lat: {parseFloat(res.lat).toFixed(6)}, Lon: {parseFloat(res.lon).toFixed(6)}
                 </div>
               </div>
             ))}
             {searchResults.length === 0 && !searching && (
-              <div className="text-center text-zinc-500 text-sm mt-8">
+              <div className="text-center text-[var(--theme-text)] text-sm mt-8">
                 Search for a location to see results here.
               </div>
             )}

@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useMemo } from "react";
 
@@ -293,30 +294,29 @@ export default function DockerManagerPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Docker Manager</h1>
-            <p className="text-zinc-400 text-sm font-medium">Control local Docker containers and view images.</p>
+      <Header 
+        title="Docker Manager"
+        subtitle="Control local Docker containers and view images."
+        actions={
+          <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm">
+            <Button variant="secondary" onClick={fetchStatusAndContainers} disabled={isLoading || isProcessing} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
+              Refresh
+            </Button>
           </div>
-        </div>
-        <Button variant="secondary" onClick={fetchStatusAndContainers} disabled={isLoading || isProcessing} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
-          Refresh
-        </Button>
-      </div>
+        }
+      />
 
       <div className="flex flex-col gap-6 w-full">
         {/* Docker Daemon Status */}
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Docker Daemon Status
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+          <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Docker Daemon Status
           </h3>
-          <div className="flex items-center justify-between p-4 bg-zinc-950 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl">
             <div className="flex items-center gap-4">
               <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] ${isRunning ? 'bg-green-500 text-green-500' : 'bg-red-500 text-red-500'}`} />
               <div>
-                <p className="font-semibold text-white">Docker is {isRunning ? "Running" : "Offline"}</p>
-                <p className="text-sm text-zinc-400">{statusMsg}</p>
+                <p className="font-semibold text-[var(--theme-heading)]">Docker is {isRunning ? "Running" : "Offline"}</p>
+                <p className="text-sm text-[var(--theme-text)]">{statusMsg}</p>
               </div>
             </div>
             
@@ -329,16 +329,20 @@ export default function DockerManagerPage() {
         </div>
 
         {isRunning && (
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">Containers & Projects
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Containers & Projects
             </h3>
-            <div className="mb-2">
+            <div className="mb-2 relative">
+              <Icon name="search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
               <input 
                 type="text" 
                 placeholder="Search projects or containers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:border-secondary"
+                className="w-full rounded-xl pl-10 pr-4 py-3 outline-none transition-all border text-[var(--theme-heading)]"
+                style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
             </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 animate-slide-up">
@@ -346,18 +350,18 @@ export default function DockerManagerPage() {
               const isGroupUp = group.status.toLowerCase().includes("running");
               
               return (
-                <div key={group.name} className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col hover:border-secondary/30 transition-all">
-                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-white/5">
+                <div key={group.name} className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-md flex flex-col hover:border-[var(--theme-heading)] hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-[var(--theme-ui-border)]">
                     <div 
                       className={`flex items-center gap-3 ${group.isProject ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
                       onClick={() => group.isProject && openProjectConfig(group.name)}
                     >
-                      <div className={`p-2.5 rounded-xl ${isGroupUp ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                      <div className={`p-2.5 rounded-xl ${isGroupUp ? 'bg-green-500/20 text-green-400' : 'bg-[var(--theme-bg)] text-[var(--theme-text)]'}`}>
                         <Icon name="deployed_code" size={24} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white text-lg truncate max-w-[200px]" title={group.name}>{group.name}</h3>
-                        <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded text-[10px] uppercase font-bold tracking-wider ${isGroupUp ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                        <h3 className="font-bold text-[var(--theme-heading)] text-lg truncate max-w-[200px]" title={group.name}>{group.name}</h3>
+                        <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded text-[10px] uppercase font-bold tracking-wider ${isGroupUp ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-[var(--theme-bg)] text-[var(--theme-text)] border border-[var(--theme-ui-border)]'}`}>
                           {group.isProject ? "Compose Project" : "Standalone"} - {group.status}
                         </span>
                       </div>
@@ -366,7 +370,7 @@ export default function DockerManagerPage() {
                     {group.isProject && (
                       <div className="flex gap-2">
                         {isGroupUp ? (
-                          <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "stop"); }} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>
+                          <Button variant="secondary" className="border-red-500/30 text-red-400" size="sm" onClick={(e) => { e.stopPropagation(); handleGroupAction(group, "stop"); }} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>
                             Stop All
                           </Button>
                         ) : (
@@ -383,32 +387,32 @@ export default function DockerManagerPage() {
                       const isUp = c.status.toLowerCase().includes("running");
                       const isExpanded = expandedContainers[c.id];
                       return (
-                        <div key={c.id} className="bg-zinc-950/50 rounded-xl border border-white/5 overflow-hidden">
+                        <div key={c.id} className="bg-[var(--theme-bg)] rounded-xl border border-[var(--theme-ui-border)] overflow-hidden">
                           <div 
-                            className="flex justify-between items-center p-3 cursor-pointer hover:bg-white/5 transition-colors"
+                            className="flex justify-between items-center p-3 cursor-pointer hover:bg-[var(--theme-ui-bg)] transition-colors"
                             onClick={() => toggleContainer(c.id)}
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1 pr-4">
-                              <div className="text-zinc-500">
+                              <div className="text-[var(--theme-text)]">
                                 {isExpanded ? <Icon name="expand_more" size={16} /> : <Icon name="chevron_right" size={16} />}
                               </div>
-                              <div className="font-medium text-zinc-200 truncate" title={c.name}>{c.name}</div>
+                              <div className="font-medium text-[var(--theme-heading)] truncate" title={c.name}>{c.name}</div>
                             </div>
-                            <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${isUp ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                            <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${isUp ? 'bg-green-500/10 text-green-400' : 'bg-[var(--theme-bg)] text-[var(--theme-text)]'}`}>
                               {c.status}
                             </span>
                           </div>
                           
                           {isExpanded && (
-                            <div className="p-4 pt-2 border-t border-white/5 flex flex-col gap-3">
+                            <div className="p-4 pt-2 border-t border-[var(--theme-ui-border)] flex flex-col gap-3">
                               <div className="flex items-start gap-2">
-                                <Icon name="monitoring" size={14} className="text-zinc-500 mt-0.5 shrink-0" />
-                                <div className="text-xs text-zinc-400 truncate" title={c.image}>{c.image}</div>
+                                <Icon name="monitoring" size={14} className="text-[var(--theme-text)] mt-0.5 shrink-0" />
+                                <div className="text-xs text-[var(--theme-text)] truncate" title={c.image}>{c.image}</div>
                               </div>
                               
                               <div className="flex items-start gap-2">
-                                <Icon name="hub" size={14} className="text-zinc-500 mt-0.5 shrink-0" />
-                                <div className="text-xs text-zinc-400 break-words line-clamp-2">
+                                <Icon name="hub" size={14} className="text-[var(--theme-text)] mt-0.5 shrink-0" />
+                                <div className="text-xs text-[var(--theme-text)] break-words line-clamp-2">
                                   {formatPorts(c.ports)}
                                 </div>
                               </div>
@@ -417,7 +421,7 @@ export default function DockerManagerPage() {
                                 {isUp ? (
                                   <>
                                     <Button variant="secondary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "restart")} disabled={isProcessing} icon={<Icon name="refresh" size={14} />}>Restart</Button>
-                                    <Button variant="danger" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "stop")} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>Stop</Button>
+                                    <Button variant="secondary" className="flex-1 h-8 text-xs border-red-500/30 text-red-400" onClick={() => handleContainerAction(c.id, "stop")} disabled={isProcessing} icon={<Icon name="stop" size={14} />}>Stop</Button>
                                   </>
                                 ) : (
                                   <Button variant="primary" className="flex-1 h-8 text-xs" onClick={() => handleContainerAction(c.id, "start")} disabled={isProcessing} icon={<Icon name="play_arrow" size={14} />}>Start</Button>
@@ -434,7 +438,7 @@ export default function DockerManagerPage() {
             })}
 
             {filteredGroups.length === 0 && !isLoading && (
-              <div className="col-span-full py-12 flex flex-col items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-2xl bg-zinc-950/50">
+              <div className="col-span-full py-12 flex flex-col items-center justify-center text-[var(--theme-text)] border border-dashed border-[var(--theme-ui-border)] rounded-2xl bg-[var(--theme-bg)]">
                 <Icon name="deployed_code" size={48} className="mb-4 opacity-50" />
                 <p>No containers found matching your search.</p>
               </div>
@@ -448,30 +452,30 @@ export default function DockerManagerPage() {
           <div className="flex flex-col h-[70vh]">
             {isComposeLoading ? (
               <div className="flex-1 flex items-center justify-center min-h-[300px]">
-                <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
+                <Icon name="refresh" className="animate-spin text-[var(--theme-heading)]" size={32} />
               </div>
             ) : (
               <div className="flex flex-col h-full">
-                <div className="flex gap-4 mb-4 bg-zinc-950/50 p-4 rounded-xl border border-white/5 shrink-0">
+                <div className="flex gap-4 mb-4 bg-[var(--theme-bg)] p-4 rounded-xl border border-[var(--theme-ui-border)] shrink-0">
                   <div className="flex flex-col gap-3">
                      <div>
-                       <div className="font-semibold text-white mb-1">Quick Actions</div>
-                       <div className="text-sm text-zinc-400 mb-2">These actions will automatically update the text editor below.</div>
+                       <div className="font-bold text-[var(--theme-heading)] mb-1">Quick Actions</div>
+                       <div className="text-sm text-[var(--theme-text)] mb-2">These actions will automatically update the text editor below.</div>
                      </div>
                      <div className="flex flex-wrap gap-4 items-center">
-                       <div className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
-                         <span className="text-sm text-zinc-300 font-medium whitespace-nowrap">Auto-Start:</span>
+                       <div className="flex gap-2 items-center bg-[var(--theme-ui-bg)] p-2 rounded-lg border border-[var(--theme-ui-border)]">
+                         <span className="text-sm text-[var(--theme-text)] font-medium whitespace-nowrap">Auto-Start:</span>
                          <Button variant="secondary" size="sm" onClick={() => toggleAutoStart(true)}>Enable</Button>
                          <Button variant="secondary" size="sm" onClick={() => toggleAutoStart(false)}>Disable</Button>
                        </div>
                        
-                       <div className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
-                         <span className="text-sm text-zinc-300 font-medium whitespace-nowrap">Memory Limit:</span>
+                       <div className="flex gap-2 items-center bg-[var(--theme-ui-bg)] p-2 rounded-lg border border-[var(--theme-ui-border)]">
+                         <span className="text-sm text-[var(--theme-text)] font-medium whitespace-nowrap">Memory Limit:</span>
                          <input 
                            type="text" 
                            value={memLimitInput}
                            onChange={(e) => setMemLimitInput(e.target.value)}
-                           className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white w-20 focus:outline-none focus:border-secondary"
+                           className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded px-2 py-1 text-sm text-[var(--theme-heading)] w-20 focus:outline-none focus:border-[var(--theme-heading)]"
                            placeholder="e.g. 512m"
                          />
                          <Button variant="secondary" size="sm" onClick={applyMemLimit}>Apply</Button>
@@ -480,17 +484,17 @@ export default function DockerManagerPage() {
                   </div>
                 </div>
                 
-                <div className="flex-1 mb-4 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] min-h-0">
+                <div className="flex-1 mb-4 overflow-hidden rounded-xl border border-[var(--theme-ui-border)] bg-[var(--theme-bg)] min-h-0 relative">
                   <textarea 
                     value={projectComposeContent}
                     onChange={(e) => setProjectComposeContent(e.target.value)}
-                    className="w-full h-full bg-transparent text-zinc-300 p-4 font-mono text-sm resize-none focus:outline-none custom-scrollbar"
+                    className="w-full h-full bg-transparent text-[var(--theme-heading)] p-4 font-mono text-sm resize-none focus:outline-none custom-scrollbar"
                     spellCheck="false"
                   />
                 </div>
                 
-                <div className="flex justify-between items-center pt-4 border-t border-white/10 shrink-0">
-                  <Button variant="danger" onClick={handleDeleteProject} disabled={isProcessing} icon={<Icon name="delete" size={16} />}>
+                <div className="flex justify-between items-center pt-4 border-t border-[var(--theme-ui-border)] shrink-0">
+                  <Button variant="secondary" className="border-red-500/30 text-red-400" onClick={handleDeleteProject} disabled={isProcessing} icon={<Icon name="delete" size={16} />}>
                     Delete Project (Down -v)
                   </Button>
                   <div className="flex gap-3">
@@ -511,28 +515,28 @@ export default function DockerManagerPage() {
         {composeUpProject && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-secondary/20 text-secondary">
+              <div className="p-2.5 rounded-xl bg-[var(--theme-heading)]/20 text-[var(--theme-heading)]">
                 <Icon name="refresh" size={22} />
               </div>
               <div>
-                <p className="text-sm text-zinc-400">{composeUpProject}</p>
+                <p className="text-sm text-[var(--theme-text)]">{composeUpProject}</p>
               </div>
             </div>
-            <p className="text-sm text-zinc-300">
-              File saved. Do you want to run <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-blue-300 font-mono text-xs">docker compose up -d</code> to apply the changes?
+            <p className="text-sm text-[var(--theme-heading)]">
+              File saved. Do you want to run <code className="bg-[var(--theme-bg)] px-1.5 py-0.5 rounded text-[var(--theme-heading)] font-mono text-xs border border-[var(--theme-ui-border)]">docker compose up -d</code> to apply the changes?
             </p>
 
             {composeUpResult && (
               <div className={`rounded-xl p-3 text-xs font-mono whitespace-pre-wrap break-all max-h-40 overflow-y-auto border ${
                 composeUpResult.ok
-                  ? 'bg-green-500/10 border-green-500/20 text-green-300'
-                  : 'bg-red-500/10 border-red-500/20 text-red-300'
+                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                  : 'bg-red-500/10 border-red-500/20 text-red-400'
               }`}>
                 {composeUpResult.msg}
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-white/10 mt-2">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[var(--theme-ui-border)] mt-2">
               <Button variant="secondary" onClick={() => { setComposeUpProject(null); setComposeUpResult(null); }} disabled={isComposingUp}>
                 {composeUpResult ? "Close" : "No, skip"}
               </Button>
@@ -548,4 +552,3 @@ export default function DockerManagerPage() {
     </div>
   );
 }
-

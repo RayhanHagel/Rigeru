@@ -74,6 +74,8 @@ export default function ExpenseTrackerPage() {
     }
   };
 
+
+
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="AI Expense Tracker" subtitle="Upload a receipt or invoice image. The Qwen2-VL model will scan and parse the document locally into structured JSON." />
@@ -81,8 +83,8 @@ export default function ExpenseTrackerPage() {
       <div className="flex flex-col gap-6 animate-slide-up w-full">
           
           {/* Upload Card */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">Upload Receipt
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
+            <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Upload Receipt
             </h3>
             
             <DirectUploadBox
@@ -95,7 +97,7 @@ export default function ExpenseTrackerPage() {
             
             {previewUrl && (
               <div className="flex flex-col gap-4 mt-2">
-                <div className="relative rounded-xl overflow-hidden border border-white/10 group flex justify-center bg-zinc-950 p-4">
+                <div className="relative rounded-xl overflow-hidden border border-[var(--theme-ui-border)] group flex justify-center bg-[var(--theme-bg)] p-4 shadow-inner">
                   <img src={previewUrl} alt="Receipt preview" className="w-auto h-auto max-h-[400px] object-contain" />
                 </div>
                 
@@ -116,7 +118,7 @@ export default function ExpenseTrackerPage() {
                 </Button>
                 
                 {isLoading && (
-                  <p className="text-xs text-center text-zinc-400 animate-pulse">
+                  <p className="text-xs text-center text-[var(--theme-text)] animate-pulse">
                     Processing with selected model (May take a moment on first run)
                   </p>
                 )}
@@ -143,37 +145,37 @@ export default function ExpenseTrackerPage() {
               </div>
               
               <div className="flex flex-col md:flex-row gap-6 w-full">
-                <div className="w-full bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-2 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
+                <div className="w-full bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-md flex flex-col gap-2 relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 text-[var(--theme-heading)]">
                     <Icon name="calendar_today" size={64} />
                   </div>
-                  <p className="text-sm text-zinc-400 font-medium uppercase tracking-wider">Date</p>
-                  <p className="text-3xl font-bold text-white">{result.date}</p>
+                  <p className="text-sm text-[var(--theme-text)] font-bold uppercase tracking-wider">Date</p>
+                  <p className="text-3xl font-bold text-[var(--theme-heading)]">{result.date}</p>
                 </div>
                 
-                <div className="w-full bg-blue-900/10 border border-primary/20 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-2 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5 text-primary">
+                <div className="w-full bg-[var(--theme-bg)] border border-[var(--theme-heading)] rounded-2xl p-6 backdrop-blur-md flex flex-col gap-2 relative overflow-hidden shadow-sm">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 text-[var(--theme-heading)]">
                     <Icon name="attach_money" size={64} />
                   </div>
-                  <p className="text-sm text-primary/80 font-medium uppercase tracking-wider">Total Amount</p>
-                  <p className="text-3xl font-bold text-primary">{result.total}</p>
+                  <p className="text-sm text-[var(--theme-heading)] opacity-80 font-bold uppercase tracking-wider">Total Amount</p>
+                  <p className="text-3xl font-bold text-[var(--theme-heading)]">{result.total}</p>
                 </div>
               </div>
               
-              <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm w-full">
+              <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl overflow-hidden w-full shadow-sm">
                 <div 
-                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                  className="p-4 flex items-center justify-between cursor-pointer hover:border-[var(--theme-heading)] hover:shadow-md transition-all duration-300 border border-transparent"
                   onClick={() => setShowJson(!showJson)}
                 >
-                  <h3 className="font-semibold text-white flex items-center gap-2">Raw JSON Output
+                  <h3 className="font-bold text-[var(--theme-heading)] flex items-center gap-2">Raw JSON Output
                   </h3>
-                  <span className="text-xs text-zinc-500 font-medium bg-zinc-950 px-2 py-1 rounded">
+                  <span className="text-xs text-[var(--theme-text)] font-bold bg-[var(--theme-bg)] px-2 py-1 rounded border border-[var(--theme-ui-border)]">
                     {showJson ? "HIDE" : "SHOW"}
                   </span>
                 </div>
                 
                 {showJson && (
-                  <div className="p-4 border-t border-white/10 bg-zinc-950/80 overflow-x-auto max-h-[500px] overflow-y-auto">
+                  <div className="p-4 border-t border-[var(--theme-ui-border)] bg-[var(--theme-bg)] overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
                     <pre className="text-sm text-emerald-400 font-mono">
                       {result.raw_text}
                     </pre>
@@ -182,13 +184,13 @@ export default function ExpenseTrackerPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full min-h-[400px] bg-zinc-900/20 border border-white/10 rounded-2xl border-dashed flex flex-col items-center justify-center p-8 text-center gap-4">
-              <div className="p-4 bg-zinc-900/50 rounded-full text-zinc-700">
+            <div className="w-full min-h-[400px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-2xl border-dashed flex flex-col items-center justify-center p-8 text-center gap-4">
+              <div className="p-4 bg-[var(--theme-ui-bg)] rounded-full text-[var(--theme-text)] border border-[var(--theme-ui-border)] shadow-sm">
                 <Icon name="receipt" size={48} />
               </div>
               <div>
-                <p className="text-zinc-400 font-medium">No Data Extracted Yet</p>
-                <p className="text-sm text-zinc-500 max-w-sm">
+                <p className="text-[var(--theme-heading)] font-bold">No Data Extracted Yet</p>
+                <p className="text-sm text-[var(--theme-text)] max-w-sm">
                   Upload a receipt image and click extract to see the parsed AI JSON output here.
                 </p>
               </div>

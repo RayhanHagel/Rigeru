@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/ui/Header";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/lib/utils";
 
@@ -38,15 +39,15 @@ function MangaReadContent() {
   // Auto-scroll effect
   useEffect(() => {
     let interval: any;
-    if (autoScroll && viewMode === "images" && layoutMode === "vertical" && scrollContainerRef.current) {
+    if (mode === "reading" && autoScroll && viewMode === "images" && layoutMode === "vertical" && scrollContainerRef.current) {
       interval = setInterval(() => {
         if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop += (scrollSpeed / 10);
+          scrollContainerRef.current.scrollBy({ top: scrollSpeed / 10, left: 0, behavior: 'auto' });
         }
       }, 50);
     }
     return () => clearInterval(interval);
-  }, [autoScroll, scrollSpeed, viewMode, layoutMode]);
+  }, [mode, autoScroll, scrollSpeed, viewMode, layoutMode]);
 
   // Reset page index on chapter change
   useEffect(() => {
@@ -255,7 +256,7 @@ function MangaReadContent() {
   };
 
   if (loading) {
-    return <div className="p-10 text-white flex justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
+    return <div className="p-10 text-white flex justify-center"><div className="w-8 h-8 border-4 border-[var(--theme-heading)]/30 border-t-[var(--theme-heading)] rounded-full animate-spin" /></div>;
   }
 
   if (errorMsg) {
@@ -271,15 +272,15 @@ function MangaReadContent() {
 
   if (mode === "reading") {
     return (
-      <div className="w-full h-full animate-slide-up relative z-10 overflow-y-auto bg-[#0a0a0a]" ref={scrollContainerRef}>
-        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 flex flex-col">
+      <div className="w-full h-full animate-slide-up relative z-10 overflow-y-auto custom-scrollbar bg-[var(--theme-bg)]" ref={scrollContainerRef}>
+        <div className="sticky top-0 z-50 bg-[var(--theme-bg)]/90 backdrop-blur-md border-b border-[var(--theme-ui-border)] flex flex-col">
           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => setMode("details")} className="h-10">
               Details
             </Button>
             <div className="truncate max-w-[200px] sm:max-w-md">
-              <h1 className="text-lg font-bold text-white truncate">{mangaId}</h1>
+              <h1 className="text-lg font-bold truncate text-[var(--theme-heading)]">{mangaId}</h1>
             </div>
           </div>
 
@@ -299,7 +300,10 @@ function MangaReadContent() {
             <select 
               value={selectedChapter}
               onChange={(e) => setSelectedChapter(e.target.value)}
-              className="bg-zinc-900 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-primary outline-none max-w-[150px] sm:max-w-[200px]"
+              className="rounded-lg p-2 text-sm outline-none transition-colors max-w-[150px] sm:max-w-[200px] border"
+              style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
             >
               {mangaData?.chapters_url?.map((url: string, i: number) => {
                 let label = `Chapter ${mangaData.chapters_url.length - i}`;
@@ -312,7 +316,7 @@ function MangaReadContent() {
                 }
                 const isDownloaded = mangaData?.chapter_downloaded?.includes(url);
                 return (
-                  <option key={url} value={url} disabled={!isDownloaded}>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={url} value={url} disabled={!isDownloaded}>
                     {label}{isDownloaded ? "" : " (Not Downloaded)"}
                   </option>
                 );
@@ -333,51 +337,60 @@ function MangaReadContent() {
           </div>
           </div>
           
-          <div className="px-4 pb-3 flex flex-wrap gap-4 items-center bg-zinc-950/50 pt-2 border-t border-white/5 shadow-inner">
+          <div className="px-4 pb-3 flex flex-wrap gap-4 items-center bg-[var(--theme-ui-bg)] pt-2 border-t border-[var(--theme-ui-border)]">
              <div className="flex items-center gap-2">
-               <span className="text-zinc-400 text-sm font-medium">Display:</span>
+               <span className="text-[var(--theme-text)] text-sm font-medium">Display:</span>
                <select 
                  value={viewMode}
                  onChange={(e) => setViewMode(e.target.value as any)}
-                 className="bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-white focus:border-primary outline-none"
+                 className="rounded-lg p-1.5 text-sm outline-none transition-colors border"
+                 style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                 onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                 onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                >
-                 <option value="pdf">PDF Embed</option>
-                 <option value="images">Image Viewer</option>
+                 <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="pdf">PDF Embed</option>
+                 <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="images">Image Viewer</option>
                </select>
              </div>
              
              {viewMode === "images" && (
                <>
                  <div className="flex items-center gap-2">
-                   <span className="text-zinc-400 text-sm font-medium">Layout:</span>
+                   <span className="text-[var(--theme-text)] text-sm font-medium">Layout:</span>
                    <select 
                      value={layoutMode}
                      onChange={(e) => setLayoutMode(e.target.value as any)}
-                     className="bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-white focus:border-primary outline-none"
+                     className="rounded-lg p-1.5 text-sm outline-none transition-colors border"
+                     style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                     onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                     onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                    >
-                     <option value="vertical">Vertical</option>
-                     <option value="horizontal">Horizontal</option>
+                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="vertical">Vertical</option>
+                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="horizontal">Horizontal</option>
                    </select>
                  </div>
                  
                  {layoutMode === "horizontal" && (
                    <div className="flex items-center gap-2">
-                     <span className="text-zinc-400 text-sm font-medium">Pages:</span>
+                     <span className="text-[var(--theme-text)] text-sm font-medium">Pages:</span>
                      <select 
                        value={horizontalType}
                        onChange={(e) => setHorizontalType(e.target.value as any)}
-                       className="bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-white focus:border-primary outline-none"
+                       className="rounded-lg p-1.5 text-sm outline-none transition-colors border"
+                       style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                      >
-                       <option value="single">Single Page</option>
-                       <option value="book">Double Page (Book)</option>
+                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="single">Single Page</option>
+                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="book">Double Page (Book)</option>
                      </select>
                    </div>
                  )}
                  
                  {layoutMode === "vertical" && (
-                   <div className="flex items-center gap-3 border-l border-white/10 pl-4 ml-2">
-                     <label className="text-sm text-zinc-300 flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-                       <input type="checkbox" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} className="rounded bg-zinc-800 border-white/10 text-primary focus:ring-primary/50" />
+                   <div className="flex items-center gap-3 border-l border-[var(--theme-ui-border)] pl-4 ml-2">
+                     <label className="text-sm text-[var(--theme-text)] flex items-center gap-2 cursor-pointer hover:text-[var(--theme-heading)] transition-colors">
+                       <input type="checkbox" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} className="rounded bg-[var(--theme-bg)] border-[var(--theme-ui-border)] text-[var(--theme-heading)] focus:ring-[var(--theme-heading)]/50" />
                        Auto-Scroll
                      </label>
                      {autoScroll && (
@@ -387,7 +400,7 @@ function MangaReadContent() {
                          max="200" 
                          value={scrollSpeed} 
                          onChange={(e) => setScrollSpeed(Number(e.target.value))} 
-                         className="w-24 accent-purple-500" 
+                         className="w-24 accent-[var(--theme-heading)]" 
                        />
                      )}
                    </div>
@@ -401,20 +414,20 @@ function MangaReadContent() {
           {viewMode === "pdf" ? (
             mangaData?.chapter_downloaded?.includes(selectedChapter) ? (
               <div className="w-full flex-1 flex flex-col items-center mt-10">
-                <embed 
-                  src={`/api/media-entertainment/manga-read/pdf?title=${encodeURIComponent(mangaId!)}&chapter_url=${encodeURIComponent(selectedChapter)}&website=${encodeURIComponent(mangaData.website)}&token=${typeof window !== "undefined" ? localStorage.getItem("auth_token") : ""}#view=FitH`}
-                  type="application/pdf"
-                  className="w-full h-[85vh] rounded-xl border border-white/10"
-                />
+                  <embed 
+                    src={`/api/media-entertainment/manga-read/pdf?title=${encodeURIComponent(mangaId!)}&chapter_url=${encodeURIComponent(selectedChapter)}&website=${encodeURIComponent(mangaData.website)}&token=${typeof window !== "undefined" ? localStorage.getItem("auth_token") : ""}#view=FitH`}
+                    type="application/pdf"
+                    className="w-full h-[85vh] rounded-xl border border-[var(--theme-ui-border)]"
+                  />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                <div className="p-4 bg-zinc-900/50 rounded-full mb-4 border border-white/5">
-                  <Icon name="cloud_download" size={48} className="text-zinc-500" />
+                <div className="p-4 bg-[var(--theme-ui-bg)] rounded-full mb-4 border border-[var(--theme-ui-border)]">
+                  <Icon name="cloud_download" size={48} className="text-[var(--theme-text)]" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">Chapter Not Downloaded</h2>
-                <p className="text-zinc-400 max-w-sm mb-6">You need to download this chapter before you can read it in PDF mode.</p>
-                <Button variant="primary" onClick={() => setMode("details")} className="bg-primary hover:bg-primary">
+                <h2 className="text-xl font-bold mb-2">Chapter Not Downloaded</h2>
+                <p className="text-[var(--theme-text)] max-w-sm mb-6">You need to download this chapter before you can read it in PDF mode.</p>
+                <Button variant="primary" onClick={() => setMode("details")}>
                   Go to Details to Download
                 </Button>
               </div>
@@ -422,31 +435,31 @@ function MangaReadContent() {
           ) : (
             // Image Viewer Mode
             loadingPages ? (
-              <div className="flex flex-col items-center justify-center h-[50vh] text-white gap-4">
-                <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                <p className="text-zinc-400 font-medium tracking-wide">Loading Images</p>
+              <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+                <div className="w-10 h-10 border-4 border-[var(--theme-heading)]/30 border-t-[var(--theme-heading)] rounded-full animate-spin" />
+                <p className="text-[var(--theme-text)] font-medium tracking-wide">Loading Images</p>
               </div>
             ) : pages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[50vh] text-white gap-4">
-                <div className="p-4 bg-zinc-900/50 rounded-full mb-4 border border-white/5">
-                  <Icon name="menu_book" size={48} className="text-zinc-500" />
+              <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+                <div className="p-4 bg-[var(--theme-ui-bg)] rounded-full mb-4 border border-[var(--theme-ui-border)]">
+                  <Icon name="menu_book" size={48} className="text-[var(--theme-text)]" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">No Images Found</h2>
-                <p className="text-zinc-400 max-w-sm mb-6 text-center">We couldn't retrieve any images for this chapter.</p>
+                <h2 className="text-xl font-bold mb-2">No Images Found</h2>
+                <p className="text-[var(--theme-text)] max-w-sm mb-6 text-center">We couldn't retrieve any images for this chapter.</p>
               </div>
             ) : layoutMode === "vertical" ? (
               <div className="flex flex-col w-full items-center gap-0">
                 {pages.map((url, idx) => (
-                  <img key={idx} src={url} alt={`Page ${idx+1}`} className="w-full max-w-3xl object-contain bg-zinc-950" loading="lazy" />
+                  <img key={idx} src={url} alt={`Page ${idx+1}`} className="w-full max-w-3xl object-contain bg-[var(--theme-ui-bg)]" loading="lazy" />
                 ))}
               </div>
             ) : (
               <div className="flex flex-col w-full items-center relative select-none">
-                <div className="flex justify-between w-full text-zinc-400 text-sm mb-4 px-4 font-medium">
+                <div className="flex justify-between w-full text-[var(--theme-text)] text-sm mb-4 px-4 font-medium">
                   <span>Page {currentPageIndex + 1}{horizontalType === 'book' ? ` - ${Math.min(currentPageIndex + 2, pages.length)}` : ''} of {pages.length}</span>
                 </div>
                 
-                <div className="relative flex w-full justify-center bg-zinc-950/50 rounded-xl overflow-hidden shadow-2xl w-full h-full" style={{ height: '80vh' }}>
+                <div className="relative flex w-full justify-center bg-[var(--theme-ui-bg)]/50 rounded-xl overflow-hidden shadow-2xl w-full h-full" style={{ height: '80vh' }}>
                   {/* Left click zone */}
                   <div className="absolute left-0 top-0 bottom-0 w-[40%] z-10 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-start p-4 group" onClick={() => handlePageClick('left')}>
                     <Icon name="chevron_left" size={64} className="text-white/10 group-hover:text-white/60 drop-shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -488,7 +501,6 @@ function MangaReadContent() {
                 mangaData?.chapters_url?.indexOf(selectedChapter) === 0 || 
                 !mangaData?.chapter_downloaded?.includes(mangaData?.chapters_url?.[mangaData?.chapters_url?.indexOf(selectedChapter) - 1])
               } 
-              className="bg-primary hover:bg-primary text-white"
             >
               Next Chapter
             </Button>
@@ -502,73 +514,68 @@ function MangaReadContent() {
   const imageSrc = resolveImageUrl(mangaData.local_image) || resolveImageUrl(mangaData.image);
   
   return (
-    <div className="w-full h-full p-6 lg:p-10 animate-slide-up relative z-10 w-full overflow-y-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-primary/30 pb-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/20 text-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <Icon name="menu_book" size={32} />
+    <div className="w-full h-full p-6 lg:p-10 animate-slide-up relative z-10 w-full overflow-y-auto custom-scrollbar">
+      <Header 
+        title={mangaId || "Unknown"}
+        subtitle="Manga Details"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="danger" 
+              onClick={handleDelete}
+              title="Delete from Library"
+              className="h-[46px]"
+            >
+              <Icon name="delete" size={16} />
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={handleRefresh}
+              isLoading={refreshing}
+              className="h-[46px]"
+              icon={refreshing ? undefined : <Icon name="refresh" size={16} />}
+            >
+              Refresh
+            </Button>
+            <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')} className="h-[46px]">
+              Back to Library
+            </Button>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">{mangaId}</h1>
-            <p className="text-zinc-400 text-sm font-medium">Manga Details</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="danger" 
-            onClick={handleDelete}
-            title="Delete from Library"
-            className="h-[46px]"
-          >
-            <Icon name="delete" size={16} />
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={handleRefresh}
-            isLoading={refreshing}
-            className="h-[46px]"
-            icon={refreshing ? undefined : <Icon name="refresh" size={16} />}
-          >
-            Refresh
-          </Button>
-          <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')} className="h-[46px]">
-            Back to Library
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col md:flex-row gap-8 mb-8">
         <div className="w-full md:w-1/3 flex-shrink-0">
-          <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 shadow-xl">
+          <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-[var(--theme-ui-border)] bg-[var(--theme-bg)] shadow-sm">
             {imageSrc ? (
               <img src={imageSrc} alt={mangaId!} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-zinc-600">No Image</div>
+              <div className="w-full h-full flex items-center justify-center text-[var(--theme-text)]">No Image</div>
             )}
           </div>
         </div>
 
         <div className="w-full md:w-2/3 flex flex-col">
-          <h2 className="text-xl font-bold text-white mb-4">Tag Information</h2>
+          <h2 className="text-xl font-bold mb-4">Tag Information</h2>
           <div className="flex flex-wrap gap-2 mb-8">
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-heading)]/10 text-[var(--theme-heading)] rounded-lg text-sm border border-[var(--theme-heading)]/30">
               <Icon name="edit" size={14} /> {mangaData.status}
             </span>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-heading)]/10 text-[var(--theme-heading)] rounded-lg text-sm border border-[var(--theme-heading)]/30">
               <Icon name="book" size={14} /> {mangaData.type}
             </span>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-heading)]/10 text-[var(--theme-heading)] rounded-lg text-sm border border-[var(--theme-heading)]/30">
               <Icon name="star" size={14} /> Rating {mangaData.rating}
             </span>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-purple-300 rounded-lg text-sm border border-primary/30">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-heading)]/10 text-[var(--theme-heading)] rounded-lg text-sm border border-[var(--theme-heading)]/30">
               <Icon name="bookmark" size={14} /> Chapter {mangaData.chapters_amount}
             </span>
           </div>
 
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row gap-4 items-end">
               <div className="w-full sm:w-48">
-                <label className="block text-sm font-medium text-zinc-300 mb-2">Chapter Read</label>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Chapter Read</label>
                 <div className="flex items-center">
                   <input 
                     type="number" 
@@ -583,9 +590,12 @@ function MangaReadContent() {
                       if (val < 0) val = 0;
                       setChapterProgress(val.toString());
                     }}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-l-xl p-3 text-white focus:border-primary outline-none text-center"
+                    className="w-full rounded-l-xl p-3 outline-none text-center transition-colors border"
+                    style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
-                  <div className="bg-zinc-800 border-y border-r border-white/10 rounded-r-xl p-3 text-zinc-400 font-medium whitespace-nowrap">
+                  <div className="bg-[var(--theme-bg)] border-y border-r border-[var(--theme-ui-border)] rounded-r-xl p-3 text-[var(--theme-text)] font-medium whitespace-nowrap">
                     / {mangaData.chapters_amount}
                   </div>
                 </div>
@@ -596,7 +606,7 @@ function MangaReadContent() {
               <Button 
                 variant="primary" 
                 onClick={handleDownloadAll} 
-                className="h-[46px] px-6 bg-primary hover:bg-primary text-white min-w-[160px]"
+                className="h-[46px] px-6 min-w-[160px]"
                 disabled={downloadingAll || ((mangaData.chapters_url || []).length === (mangaData.chapter_downloaded || []).length)}
                 isLoading={downloadingAll}
               >
@@ -604,71 +614,73 @@ function MangaReadContent() {
               </Button>
             </div>
           </div>
+
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] shadow-sm rounded-2xl overflow-hidden mt-8">
+            <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-bg)] flex justify-between items-center">
+              <h3 className="font-bold">Chapters List ({mangaData.chapters_url?.length || 0})</h3>
+            </div>
+            <div className="max-h-[400px] overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              {mangaData.chapters_url?.map((url: string, i: number) => {
+                let currentChapter = url.split("/").pop() || "";
+                if (mangaData.website === "mangadex.org/") {
+                  const match = url.match(/chapter-([0-9.]+)/);
+                  if (match) currentChapter = `chapter-${match[1]}`;
+                }
+                
+                // Assume downloaded if it's in chapter_downloaded
+                const isDownloaded = mangaData.chapter_downloaded?.includes(url);
+
+                return (
+                  <div key={url} className="flex justify-between items-center p-3 rounded-xl bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] transition-colors">
+                    <span className="font-medium text-[var(--theme-text)]">Chapter {currentChapter.replace("chapter-", "")}</span>
+                    <div className="flex gap-2 min-w-[200px]">
+                      <Button 
+                        variant="primary" 
+                        icon={<Icon name="library_add_check" size={16} />} 
+                        className="flex-1"
+                        disabled={!isDownloaded}
+                        onClick={() => {
+                          setSelectedChapter(url);
+                          setMode("reading");
+                        }}
+                      >
+                        Read
+                      </Button>
+                      {isDownloaded ? (
+                        <Button variant="secondary" icon={<Icon name="cloud_download" size={16} />} disabled className="flex-1 text-green-400 border-green-500/30">
+                          Done
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="secondary" 
+                          icon={<Icon name="download" size={16} />} 
+                          className="flex-1"
+                          isLoading={downloading[url]}
+                          onClick={() => handleDownload(url)}
+                        >
+                          {downloading[url] ? "" : "Download"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {(!mangaData.chapters_url || mangaData.chapters_url.length === 0) && (
+                <div className="text-center p-6 text-[var(--theme-text)]">No chapters found.</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bg-zinc-900/30 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/10 bg-zinc-900/50 flex justify-between items-center">
-          <h3 className="font-bold text-white">Chapters List ({mangaData.chapters_url?.length || 0})</h3>
-        </div>
-        <div className="max-h-[400px] overflow-y-auto p-4 space-y-2">
-          {mangaData.chapters_url?.map((url: string, i: number) => {
-            let currentChapter = url.split("/").pop() || "";
-            if (mangaData.website === "mangadex.org/") {
-              const match = url.match(/chapter-([0-9.]+)/);
-              if (match) currentChapter = `chapter-${match[1]}`;
-            }
-            
-            // Assume downloaded if it's in chapter_downloaded
-            const isDownloaded = mangaData.chapter_downloaded?.includes(url);
 
-            return (
-              <div key={url} className="flex justify-between items-center p-3 rounded-xl bg-zinc-950 border border-white/5 hover:border-primary/30 transition-colors">
-                <span className="font-medium text-zinc-300">Chapter {currentChapter.replace("chapter-", "")}</span>
-                <div className="flex gap-2 min-w-[200px]">
-                  <Button 
-                    variant="primary" 
-                    icon={<Icon name="library_add_check" size={16} />} 
-                    className="flex-1 bg-primary hover:bg-primary text-white"
-                    disabled={!isDownloaded}
-                    onClick={() => {
-                      setSelectedChapter(url);
-                      setMode("reading");
-                    }}
-                  >
-                    Read
-                  </Button>
-                  {isDownloaded ? (
-                    <Button variant="secondary" icon={<Icon name="cloud_download" size={16} />} disabled className="flex-1 text-green-400 border-green-500/30">
-                      Done
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="secondary" 
-                      icon={<Icon name="download" size={16} />} 
-                      className="flex-1"
-                      isLoading={downloading[url]}
-                      onClick={() => handleDownload(url)}
-                    >
-                      {downloading[url] ? "" : "Download"}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          {(!mangaData.chapters_url || mangaData.chapters_url.length === 0) && (
-            <div className="text-center p-6 text-zinc-500">No chapters found.</div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
 
 export default function MangaRead() {
   return (
-    <Suspense fallback={<div className="w-full h-full p-10 text-white flex justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="w-full h-full p-10 text-white flex justify-center"><div className="w-8 h-8 border-4 border-[var(--theme-heading)]/30 border-t-[var(--theme-heading)] rounded-full animate-spin" /></div>}>
       <MangaReadContent />
     </Suspense>
   );

@@ -52,6 +52,37 @@ def split_pdf(pdf_bytes: bytes, start_page: int, end_page: int) -> tuple[bool, b
     except Exception as e:
         return False, f"Split failed: {str(e)}"
 
+def split_pdf_buckets(pdf_bytes: bytes, buckets: list[list[int]]) -> tuple[bool, bytes | str]:
+    """Splits a PDF into multiple PDFs based on page buckets (1-indexed). Returns a ZIP file."""
+    import zipfile
+    try:
+        import fitz
+    except ImportError:
+        return False, "Missing dependency: pymupdf"
+        
+    try:
+        src_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+            for idx, bucket in enumerate(buckets, start=1):
+                if not bucket:
+                    continue
+                new_doc = fitz.open()
+                for page_num in bucket:
+                    if 1 <= page_num <= len(src_doc):
+                        new_doc.insert_pdf(src_doc, from_page=page_num - 1, to_page=page_num - 1)
+                
+                pdf_buffer = io.BytesIO()
+                new_doc.save(pdf_buffer)
+                new_doc.close()
+                zip_file.writestr(f"split_{idx}.pdf", pdf_buffer.getvalue())
+                
+        src_doc.close()
+        return True, zip_buffer.getvalue()
+    except Exception as e:
+        return False, f"Split by buckets failed: {str(e)}"
+
 
 def remove_specific_pages(pdf_bytes: bytes, pages_to_remove: list[int]) -> tuple[bool, bytes | str]:
     """Deletes specific pages (1-indexed)."""
@@ -122,17 +153,29 @@ def resize_pdf_pages(pdf_bytes: bytes, target_size: str) -> tuple[bool, bytes | 
         return False, "Missing dependency: pymupdf"
 
     sizes = {
+        "A3": (842, 1191),
         "A4": (595, 842),
-        "Letter": (612, 792)
+        "A5": (420, 595),
+        "Letter": (612, 792),
+        "Legal": (612, 1008),
+        "Tabloid": (792, 1224)
     }
     
-    if target_size not in sizes:
+    if target_size in sizes:
+        w, h = sizes[target_size]
+    elif "x" in target_size.lower():
+        try:
+            pts = target_size.lower().split("x")
+            w, h = float(pts[0].strip()), float(pts[1].strip())
+        except:
+            return False, "Invalid custom size format. Use 'Width x Height'."
+    else:
         return False, "Unsupported target size."
 
     try:
         src_doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         new_doc = fitz.open()
-        target_rect = fitz.Rect(0, 0, sizes[target_size][0], sizes[target_size][1])
+        target_rect = fitz.Rect(0, 0, w, h)
         
         for i in range(len(src_doc)):
             src_page = src_doc[i]

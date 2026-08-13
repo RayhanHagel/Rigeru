@@ -10,6 +10,9 @@ def get_pdf_metadata(pdf_bytes: bytes) -> tuple[bool, dict | str]:
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         metadata = doc.metadata
+        if len(doc) > 0:
+            rect = doc[0].rect
+            metadata['page_size'] = f"{round(rect.width, 2)} x {round(rect.height, 2)}"
         doc.close()
         return True, metadata
     except Exception as e:

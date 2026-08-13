@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/utils";
+import { Header } from "@/components/ui/Header";
 
 interface LinkResult {
   link: string;
@@ -117,12 +118,12 @@ export default function LinkCleanerPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
         <div className="flex items-center gap-0">
           
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">Link Cleaner</h1>
-            <p className="text-zinc-400 text-sm font-medium">Extract individual file links from master MEGA folders, filter by size, and remove duplicates automatically.</p>
+            <p className="text-[var(--theme-text)] text-sm font-medium">Extract individual file links from master MEGA folders, filter by size, and remove duplicates automatically.</p>
           </div>
         </div>
         {results && (
@@ -139,9 +140,9 @@ export default function LinkCleanerPage() {
       </div>
 
       <div className="flex flex-col gap-6 w-full">
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-6">
-        <div className="flex justify-between items-center border-b border-white/5 pb-4">
-          <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col gap-6">
+        <div className="flex justify-between items-center border-b border-[var(--theme-ui-border)] pb-4">
+          <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
             Target Links
           </label>
           <Button variant="secondary" size="sm" onClick={addLink} icon={<Icon name="add" size={14} />} className="h-8 text-xs">
@@ -156,13 +157,19 @@ export default function LinkCleanerPage() {
                 value={link}
                 onChange={(e) => updateLink(idx, e.target.value)}
                 placeholder="https://mega.nz/folder/ID#KEY"
-                className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors font-mono"
+                className="flex-1 rounded-lg px-4 py-2.5 text-sm text-white border focus:outline-none transition-colors font-mono"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
               <div className="flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-9 w-9 text-zinc-400 hover:text-white"
+                  className="h-9 w-9 text-[var(--theme-text)] hover:text-white"
                   onClick={() => moveLink(idx, 'up')}
                   disabled={idx === 0}
                 >
@@ -171,7 +178,7 @@ export default function LinkCleanerPage() {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-9 w-9 text-zinc-400 hover:text-white"
+                  className="h-9 w-9 text-[var(--theme-text)] hover:text-white"
                   onClick={() => moveLink(idx, 'down')}
                   disabled={idx === links.length - 1}
                 >
@@ -190,39 +197,57 @@ export default function LinkCleanerPage() {
           ))}
         </div>
         
-        <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
-          <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">
+        <div className="flex flex-col gap-3 pt-4 border-t border-[var(--theme-ui-border)]">
+          <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
             Filter Settings
           </label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-400">Max Image Size (MB)</label>
+              <label className="text-xs text-[var(--theme-text)]">Max Image Size (MB)</label>
               <input
                 type="number"
                 value={maxImageSize}
                 onChange={(e) => setMaxImageSize(parseInt(e.target.value) || 0)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
                 min="0"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-400">Max Video Size (MB)</label>
+              <label className="text-xs text-[var(--theme-text)]">Max Video Size (MB)</label>
               <input
                 type="number"
                 value={maxVideoSize}
                 onChange={(e) => setMaxVideoSize(parseInt(e.target.value) || 0)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
                 min="0"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-zinc-400">Max Other Size (MB)</label>
+              <label className="text-xs text-[var(--theme-text)]">Max Other Size (MB)</label>
               <input
                 type="number"
                 value={maxOtherSize}
                 onChange={(e) => setMaxOtherSize(parseInt(e.target.value) || 0)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
                 min="0"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
             </div>
           </div>
@@ -256,98 +281,100 @@ export default function LinkCleanerPage() {
       </div>
 
       {results && (
-        <div className="flex flex-col gap-6 animate-slide-up">
-          {/* Summary Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col justify-center items-center gap-1">
-                <span className="text-sm text-zinc-400 uppercase tracking-wider font-semibold">Total Original Size</span>
-                <span className="text-3xl font-bold text-white">{formatBytes(totalOriginal)}</span>
-            </div>
-            <div className="bg-emerald-900/20 border border-emerald-500/20 rounded-2xl p-6 backdrop-blur-sm flex flex-col justify-center items-center gap-1">
-                <span className="text-sm text-emerald-500/80 uppercase tracking-wider font-semibold">Total Cleaned Size</span>
-                <span className="text-3xl font-bold text-emerald-400">{formatBytes(totalCleaned)}</span>
-            </div>
-          </div>
-
-          {/* Per-Link Stats Table */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
-            <div className="p-4 bg-zinc-900/80 border-b border-white/10">
-                <h3 className="font-semibold text-white">Folder Summary</h3>
-            </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-zinc-300">
-                    <thead className="bg-zinc-950/50 text-xs uppercase text-zinc-500 border-b border-white/10">
-                        <tr>
-                            <th className="px-4 py-3 font-medium">Link</th>
-                            <th className="px-4 py-3 font-medium">Original Size</th>
-                            <th className="px-4 py-3 font-medium">Cleaned Size</th>
-                            <th className="px-4 py-3 font-medium">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {results.map((res, i) => (
-                            <tr key={i} className="hover:bg-zinc-800/30 transition-colors">
-                                <td className="px-4 py-3 font-mono text-xs truncate max-w-[200px]" title={res.link}>
-                                    {res.link}
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap">{res.error ? "-" : formatBytes(res.original_size_bytes)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-emerald-400">{res.error ? "-" : formatBytes(res.cleaned_size_bytes)}</td>
-                                <td className="px-4 py-3 max-w-[200px]">
-                                    {res.error ? (
-                                        <span className="text-red-400 flex items-center gap-1 text-xs"><Icon name="warning" size={12}/> {res.error}</span>
-                                    ) : (
-                                        <span className="text-emerald-400 text-xs">Success</span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-          </div>
-
-          {/* Aggregated Output */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col h-[500px]">
-            
-            <div className="flex-1 p-0 overflow-hidden relative">
-              <div className="absolute top-4 right-4 z-10 flex gap-2">
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => {
-                    const content = activeTab === 'raw' ? aggregatedRaw : activeTab === 'named' ? aggregatedNamed : aggregatedLogs;
-                    navigator.clipboard.writeText(content);
-                  }}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-xs border border-white/10"
-                >
-                  Copy All
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  icon={<Icon name="download" size={14} />}
-                  onClick={() => {
-                    const content = activeTab === 'raw' ? aggregatedRaw : activeTab === 'named' ? aggregatedNamed : aggregatedLogs;
-                    const blob = new Blob([content], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `mega_links_${activeTab}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-xs border border-white/10"
-                >
-                  Save File
-                </Button>
+        <div className="flex flex-col gap-6 animate-slide-up mt-6">
+          <ModernTabContent activeTab={activeTab}>
+            {/* Summary Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col justify-center items-center gap-1">
+                  <span className="text-sm text-[var(--theme-text)] uppercase tracking-wider font-semibold">Total Original Size</span>
+                  <span className="text-3xl font-bold text-white">{formatBytes(totalOriginal)}</span>
               </div>
-              <textarea
-                readOnly
-                value={activeTab === "raw" ? aggregatedRaw : activeTab === "named" ? aggregatedNamed : aggregatedLogs}
-                className="w-full h-full bg-zinc-950 text-white font-mono text-xs p-4 focus:outline-none resize-none"
-              />
+              <div className="bg-[var(--theme-bg)] border border-emerald-500/20 rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col justify-center items-center gap-1">
+                  <span className="text-sm text-emerald-500/80 uppercase tracking-wider font-semibold">Total Cleaned Size</span>
+                  <span className="text-3xl font-bold text-emerald-400">{formatBytes(totalCleaned)}</span>
+              </div>
             </div>
-          </div>
+
+            {/* Per-Link Stats Table */}
+            <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl overflow-hidden shadow-sm backdrop-blur-md mb-6">
+              <div className="p-4 bg-[var(--theme-bg)]/80 border-b border-[var(--theme-ui-border)]">
+                  <h3 className="font-semibold text-white">Folder Summary</h3>
+              </div>
+              <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left text-sm text-[var(--theme-text)]">
+                      <thead className="bg-[var(--theme-bg)]/50 text-xs uppercase text-[var(--theme-text)] border-b border-[var(--theme-ui-border)]">
+                          <tr>
+                              <th className="px-4 py-3 font-medium">Link</th>
+                              <th className="px-4 py-3 font-medium">Original Size</th>
+                              <th className="px-4 py-3 font-medium">Cleaned Size</th>
+                              <th className="px-4 py-3 font-medium">Status</th>
+                          </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--theme-ui-border)]">
+                          {results.map((res, i) => (
+                              <tr key={i} className="hover:bg-[var(--theme-bg)]/50 transition-colors">
+                                  <td className="px-4 py-3 font-mono text-xs truncate max-w-[200px]" title={res.link}>
+                                      {res.link}
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">{res.error ? "-" : formatBytes(res.original_size_bytes)}</td>
+                                  <td className="px-4 py-3 whitespace-nowrap text-emerald-400">{res.error ? "-" : formatBytes(res.cleaned_size_bytes)}</td>
+                                  <td className="px-4 py-3 max-w-[200px]">
+                                      {res.error ? (
+                                          <span className="text-red-400 flex items-center gap-1 text-xs"><Icon name="warning" size={12}/> {res.error}</span>
+                                      ) : (
+                                          <span className="text-emerald-400 text-xs">Success</span>
+                                      )}
+                                  </td>
+                              </tr>
+                          ))}
+                      </tbody>
+                  </table>
+              </div>
+            </div>
+
+            {/* Aggregated Output */}
+            <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl overflow-hidden shadow-sm backdrop-blur-md flex flex-col h-[500px]">
+              
+              <div className="flex-1 p-0 overflow-hidden relative">
+                <div className="absolute top-4 right-4 z-10 flex gap-2">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => {
+                      const content = activeTab === 'raw' ? aggregatedRaw : activeTab === 'named' ? aggregatedNamed : aggregatedLogs;
+                      navigator.clipboard.writeText(content);
+                    }}
+                    className="text-xs"
+                  >
+                    Copy All
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    icon={<Icon name="download" size={14} />}
+                    onClick={() => {
+                      const content = activeTab === 'raw' ? aggregatedRaw : activeTab === 'named' ? aggregatedNamed : aggregatedLogs;
+                      const blob = new Blob([content], { type: "text/plain" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `mega_links_${activeTab}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="text-xs"
+                  >
+                    Save File
+                  </Button>
+                </div>
+                <textarea
+                  readOnly
+                  value={activeTab === "raw" ? aggregatedRaw : activeTab === "named" ? aggregatedNamed : aggregatedLogs}
+                  className="w-full h-full bg-[var(--theme-bg)] text-white font-mono text-xs p-4 focus:outline-none resize-none custom-scrollbar"
+                />
+              </div>
+            </div>
+          </ModernTabContent>
         </div>
       )}
       </div>

@@ -73,8 +73,7 @@ def add_pdf_watermark(pdf_bytes: bytes, text: str, opacity: float = 0.3) -> tupl
                 fontsize=50,
                 color=(0.5, 0.5, 0.5), # Gray
                 fontname="helv",
-                rotate=-45,
-                align=fitz.TEXT_ALIGN_CENTER
+                rotate=-45
             )
             shape.commit(fill_opacity=opacity)
             

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Icon } from "@/lib/utils";
 
 export default function AudioEditorPage() {
@@ -179,16 +180,17 @@ export default function AudioEditorPage() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="Audio Editor" subtitle="Visually trim and cut audio files directly in your browser." />
 
-      <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 shadow-xl backdrop-blur-sm min-h-[400px]">
-        {errorMsg && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-            <Icon name="error" className="text-red-400 shrink-0 mt-0.5" size={18} />
-            <p className="text-red-400 text-sm">{errorMsg}</p>
-          </div>
-        )}
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3 mt-4">
+          <Icon name="error" className="text-red-400 shrink-0 mt-0.5" size={18} />
+          <p className="text-red-400 text-sm">{errorMsg}</p>
+        </div>
+      )}
 
-        {!fileHash ? (
-          <div className="flex flex-col items-center justify-center h-80 rounded-2xl bg-zinc-950/50 transition-colors">
+      <div className="flex flex-col gap-6 mt-4">
+        {!resultAudioUrl && (
+          <div className="flex flex-col gap-2">
+            <SectionHeader title="Upload Audio" />
             <DirectUploadBox 
               accept="audio/*"
               label="Upload Audio"
@@ -204,22 +206,22 @@ export default function AudioEditorPage() {
               }}
             />
           </div>
+        )}
+
+        <SectionHeader title="Audio Editor" />
+        
+        {!fileHash ? (
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-10 flex flex-col items-center justify-center opacity-50 min-h-[250px]">
+            <Icon name="graphic_eq" size={48} className="mb-4 opacity-50" />
+            <p className="text-[var(--theme-text)]">Upload an audio file to view the waveform and trim.</p>
+          </div>
         ) : !resultAudioUrl ? (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-zinc-200 truncate">{fileName}</h3>
-              <button 
-                onClick={() => {
-                  setFileHash(null);
-                  setFileName("");
-                }}
-                className="text-sm text-zinc-500 hover:text-zinc-300"
-              >
-                Change File
-              </button>
+              <h3 className="font-medium text-[var(--theme-heading)] truncate">{fileName}</h3>
             </div>
             
-            <div className="bg-zinc-950 border border-white/5 rounded-xl p-4">
+            <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4">
               <div ref={waveformRef} className="w-full" />
             </div>
             
@@ -232,11 +234,11 @@ export default function AudioEditorPage() {
                 >
                   {isPlaying ? "Pause" : "Play"}
                 </Button>
-                <div className="text-sm font-mono text-zinc-400 bg-zinc-900 px-3 py-1.5 rounded-lg border border-white/5">
+                <div className="text-sm font-mono text-[var(--theme-text)] bg-[var(--theme-bg)] px-3 py-1.5 rounded-lg border border-[var(--theme-ui-border)]">
                   {currentTime} / {totalTime}
                 </div>
                 <div className="flex items-center gap-2 ml-2 hidden sm:flex">
-                  <Icon name="volume_up" size={16} className="text-zinc-500" />
+                  <Icon name="volume_up" size={16} className="text-[var(--theme-text)]" />
                   <input
                     type="range"
                     min="0"
@@ -250,14 +252,13 @@ export default function AudioEditorPage() {
                         wavesurferRef.current.setVolume(val);
                       }
                     }}
-                    className="w-24 accent-purple-500 bg-zinc-800 h-1.5 rounded-lg appearance-none cursor-pointer"
+                    className="w-24 accent-[var(--theme-heading)] bg-[var(--theme-bg)] h-1.5 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </div>
               
               <Button 
                 variant="primary" 
-                className="bg-primary hover:bg-purple-700 text-white" 
                 onClick={handleTrim}
                 disabled={isProcessing}
                 icon={isProcessing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="content_cut" size={16} />}
@@ -265,23 +266,23 @@ export default function AudioEditorPage() {
                 {isProcessing ? "Processing" : "Trim Selected Region"}
               </Button>
             </div>
-            <p className="text-xs text-zinc-500 text-right">
+            <p className="text-xs text-[var(--theme-text)] text-right">
               Drag the edges of the white region on the waveform to select the area to trim.
             </p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6">
-            <div className="w-full max-w-md bg-zinc-950/80 rounded-xl border border-white/10 p-8 text-center space-y-6 shadow-2xl">
+            <div className="w-full max-w-md bg-[var(--theme-ui-bg)] rounded-xl border border-[var(--theme-ui-border)] p-8 text-center space-y-6 shadow-2xl">
               <div className="inline-flex p-4 bg-emerald-500/10 text-emerald-400 rounded-full mb-2">
                 <Icon name="content_cut" size={32} />
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-zinc-100">Audio Trimmed Successfully</h4>
-                <p className="text-sm text-zinc-400">{resultFilename}</p>
+                <h4 className="text-lg font-semibold text-[var(--theme-heading)]">Audio Trimmed Successfully</h4>
+                <p className="text-sm text-[var(--theme-text)]">{resultFilename}</p>
               </div>
               
-              <audio src={resultAudioUrl} controls className="w-full h-10 mt-4 custom-audio-player" />
+              <audio src={resultAudioUrl} controls className="w-full h-12 mt-4" />
               
               <div className="flex gap-4 pt-4">
                 <Button 
@@ -299,22 +300,12 @@ export default function AudioEditorPage() {
                 <a 
                   href={resultAudioUrl} 
                   download={resultFilename}
-                  className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-primary hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-[var(--theme-heading)] hover:opacity-90 text-[var(--theme-bg)] rounded-lg text-sm font-bold transition-colors"
                 >
                   <Icon name="download" size={16} /> Download
                 </a>
               </div>
             </div>
-            
-            <style dangerouslySetInnerHTML={{__html: `
-              .custom-audio-player::-webkit-media-controls-panel {
-                background-color: #18181b;
-              }
-              .custom-audio-player::-webkit-media-controls-current-time-display,
-              .custom-audio-player::-webkit-media-controls-time-remaining-display {
-                color: #a1a1aa;
-              }
-            `}} />
           </div>
         )}
       </div>

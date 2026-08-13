@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "@/lib/utils";
 
-
 type HardwareStats = {
   cpu_percent: number;
   mem_percent: number;
@@ -69,9 +68,9 @@ export default function SystemMonitorPage() {
   };
 
   const renderMetric = (icon: React.ReactNode, title: string, percent: number, text: string) => (
-    <div className="animate-slide-up bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-4">
+    <div className="animate-slide-up bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-xl p-5 flex flex-col gap-4 shadow-sm hover:border-[var(--theme-heading)] hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-zinc-400 font-medium">
+        <div className="flex items-center gap-2 text-[var(--theme-text)] font-medium">
           {icon}
           {title}
         </div>
@@ -79,23 +78,23 @@ export default function SystemMonitorPage() {
           {percent.toFixed(1)}%
         </div>
       </div>
-      <div className="w-full bg-black rounded-full h-3 overflow-hidden border border-white/5">
+      <div className="w-full bg-[var(--theme-bg)] rounded-full h-3 overflow-hidden border border-[var(--theme-ui-border)]">
         <div 
           className={`h-full transition-all duration-500 ease-out ${getMetricBg(percent)}`} 
           style={{ width: `${percent}%` }}
         />
       </div>
-      <div className="text-xs text-zinc-500 font-mono text-right">{text}</div>
+      <div className="text-xs text-[var(--theme-text)] opacity-70 font-mono text-right">{text}</div>
     </div>
   );
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
         <div className="flex items-center gap-0">
           
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight flex items-center gap-3">
               System & Network Monitor
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mt-1">
                 <span className="relative flex h-2 w-2">
@@ -105,7 +104,7 @@ export default function SystemMonitorPage() {
                 <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Live</span>
               </div>
             </h1>
-            <p className="text-zinc-400 text-sm font-medium">Real-time telemetry and network diagnostics.</p>
+            <p className="text-[var(--theme-text)] text-sm font-medium">Real-time telemetry and network diagnostics.</p>
             {error && <p className="text-red-400 text-xs">Error: {error}</p>}
           </div>
         </div>
@@ -121,12 +120,12 @@ export default function SystemMonitorPage() {
       )}
 
       <div className="flex flex-col gap-6 animate-slide-up w-full mt-6">
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 shadow-xl">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Top Processes (by Memory)
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Top Processes (by Memory)
           </h3>
-          <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+          <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
+              <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] sticky top-0 border-b border-[var(--theme-ui-border)]">
                 <tr>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">PID</th>
@@ -134,13 +133,13 @@ export default function SystemMonitorPage() {
                   <th className="px-4 py-3 font-medium">CPU %</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[var(--theme-ui-border)]">
                 {stats.processes.map((p, i) => (
-                  <tr key={`${p.PID}-${i}`} className="hover:bg-zinc-800/50">
-                    <td className="px-4 py-2 font-medium text-white">{p.Name}</td>
-                    <td className="px-4 py-2 text-zinc-400 font-mono text-xs">{p.PID}</td>
-                    <td className={`px-4 py-2 ${p['Memory (%)'] > 10 ? 'text-amber-400' : 'text-zinc-300'}`}>{p["Memory (%)"]}</td>
-                    <td className={`px-4 py-2 ${p['CPU (%)'] > 10 ? 'text-amber-400' : 'text-zinc-300'}`}>{p["CPU (%)"]}</td>
+                  <tr key={`${p.PID}-${i}`} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                    <td className="px-4 py-2 font-bold text-[var(--theme-heading)]">{p.Name}</td>
+                    <td className="px-4 py-2 text-[var(--theme-text)] font-mono text-xs">{p.PID}</td>
+                    <td className={`px-4 py-2 ${p['Memory (%)'] > 10 ? 'text-amber-400 font-bold' : 'text-[var(--theme-text)]'}`}>{p["Memory (%)"]}</td>
+                    <td className={`px-4 py-2 ${p['CPU (%)'] > 10 ? 'text-amber-400 font-bold' : 'text-[var(--theme-text)]'}`}>{p["CPU (%)"]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -148,29 +147,29 @@ export default function SystemMonitorPage() {
           </div>
         </div>
         
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 shadow-xl">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Active Network Connections
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Active Network Connections
           </h3>
-          <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[400px] overflow-y-auto">
+          <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
+              <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] sticky top-0 border-b border-[var(--theme-ui-border)]">
                 <tr>
                   <th className="px-4 py-3 font-medium">App</th>
                   <th className="px-4 py-3 font-medium">Local Port</th>
                   <th className="px-4 py-3 font-medium">Remote Target</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[var(--theme-ui-border)]">
                 {stats.network.map((c, i) => (
-                  <tr key={`${c.pid}-${c.remote_port}-${i}`} className="hover:bg-zinc-800/50">
-                    <td className="px-4 py-2 font-medium text-emerald-400">{c.app}</td>
-                    <td className="px-4 py-2 text-zinc-400 font-mono text-xs">{c.local_port}</td>
-                    <td className="px-4 py-2 text-primary font-mono text-xs">{c.remote_ip}:{c.remote_port}</td>
+                  <tr key={`${c.pid}-${c.remote_port}-${i}`} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                    <td className="px-4 py-2 font-bold text-emerald-400">{c.app}</td>
+                    <td className="px-4 py-2 text-[var(--theme-text)] font-mono text-xs">{c.local_port}</td>
+                    <td className="px-4 py-2 text-[var(--theme-heading)] font-mono text-xs">{c.remote_ip}:{c.remote_port}</td>
                   </tr>
                 ))}
                 {stats.network.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
+                    <td colSpan={3} className="px-4 py-8 text-center text-[var(--theme-text)]">
                       Loading connections
                     </td>
                   </tr>

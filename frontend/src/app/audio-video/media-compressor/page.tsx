@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/Slider';
 import { Select } from '@/components/ui/Select';
 import { FileExplorerModal } from '@/components/ui/FileExplorerModal';
 import { DirectUploadBox } from '@/components/ui/DirectUploadBox';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 
 export default function MediaCompressor() {
   // Video State
@@ -133,16 +134,12 @@ export default function MediaCompressor() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-indigo-500/30 pb-4">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Media Compressor</h1>
-            <p className="text-zinc-400 text-sm font-medium">Locally trim videos and batch-compress images to save hard drive space.</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+        <Header 
+          title="Media Compressor" 
+          subtitle="Locally trim videos and batch-compress images to save hard drive space." 
+        />
+        <div className="flex items-center gap-2">
           <ModernTabs
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -155,48 +152,46 @@ export default function MediaCompressor() {
       </div>
       <ModernTabContent activeTab={activeTab}>
           {activeTab === 'video' && (
-                  <div>
-                    <Container>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-zinc-300 mb-2">1. Select Input Video File</label>
-                          <DirectUploadBox
-                            accept=".mp4,.mkv,.mov,.avi,.wmv,.flv,.webm,.m4v"
-                            label="Upload Video to Compress"
-                            onUploadComplete={setVidFileInfo}
-                            onClear={() => setVidFileInfo(null)}
-                            defaultFileName={vidFileInfo?.original_name}
+                  <div className="flex flex-col gap-6">
+                    <div className="space-y-4">
+                      <SectionHeader title="Upload Video" />
+                      <div>
+                        <DirectUploadBox
+                          accept=".mp4,.mkv,.mov,.avi,.wmv,.flv,.webm,.m4v"
+                          label="Upload Video to Compress"
+                          onUploadComplete={setVidFileInfo}
+                          onClear={() => setVidFileInfo(null)}
+                          defaultFileName={vidFileInfo?.original_name}
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2 items-end mt-4">
+                        <div className="flex-1">
+                          <TextInput
+                            label="Output Folder"
+                            value={vidOut}
+                            onChange={(e) => setVidOut(e.target.value)}
+                            placeholder="C:\Users\You\Videos\Compressed"
                           />
                         </div>
-                        
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <TextInput
-                              label="2. Output Folder"
-                              value={vidOut}
-                              onChange={(e) => setVidOut(e.target.value)}
-                              placeholder="C:\Users\You\Videos\Compressed"
-                            />
-                          </div>
-                          <Button variant="secondary" onClick={() => setShowVidOutPicker(true)}>Browse</Button>
-                        </div>
+                        <Button variant="secondary" onClick={() => setShowVidOutPicker(true)}>Browse</Button>
                       </div>
-                    </Container>
+                    </div>
 
-                    <div className="mt-6">
-                      <h3 className="text-xl font-semibold text-zinc-100 mb-4">Trimming & Profile</h3>
+                    <div className="space-y-6">
+                      <SectionHeader title="Trimming & Profile" />
                       
                       <Columns>
                         <Column>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Start Time (seconds)</label>
-                            <input type="number" value={startT} onChange={(e) => setStartT(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-md p-2 text-white" min={0} />
+                            <label className="text-sm font-bold text-[var(--theme-heading)]">Start Time (seconds)</label>
+                            <input type="number" value={startT} onChange={(e) => setStartT(Number(e.target.value))} className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-md p-2 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors" min={0} />
                           </div>
                         </Column>
                         <Column>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">End Time (seconds)</label>
-                            <input type="number" value={endT} onChange={(e) => setEndT(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-md p-2 text-white" min={0} />
+                            <label className="text-sm font-bold text-[var(--theme-heading)]">End Time (seconds)</label>
+                            <input type="number" value={endT} onChange={(e) => setEndT(Number(e.target.value))} className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-md p-2 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors" min={0} />
                           </div>
                         </Column>
                       </Columns>
@@ -215,7 +210,7 @@ export default function MediaCompressor() {
                         />
 
                         {profile === "Custom Configuration" ? (
-                          <div className="p-4 bg-zinc-900/50 rounded-lg border border-white/5 space-y-4 mt-2">
+                          <div className="p-4 bg-[var(--theme-ui-bg)] rounded-lg border border-[var(--theme-ui-border)] space-y-4 mt-2">
                             <Select
                               label="Max Resolution"
                               value={targetRes}
@@ -258,8 +253,8 @@ export default function MediaCompressor() {
 
                             <Columns>
                               <Column>
-                                <label className="flex items-center space-x-2 text-sm text-zinc-300 mt-8">
-                                  <input type="checkbox" checked={keepAudio} onChange={(e) => setKeepAudio(e.target.checked)} className="rounded bg-zinc-900 border-white/20" />
+                                <label className="flex items-center space-x-2 text-sm font-bold text-[var(--theme-text)] mt-8">
+                                  <input type="checkbox" checked={keepAudio} onChange={(e) => setKeepAudio(e.target.checked)} className="rounded bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-heading)] focus:ring-[var(--theme-heading)]" />
                                   <span>Keep All Audio Tracks (Multi-track)</span>
                                 </label>
                               </Column>
@@ -277,7 +272,7 @@ export default function MediaCompressor() {
                             </Columns>
                           </div>
                         ) : (
-                          <div className="p-4 bg-blue-900/20 text-blue-300 rounded-md border border-secondary/20 text-sm mt-2">
+                          <div className="p-4 bg-[var(--theme-heading)]/10 text-[var(--theme-heading)] rounded-md border border-[var(--theme-ui-border)] text-sm mt-2 font-bold">
                             **Loaded Preset:** Max Res: {profile.includes("1080") ? "1080p" : "720p"} | 
                             CRF: {profile.includes("Fast") ? 22 : profile.includes("High") ? 18 : 28} | 
                             Speed: {profile.includes("Fast") ? "fast" : profile.includes("High") ? "slow" : "veryfast"} | 
@@ -307,37 +302,36 @@ export default function MediaCompressor() {
 
       <ModernTabContent activeTab={activeTab}>
           {activeTab === 'image' && (
-                  <div>
-                    <Container>
-                      <div className="space-y-4">
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <TextInput
-                              label="1. Input Image Folder"
-                              value={imgIn}
-                              onChange={(e) => setImgIn(e.target.value)}
-                              placeholder="Full path to the folder containing images to compress."
-                            />
-                          </div>
-                          <Button variant="secondary" onClick={() => setShowImgInPicker(true)}>Browse</Button>
+                  <div className="flex flex-col gap-6">
+                    <div className="space-y-4">
+                      <SectionHeader title="Batch Image Input" />
+                      <div className="flex gap-2 items-end mt-4">
+                        <div className="flex-1">
+                          <TextInput
+                            label="Input Image Folder"
+                            value={imgIn}
+                            onChange={(e) => setImgIn(e.target.value)}
+                            placeholder="Full path to the folder containing images to compress."
+                          />
                         </div>
-
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1">
-                            <TextInput
-                              label="2. Output Image Folder"
-                              value={imgOut}
-                              onChange={(e) => setImgOut(e.target.value)}
-                              placeholder="Full path to the folder where compressed images will be saved."
-                            />
-                          </div>
-                          <Button variant="secondary" onClick={() => setShowImgOutPicker(true)}>Browse</Button>
-                        </div>
+                        <Button variant="secondary" onClick={() => setShowImgInPicker(true)}>Browse</Button>
                       </div>
-                    </Container>
 
-                    <div className="mt-6 space-y-6">
-                      <h3 className="text-xl font-semibold text-zinc-100">Compression Settings</h3>
+                      <div className="flex gap-2 items-end mt-2">
+                        <div className="flex-1">
+                          <TextInput
+                            label="Output Image Folder"
+                            value={imgOut}
+                            onChange={(e) => setImgOut(e.target.value)}
+                            placeholder="Full path to the folder where compressed images will be saved."
+                          />
+                        </div>
+                        <Button variant="secondary" onClick={() => setShowImgOutPicker(true)}>Browse</Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <SectionHeader title="Compression Settings" />
                       
                       <Slider
                         label="JPEG Quality"
@@ -348,16 +342,16 @@ export default function MediaCompressor() {
                       <Columns>
                         <Column>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Target Box Width (px)</label>
-                            <input type="number" value={imgWidth} onChange={(e) => setImgWidth(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-md p-2 text-white" min={0} />
-                            <p className="text-xs text-zinc-500">Set to 0 to ignore</p>
+                            <label className="text-sm font-bold text-[var(--theme-heading)]">Target Box Width (px)</label>
+                            <input type="number" value={imgWidth} onChange={(e) => setImgWidth(Number(e.target.value))} className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-md p-2 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors" min={0} />
+                            <p className="text-xs text-[var(--theme-text)]">Set to 0 to ignore</p>
                           </div>
                         </Column>
                         <Column>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-zinc-300">Target Box Height (px)</label>
-                            <input type="number" value={imgHeight} onChange={(e) => setImgHeight(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-md p-2 text-white" min={0} />
-                            <p className="text-xs text-zinc-500">Set to 0 to ignore</p>
+                            <label className="text-sm font-bold text-[var(--theme-heading)]">Target Box Height (px)</label>
+                            <input type="number" value={imgHeight} onChange={(e) => setImgHeight(Number(e.target.value))} className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-md p-2 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors" min={0} />
+                            <p className="text-xs text-[var(--theme-text)]">Set to 0 to ignore</p>
                           </div>
                         </Column>
                       </Columns>

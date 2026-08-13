@@ -296,8 +296,8 @@ function SubCanvasInternal({ nodeData, onUpdateNodeData, onClose, mainGraphEdges
               onChange={(e) => updateSelectedLayerParam(paramName, { ...param, value: e.target.value })}
               className="bg-zinc-900 border border-white/10 rounded px-2 py-1.5 text-xs text-white"
             >
-              <option value="">Select...</option>
-              {choices.map(c => <option key={c} value={c}>{c}</option>)}
+              <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="">Select...</option>
+              {choices.map(c => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>{c}</option>)}
             </select>
           ) : (
             <input 

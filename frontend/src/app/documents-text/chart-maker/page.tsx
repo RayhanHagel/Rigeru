@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState } from "react";
 
@@ -149,18 +150,13 @@ export default function ChartMakerPage() {
       <Header title="Chart Maker" subtitle="Upload a CSV or Excel file to instantly generate beautiful, interactive charts." />
 
       {!data.length ? (
-        <div className="w-full mx-auto mt-12">
-          <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 shadow-xl text-center">
-            <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-              <Icon name="table" size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Upload Data</h3>
-            <p className="text-zinc-400 mb-8 max-w-md mx-auto">Upload a .csv or .xlsx file to begin configuring your chart.</p>
-            
+        <div className="flex flex-col gap-6 w-full animate-slide-up mt-6">
+          <SectionHeader title="Upload Data" icon={<Icon name="table" size={18} />} />
+          <div className="w-full">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-40">
-                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4" />
-                <p className="text-zinc-400">Parsing data...</p>
+                <div className="w-8 h-8 border-4 border-[var(--theme-heading)] border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-[var(--theme-text)]">Parsing data...</p>
               </div>
             ) : (
               <DirectUploadBox 
@@ -171,58 +167,55 @@ export default function ChartMakerPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-8 w-full">
+        <div className="flex flex-col gap-6 w-full mt-6">
+          <SectionHeader title="Configuration" icon={<Icon name="settings" size={18} />} />
           
           <div className="w-full">
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-zinc-100 mb-6 flex items-center gap-2">Configuration
-              </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Chart Type</label>
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
+                  <button onClick={() => setChartType("bar")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "bar" ? "bg-[var(--theme-heading)] border-[var(--theme-heading)] text-[var(--theme-bg)]" : "bg-[var(--theme-ui-bg)] border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:shadow-md"}`}><Icon name="bar_chart" size={16}/> Bar</button>
+                  <button onClick={() => setChartType("line")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "line" ? "bg-[var(--theme-heading)] border-[var(--theme-heading)] text-[var(--theme-bg)]" : "bg-[var(--theme-ui-bg)] border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:shadow-md"}`}><Icon name="show_chart" size={16}/> Line</button>
+                  <button onClick={() => setChartType("pie")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "pie" ? "bg-[var(--theme-heading)] border-[var(--theme-heading)] text-[var(--theme-bg)]" : "bg-[var(--theme-ui-bg)] border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:shadow-md"}`}><Icon name="pie_chart" size={16}/> Pie</button>
+                  <button onClick={() => setChartType("scatter")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "scatter" ? "bg-[var(--theme-heading)] border-[var(--theme-heading)] text-[var(--theme-bg)]" : "bg-[var(--theme-ui-bg)] border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:shadow-md"}`}><Icon name="tune" size={16}/> Scatter</button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">X-Axis (Labels)</label>
+                <select 
+                  value={xAxisKey} 
+                  onChange={(e) => setXAxisKey(e.target.value)}
+                  className="w-full bg-[var(--theme-bg)] border border-[color-mix(in_srgb,var(--theme-heading)_20%,transparent)] rounded-lg p-2 text-[var(--theme-text)] text-sm outline-none focus:border-[var(--theme-heading)] h-[38px] transition-colors"
+                >
+                  {columns.map(c => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Y-Axis (Values)</label>
+                <select 
+                  value={yAxisKey} 
+                  onChange={(e) => setYAxisKey(e.target.value)}
+                  className="w-full bg-[var(--theme-bg)] border border-[color-mix(in_srgb,var(--theme-heading)_20%,transparent)] rounded-lg p-2 text-[var(--theme-text)] text-sm outline-none focus:border-[var(--theme-heading)] h-[38px] transition-colors"
+                >
+                  {columns.map(c => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
               
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Chart Type</label>
-                  <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
-                    <button onClick={() => setChartType("bar")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "bar" ? "bg-primary/20 border-primary/50 text-purple-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="bar_chart" size={16}/> Bar</button>
-                    <button onClick={() => setChartType("line")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "line" ? "bg-secondary/20 border-secondary/50 text-blue-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="show_chart" size={16}/> Line</button>
-                    <button onClick={() => setChartType("pie")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "pie" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="pie_chart" size={16}/> Pie</button>
-                    <button onClick={() => setChartType("scatter")} className={`p-2 rounded-lg text-sm flex items-center justify-center gap-2 border transition-all ${chartType === "scatter" ? "bg-amber-500/20 border-amber-500/50 text-amber-300" : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-zinc-300"}`}><Icon name="tune" size={16}/> Scatter</button>
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">X-Axis (Labels)</label>
-                  <select 
-                    value={xAxisKey} 
-                    onChange={(e) => setXAxisKey(e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-primary h-[42px]"
-                  >
-                    {columns.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Y-Axis (Values)</label>
-                  <select 
-                    value={yAxisKey} 
-                    onChange={(e) => setYAxisKey(e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg p-2.5 text-zinc-200 text-sm outline-none focus:border-primary h-[42px]"
-                  >
-                    {columns.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                
-                <div className="flex-none flex items-end">
-                  <Button variant="secondary" className="w-full h-[42px]" onClick={() => setData([])}>
-                    Upload New File
-                  </Button>
-                </div>
+              <div className="flex items-end">
+                <Button variant="secondary" className="w-full h-[38px]" onClick={() => setData([])}>
+                  Upload New File
+                </Button>
               </div>
             </div>
           </div>
 
+          <SectionHeader title="Preview" icon={<Icon name="visibility" size={18} />} />
           <div className="w-full">
-            <div className="bg-zinc-950 border border-white/5 rounded-2xl p-6 md:p-8 shadow-2xl h-full min-h-[500px] flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+            <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md p-4 md:p-8 rounded-xl border border-[var(--theme-ui-border)] shadow-sm h-full min-h-[500px] flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[var(--theme-heading)]/5 to-transparent pointer-events-none"></div>
               {renderChart()}
             </div>
           </div>

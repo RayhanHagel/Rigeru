@@ -173,12 +173,12 @@ def search_titles(websites: list, title: str) -> list:
         return []
 
     for website in websites:
-        if website == "🌑 AsuraScans":
+        if website == "AsuraScans" or website == "🌑 AsuraScans":
             search_response = search_titles_asura(title)
             if search_response:
                 search_results.extend(search_response.keys())
                 combined_results.update(search_response)
-        elif website == "😺 MangaDex":
+        elif website == "MangaDex" or website == "😺 MangaDex":
             search_response = search_titles_mangadex(title)
             if search_response:
                 search_results.extend(search_response.keys())
@@ -198,7 +198,7 @@ def search_titles_asura(title: str) -> dict | None:
             return None
 
         search_result_clean = {
-            f"🌑 {item['title']}": f"https://asurascans.com/comics/{item['slug']}||{item.get('cover', '')}" 
+            f"{item['title']}": f"https://asurascans.com/comics/{item['slug']}||{item.get('cover', '')}" 
             for item in response_json
         }
         return search_result_clean if search_result_clean else None
@@ -269,7 +269,7 @@ def search_titles_mangadex(title: str) -> dict | None:
                 if bayesian:
                     rating_str = f" (⭐ {bayesian:.1f})"
 
-            results[f"😺 {manga_title}{rating_str}"] = f"https://mangadex.org/title/{manga_id}||{cover_url}"
+            results[f"{manga_title}{rating_str}"] = f"https://mangadex.org/title/{manga_id}||{cover_url}"
             
         return results if results else None
     except Exception as e:

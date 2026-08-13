@@ -65,63 +65,87 @@ export default function SpotifyDownloader() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="Spotify Downloader" subtitle="Download Spotify tracks and playlists locally." />
       
-      <div className="bg-zinc-950/50 border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl">
+      <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 md:p-8 shadow-sm backdrop-blur-md">
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Spotify Link (Track, Album, or Playlist)</label>
+            <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Spotify Link (Track, Album, or Playlist)</label>
             <input 
               type="text" 
               placeholder="https://open.spotify.com/..." 
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+              className="w-full rounded-xl p-4 text-[var(--theme-text)] border focus:outline-none transition-colors"
+              style={{ 
+                backgroundColor: "var(--theme-bg)",
+                borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
             />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Audio Format</label>
+              <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Audio Format</label>
               <select 
                 value={audioFormat}
                 onChange={(e) => setAudioFormat(e.target.value)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-white focus:border-primary outline-none appearance-none"
+                className="w-full rounded-xl p-4 text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               >
-                <option value="mp3">MP3</option>
-                <option value="flac">FLAC</option>
-                <option value="ogg">OGG</option>
-                <option value="opus">OPUS</option>
-                <option value="m4a">M4A</option>
-                <option value="wav">WAV</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="mp3">MP3</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="flac">FLAC</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="ogg">OGG</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="opus">OPUS</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="m4a">M4A</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="wav">WAV</option>
               </select>
             </div>
             
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Bitrate</label>
+              <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Bitrate</label>
               <select 
                 value={bitrate}
                 onChange={(e) => setBitrate(e.target.value)}
-                className="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 text-white focus:border-primary outline-none appearance-none"
+                className="w-full rounded-xl p-4 text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
+                style={{ 
+                  backgroundColor: "var(--theme-bg)",
+                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               >
-                <option value="320k">320 kbps (High)</option>
-                <option value="192k">192 kbps (Medium)</option>
-                <option value="128k">128 kbps (Low)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="320k">320 kbps (High)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="192k">192 kbps (Medium)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="128k">128 kbps (Low)</option>
               </select>
             </div>
             
             <div className="md:col-span-1">
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Output Directory</label>
+              <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Output Directory</label>
               <div className="relative">
                 <input 
                   type="text" 
                   placeholder="Default: ~/Music" 
                   value={outputDir}
                   onChange={(e) => setOutputDir(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-xl p-4 pr-12 text-white focus:border-primary outline-none transition-all"
+                  className="w-full rounded-xl p-4 pr-12 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                  style={{ 
+                    backgroundColor: "var(--theme-bg)",
+                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 />
                 <button
                   type="button"
                   onClick={() => setIsExplorerOpen(true)}
-                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
                   <Icon name="folder_open" size={18} />
@@ -150,22 +174,22 @@ export default function SpotifyDownloader() {
         <div className={`mt-6 p-6 rounded-2xl border flex items-start gap-4 ${
           status.status === 'completed' ? 'bg-green-500/10 border-green-500/30' :
           status.status === 'failed' ? 'bg-red-500/10 border-red-500/30' :
-          'bg-secondary/10 border-secondary/30'
+          'bg-[var(--theme-heading)]/10 border-[var(--theme-heading)]/30'
         }`}>
           {status.status === 'completed' ? <Icon name="check_circle" className="text-green-500" /> :
            status.status === 'failed' ? <Icon name="error" className="text-red-500" /> :
-           <div className="w-6 h-6 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
+           <div className="w-6 h-6 border-2 border-[var(--theme-heading)]/30 border-t-[var(--theme-heading)] rounded-full animate-spin" />
           }
           <div>
             <h3 className={`font-semibold ${
               status.status === 'completed' ? 'text-green-400' :
-              status.status === 'failed' ? 'text-red-400' : 'text-secondary'
+              status.status === 'failed' ? 'text-red-400' : 'text-[var(--theme-heading)]'
             }`}>
               {status.status === 'completed' ? 'Download Complete' :
                status.status === 'failed' ? 'Download Failed' : 'Downloading'}
             </h3>
-            <p className="text-zinc-300 text-sm">{status.message}</p>
-            {status.path && <p className="text-zinc-500 text-xs font-mono break-all">Saved to: {status.path}</p>}
+            <p className="text-[var(--theme-text)] text-sm">{status.message}</p>
+            {status.path && <p className="text-[var(--theme-text)] text-xs font-mono break-all">Saved to: {status.path}</p>}
           </div>
         </div>
       )}

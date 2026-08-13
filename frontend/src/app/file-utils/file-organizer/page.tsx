@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -209,7 +210,7 @@ export default function FileOrganizerPage() {
         {statusMsg.text !== 'Ready to scan.' && (
           <div className={`p-4 rounded-xl flex items-center gap-3 transition-colors ${statusMsg.type === 'error' ? 'bg-red-500/10 border border-red-500/20 text-red-400' :
               statusMsg.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' :
-                'bg-secondary/10 border border-secondary/20 text-secondary'
+                'bg-[var(--theme-heading)]/10 border border-[var(--theme-heading)]/20 text-[var(--theme-heading)]'
             }`}>
             {statusMsg.type === 'error' ? <Icon name="error" size={20} /> :
               statusMsg.type === 'success' ? <Icon name="check_circle" size={20} /> :
@@ -219,25 +220,31 @@ export default function FileOrganizerPage() {
         )}
 
         {/* Config Area */}
-        <div className="bg-zinc-900/60 border border-white/5 rounded-2xl p-6 shadow-xl space-y-5">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Source Directory (To Scan)</label>
+              <label className="text-sm font-medium text-[var(--theme-text)] ml-1">Source Directory (To Scan)</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
                   <Icon name="search" size={18} />
                 </div>
                 <input
                   type="text"
                   value={sourcePath}
                   onChange={(e) => setSourcePath(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-xl pl-10 pr-12 py-3 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  className="w-full rounded-xl pl-10 pr-12 py-3 text-[var(--theme-text)] border focus:outline-none transition-colors"
                   placeholder="e.g. C:\Users\Username\Downloads"
+                  style={{ 
+                    backgroundColor: "var(--theme-bg)",
+                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 />
                 <button
                   type="button"
                   onClick={() => openExplorer('source')}
-                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
                   <Icon name="folder_open" size={18} />
@@ -245,22 +252,28 @@ export default function FileOrganizerPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Destination Root Directory</label>
+              <label className="text-sm font-medium text-[var(--theme-text)] ml-1">Destination Root Directory</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
                   <Icon name="drive_file_move" size={18} />
                 </div>
                 <input
                   type="text"
                   value={destPath}
                   onChange={(e) => setDestPath(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-xl pl-10 pr-12 py-3 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  className="w-full rounded-xl pl-10 pr-12 py-3 text-[var(--theme-text)] border focus:outline-none transition-colors"
                   placeholder="e.g. C:\Users\Username\Documents\Organized"
+                  style={{ 
+                    backgroundColor: "var(--theme-bg)",
+                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                 />
                 <button
                   type="button"
                   onClick={() => openExplorer('dest')}
-                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
                   <Icon name="folder_open" size={18} />
@@ -280,10 +293,10 @@ export default function FileOrganizerPage() {
 
         {/* Interactive Sorting Area */}
         {filesList.length > 0 && !isFinished && (
-          <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 shadow-xl animate-slide-up flex flex-col gap-8 w-full">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md animate-slide-up flex flex-col gap-8 w-full">
 
             {/* Preview */}
-            <div className="w-full flex flex-col items-center justify-center bg-black/40 rounded-xl p-4 border border-white/5 min-h-[300px] overflow-hidden">
+            <div className="w-full flex flex-col items-center justify-center bg-[var(--theme-bg)]/40 rounded-xl p-4 border border-[var(--theme-ui-border)] min-h-[300px] overflow-hidden">
               {currentFile && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -296,7 +309,7 @@ export default function FileOrganizerPage() {
                     e.currentTarget.parentElement?.classList.add('flex', 'flex-col', 'items-center', 'justify-center');
                     // Create fallback visual safely using DOM API to prevent XSS warnings
                     const container = document.createElement('div');
-                    container.className = 'text-zinc-600 flex flex-col items-center gap-4';
+                    container.className = 'text-[var(--theme-text)] flex flex-col items-center gap-4';
                     container.innerHTML = `
                       <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -313,16 +326,16 @@ export default function FileOrganizerPage() {
             {/* Controls */}
             <div className="w-full flex flex-col justify-between space-y-6">
               <div>
-                <div className="flex items-center gap-2 text-zinc-400 font-medium mb-1 uppercase tracking-wider text-sm">
+                <div className="flex items-center gap-2 text-[var(--theme-text)] font-medium mb-1 uppercase tracking-wider text-sm">
                   File {currentIdx + 1} of {filesList.length}
                 </div>
-                <h2 className="text-2xl font-bold text-white break-all bg-zinc-950 p-4 rounded-xl border border-white/5 shadow-inner">
+                <h2 className="text-2xl font-bold text-[var(--theme-heading)] break-all bg-[var(--theme-bg)] p-4 rounded-xl border border-[var(--theme-ui-border)] shadow-inner">
                   {currentFile}
                 </h2>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-zinc-200 flex items-center gap-2">Quick Actions
+                <h3 className="text-lg font-semibold text-[var(--theme-text)] flex items-center gap-2">Quick Actions
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Button variant="secondary" onClick={handleOpen} className="flex-1 whitespace-nowrap">
@@ -342,16 +355,22 @@ export default function FileOrganizerPage() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-lg font-semibold text-zinc-200 flex items-center gap-2">Move & Rename
+              <div className="space-y-4 pt-4 border-t border-[var(--theme-ui-border)]">
+                <h3 className="text-lg font-semibold text-[var(--theme-text)] flex items-center gap-2">Move & Rename
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="text"
                     value={renameVal}
                     onChange={(e) => setRenameVal(e.target.value)}
-                    className="flex-1 bg-zinc-950 border border-white/10 rounded-xl px-4 py-2 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                    className="flex-1 rounded-xl px-4 py-2 text-[var(--theme-text)] border focus:outline-none transition-colors"
                     placeholder="New name (blank to keep)"
+                    style={{ 
+                      backgroundColor: "var(--theme-bg)",
+                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   />
                   <Button
                     variant="primary"
@@ -368,10 +387,10 @@ export default function FileOrganizerPage() {
         )}
 
         {isFinished && (
-          <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-12 shadow-xl flex flex-col items-center justify-center text-center animate-slide-up">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-12 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center animate-slide-up">
             <Icon name="check_circle" size={64} className="text-green-500 mb-6" />
-            <h2 className="text-3xl font-bold text-white mb-4">All Caught Up!</h2>
-            <p className="text-zinc-400 text-lg mb-8">You have successfully processed all files in this folder.</p>
+            <h2 className="text-3xl font-bold text-[var(--theme-heading)] mb-4">All Caught Up!</h2>
+            <p className="text-[var(--theme-text)] text-lg mb-8">You have successfully processed all files in this folder.</p>
             <Button
               variant="primary"
               onClick={() => {

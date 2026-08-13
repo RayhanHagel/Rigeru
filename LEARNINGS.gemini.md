@@ -262,3 +262,11 @@ The `vision-censor` page's configuration cards and output placeholder had differ
 - **Reason**: The `Icon` component uses Material Symbols text spans. Applying strict `w-8 h-8` tailwind classes to the text span itself causes padding/centering mismatches within the wrapper div.
 - **Act**: Removed the strict width/height classes from the `<Icon>`, bumped the explicit `size` prop to `32`, and added `flex items-center justify-center` to the wrapper div.
 - **Refine**: When centering text-based icon fonts inside a container, use flexbox centering on the container rather than explicit width/height properties on the icon itself.
+
+---
+
+## 2026-08-13 — Global Style Guideline & Batch 1 Execution
+- **Perceive**: The user requested a formal UI style guideline based on the `image-vision` module, followed by a request to apply it to all 55+ pages in the application.
+- **Reason**: To avoid a massive, error-prone global refactor, it is safer to write the guidelines in `.agents/AGENTS.md` and then refactor the application in isolated batches (e.g., category by category).
+- **Act**: Drafted a detailed 6-point style guideline in `AGENTS.md`. Proceeded to execute "Batch 1" by running a Python regex script over the `audio-video` directory to safely replace all hardcoded tailwind colors with dynamic `--theme-*` variables.
+- **Refine**: When refactoring 10+ similar files, building a quick Python script to handle standard regex text replacements is exponentially faster and more reliable than issuing dozens of individual file edit commands.

@@ -138,39 +138,39 @@ function ResultCard({ vid, downloadState, onDownload }: {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-4 bg-zinc-950/50 border border-white/10 rounded-2xl shadow-xl transition-all hover:border-primary">
+    <div className="flex flex-col md:flex-row gap-6 p-4 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl shadow-sm backdrop-blur-md transition-all hover:border-[var(--theme-heading)]">
       <div className="w-full md:w-64 h-36 rounded-xl overflow-hidden bg-black shrink-0 relative">
         <img 
           src={resolveImageUrl(vid.thumbnail)} 
           alt={vid.title} 
           className="w-full h-full object-cover" 
         />
-        <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-mono font-medium border border-white/10">
+        <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs font-mono font-medium border border-[var(--theme-ui-border)]">
           {vid.duration_string}
         </div>
       </div>
 
       <div className="flex flex-col flex-1 justify-between py-1 min-w-0 overflow-hidden">
         <div>
-          <a href={vid.webpage_url || vid.url} target="_blank" rel="noreferrer" className="text-lg font-bold text-zinc-100 hover:text-primary transition-colors line-clamp-2">
+          <a href={vid.webpage_url || vid.url} target="_blank" rel="noreferrer" className="text-lg font-bold text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors line-clamp-2">
             {vid.title}
           </a>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-zinc-400">
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-[var(--theme-text)]">
             <span className="flex items-center gap-1"><Icon name="person" size={14} /> {vid.uploader || "Unknown"}</span>
             <span className="flex items-center gap-1"><Icon name="visibility" size={14} /> {vid.views?.toLocaleString() || 0} views</span>
           </div>
         </div>
 
         {downloadState ? (
-          <div className="mt-4 p-3 rounded-lg bg-zinc-950/50 border border-white/5 flex items-center justify-between">
+          <div className="mt-4 p-3 rounded-lg bg-[var(--theme-bg)]/50 border border-[var(--theme-ui-border)] flex items-center justify-between">
             <span className={`text-sm font-medium ${
               downloadState.status === 'completed' ? 'text-green-400' :
-              downloadState.status === 'failed' ? 'text-red-400' : 'text-primary'
+              downloadState.status === 'failed' ? 'text-red-400' : 'text-[var(--theme-heading)]'
             }`}>
               {downloadState.message}
             </span>
             {downloadState.status === 'downloading' && (
-              <div className="w-4 h-4 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-[var(--theme-ui-border)] border-t-[var(--theme-heading)] rounded-full animate-spin" />
             )}
           </div>
         ) : (
