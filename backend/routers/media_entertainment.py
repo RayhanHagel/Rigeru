@@ -69,14 +69,17 @@ def refresh_manga_library():
     """Refreshes the manga library by re-fetching chapter counts from sources."""
     try:
         from utilities.util_manga import refresh_library_standalone, get_manga_library_data
-        from utilities.util_json import save_json
+        import json
         
         cache = get_manga_library_data()
         if not cache:
             return {"message": "No library to refresh."}
             
         updated_cache, results = refresh_library_standalone(cache)
-        save_json("./cache/reading_library.json", updated_cache)
+        from utilities.util_store import get_data, set_data
+        manager = get_data("manga_manager") or {}
+        manager["library"] = updated_cache
+        set_data("manga_manager", manager)
         
         success_count = sum(1 for r in results if r["success"])
         fail_count = len(results) - success_count
@@ -94,21 +97,16 @@ import asyncio
 
 @router.get("/manga-search/query")
 def query_manga_search(title: str, websites: str):
-    """Searches for manga titles. `websites` should be comma separated e.g., '🌑 AsuraScans,😺 MangaDex'"""
+    """Searches for manga titles. `websites` should be comma separated e.g., 'AsuraScans,MangaDex'"""
     try:
         site_list = [s.strip() for s in websites.split(",") if s.strip()]
-        results = search_titles(site_list, title)
-        # util_manga sets st.session_state.search_lookup, but we need to return the mapping
-        # so let's rebuild it or just return the results. Wait, search_titles just returns a list of keys.
-        # But we also need the URL. Since search_titles is designed for Streamlit's session_state,
-        # we can just run the underlying functions directly.
         combined = {}
         for site in site_list:
-            if site == "🌑 AsuraScans":
+            if site == "AsuraScans":
                 from utilities.util_manga import search_titles_asura
                 res = search_titles_asura(title)
                 if res: combined.update(res)
-            elif site == "😺 MangaDex":
+            elif site == "MangaDex":
                 from utilities.util_manga import search_titles_mangadex
                 res = search_titles_mangadex(title)
                 if res: combined.update(res)

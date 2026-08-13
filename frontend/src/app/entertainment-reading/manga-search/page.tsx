@@ -3,13 +3,14 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/ui/Header";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/lib/utils";
 
 export default function MangaSearch() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [websites, setWebsites] = useState<string[]>(["🌑 AsuraScans", "😺 MangaDex"]);
+  const [websites, setWebsites] = useState<string[]>(["AsuraScans", "MangaDex"]);
   const [results, setResults] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -39,7 +40,7 @@ export default function MangaSearch() {
     
     const url = urlStr.split("||")[0];
     
-    const cleanTitle = title.replace(/^🌑 /, '').replace(/^😺 /, '');
+    const cleanTitle = title;
 
     setAdding(prev => ({ ...prev, [title]: true }));
     try {
@@ -64,26 +65,21 @@ export default function MangaSearch() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 border-b border-primary/30 pb-6">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-primary/20 text-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-            <Icon name="search" size={32} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Manga Search</h1>
-            <p className="text-zinc-400 text-sm font-medium">Find and add new manga to your library.</p>
-          </div>
-        </div>
-        <Button variant="secondary" icon={<Icon name="menu_book" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')}>
-          Library
-        </Button>
-      </div>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header 
+        title="Manga Search"
+        subtitle="Find and add new manga to your library."
+        actions={
+          <Button variant="secondary" icon={<Icon name="menu_book" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')}>
+            Library
+          </Button>
+        }
+      />
 
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm mb-8">
+      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm mb-8">
         <div className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Search Title</label>
+            <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Search Title</label>
             <div className="flex gap-3">
               <input 
                 type="text" 
@@ -91,24 +87,27 @@ export default function MangaSearch() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1 bg-zinc-950 border border-white/10 rounded-xl p-3 text-white focus:border-primary outline-none transition-all"
+                className="flex-1 rounded-xl p-3 outline-none transition-all border"
+                style={{ backgroundColor: "var(--theme-bg)", borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
-              <Button variant="primary" icon={<Icon name="search" size={16} />} onClick={handleSearch} isLoading={loading} className="bg-primary hover:bg-primary text-white border-none px-6">
+              <Button variant="primary" icon={<Icon name="search" size={16} />} onClick={handleSearch} isLoading={loading} className="px-6">
                 Search
               </Button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Sources</label>
+            <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Sources</label>
             <div className="flex gap-3">
-              {["🌑 AsuraScans", "😺 MangaDex"].map(site => (
+              {["AsuraScans", "MangaDex"].map(site => (
                 <button
                   key={site}
                   onClick={() => toggleSite(site)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
                     websites.includes(site) 
-                      ? "bg-primary/20 border-primary text-primary" 
-                      : "bg-zinc-950 border-white/10 text-zinc-500 hover:bg-white/5"
+                      ? "bg-[var(--theme-heading)]/20 border-[var(--theme-heading)] text-[var(--theme-heading)]" 
+                      : "bg-[var(--theme-bg)] border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:bg-white/5"
                   }`}
                 >
                   {site}
@@ -121,9 +120,9 @@ export default function MangaSearch() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-white mb-6">Search Results</h2>
+        <h2 className="text-xl font-bold mb-6">Search Results</h2>
         {Object.keys(results).length === 0 && !loading && (
-          <div className="p-10 border border-dashed border-zinc-800 rounded-2xl text-center text-zinc-500">
+          <div className="p-10 border border-dashed border-[var(--theme-ui-border)] rounded-2xl text-center text-[var(--theme-text)]">
             No results found. Try a different query.
           </div>
         )}
@@ -131,14 +130,14 @@ export default function MangaSearch() {
           {Object.entries(results).map(([title, urlStr]) => {
             const coverUrl = urlStr.includes("||") ? urlStr.split("||")[1] : null;
             return (
-              <div key={title} className="bg-zinc-900/30 border border-white/10 rounded-xl overflow-hidden flex flex-col group hover:border-primary/50 transition-all">
+              <div key={title} className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] shadow-sm rounded-xl overflow-hidden flex flex-col group hover:border-[var(--theme-heading)]/50 hover:shadow-md transition-all">
                 {coverUrl && (
-                  <div className="h-48 w-full overflow-hidden bg-zinc-950">
+                  <div className="h-48 w-full overflow-hidden bg-[var(--theme-bg)]">
                     <img src={coverUrl} alt={title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
                   </div>
                 )}
                 <div className="p-4 flex flex-col flex-1">
-                  <h4 className="font-bold text-zinc-200 mb-2 truncate" title={title}>{title}</h4>
+                  <h4 className="font-bold mb-2 truncate" title={title}>{title}</h4>
                   <div className="mt-auto pt-4 flex justify-end">
                     <Button 
                       variant="secondary" 
@@ -159,3 +158,4 @@ export default function MangaSearch() {
     </div>
   );
 }
+

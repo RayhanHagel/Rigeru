@@ -204,7 +204,7 @@ export default function PackageManagerPage() {
     return (
       <div className="w-full h-full relative z-10 overflow-y-auto animate-slide-up flex flex-col gap-8 font-sans">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-white">{pkgs.length} Installed Packages</h3>
+          <h3 className="text-lg font-bold text-[var(--theme-heading)]">{pkgs.length} Installed Packages</h3>
           <div className="flex gap-2">
             <Button 
               variant="primary" 
@@ -246,13 +246,13 @@ export default function PackageManagerPage() {
         {/* Search for Installed Packages & Batch Actions */}
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="flex-1 w-full relative">
-            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" size={16} />
             <input 
               type="text" 
               value={installedSearchQuery}
               onChange={e => setInstalledSearchQuery(e.target.value)}
               placeholder="Search installed packages..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 pl-10 pr-3 text-white focus:outline-none focus:border-secondary"
+              className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg py-2 pl-10 pr-3 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
             />
           </div>
           
@@ -274,12 +274,12 @@ export default function PackageManagerPage() {
         </div>
 
         {/* Package List Grid */}
-        <div className="bg-zinc-950/50 rounded-xl overflow-hidden min-h-[400px]">
-          <div className="p-4 border-b border-white/5 flex items-center justify-between">
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl overflow-hidden min-h-[400px] border border-[var(--theme-ui-border)] shadow-sm">
+          <div className="p-4 border-b border-[var(--theme-ui-border)] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <input 
                 type="checkbox" 
-                className="w-4 h-4 accent-indigo-500"
+                className="w-4 h-4 accent-[var(--theme-heading)]"
                 onChange={(e) => {
                   if (e.target.checked) {
                     const upgradable = filteredPkgs.filter(p => p.is_outdated);
@@ -294,14 +294,14 @@ export default function PackageManagerPage() {
                 }
                 disabled={filteredPkgs.filter(p => p.is_outdated).length === 0}
               />
-              <span className="text-sm font-medium text-zinc-400">Select All (Upgradable)</span>
+              <span className="text-sm font-medium text-[var(--theme-text)]">Select All (Upgradable)</span>
             </div>
-            <span className="text-sm text-zinc-500">Showing {filteredPkgs.length} packages</span>
+            <span className="text-sm text-[var(--theme-text)]">Showing {filteredPkgs.length} packages</span>
           </div>
 
           <div className="p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
             {filteredPkgs.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500">
+              <div className="py-12 text-center text-[var(--theme-text)]">
                 {isLoading ? "Loading packages..." : "No packages found."}
               </div>
             ) : (
@@ -312,26 +312,26 @@ export default function PackageManagerPage() {
                   <div 
                     key={`${p.id}-${i}`} 
                     onClick={() => toggleSelect(p.id)}
-                    className={`bg-zinc-900 border transition-all rounded-xl p-4 flex flex-col gap-3 cursor-pointer ${
-                      isSelected ? 'border-secondary shadow-[0_0_10px] shadow-secondary/20' : (
-                        p.is_outdated ? 'border-primary/40 shadow-[0_0_5px] shadow-primary/20' : 'border-white/5 hover:border-secondary/30'
+                    className={`bg-[var(--theme-bg)] border transition-all rounded-xl p-4 flex flex-col gap-3 cursor-pointer ${
+                      isSelected ? 'border-[var(--theme-heading)] shadow-sm' : (
+                        p.is_outdated ? 'border-primary/40 shadow-sm' : 'border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-md'
                       )
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex-shrink-0 transition-colors">
                         {isSelected ? (
-                          <Icon name="check_circle" size={18} className="text-secondary" />
+                          <Icon name="check_circle" size={18} className="text-[var(--theme-heading)]" />
                         ) : (
-                          <Icon name="circle" size={18} className="text-zinc-600 hover:text-zinc-400 transition-colors" />
+                          <Icon name="circle" size={18} className="text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors" />
                         )}
                       </div>
                       <div className="flex flex-col overflow-hidden w-full">
                         <div className="flex justify-between items-start w-full gap-2">
-                          <span className="font-medium text-zinc-100 truncate" title={p.name}>{p.name}</span>
-                          <span className="text-xs text-zinc-300 font-mono bg-black/30 px-2 py-0.5 rounded whitespace-nowrap">{p.version}</span>
+                          <span className="font-bold text-[var(--theme-heading)] truncate" title={p.name}>{p.name}</span>
+                          <span className="text-xs text-[var(--theme-text)] font-mono bg-[var(--theme-ui-bg)] px-2 py-0.5 rounded whitespace-nowrap border border-[var(--theme-ui-border)]">{p.version}</span>
                         </div>
-                        <span className="text-xs text-zinc-500 truncate mt-0.5" title={p.id}>{p.id}</span>
+                        <span className="text-xs text-[var(--theme-text)] truncate mt-0.5" title={p.id}>{p.id}</span>
                       </div>
                     </div>
                   </div>
@@ -342,14 +342,17 @@ export default function PackageManagerPage() {
         </div>
 
         {/* Search & Install */}
-        <Container title={`Install new ${pm} package`} icon={<Icon name="search" size={18} className="text-secondary"/>}>
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] p-4 rounded-xl shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--theme-heading)] mb-4 flex items-center gap-2">
+            <Icon name="search" size={18} className="text-[var(--theme-heading)]"/> Install new {pm} package
+          </h3>
           <div className="flex gap-2 mb-4">
             <input 
               type="text" 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search package name..."
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:border-secondary"
+              className="flex-1 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
             />
             <Button variant="secondary" onClick={() => handleSearch(pm)} disabled={isSearching || !searchQuery} className="px-6">
               {isSearching ? "Searching..." : "Search"}
@@ -357,20 +360,20 @@ export default function PackageManagerPage() {
           </div>
 
           {searchResults.length > 0 && (
-            <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
+            <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <table className="w-full text-sm text-left">
-                <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
+                <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] sticky top-0 border-b border-[var(--theme-ui-border)]">
                   <tr>
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">ID</th>
                     <th className="px-4 py-3 font-medium">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-[var(--theme-ui-border)]">
                   {searchResults.map((r, i) => (
-                    <tr key={i} className="hover:bg-zinc-800/50">
-                      <td className="px-4 py-2 font-medium text-zinc-200">{r.name}</td>
-                      <td className="px-4 py-2 text-zinc-400">{r.id}</td>
+                    <tr key={i} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                      <td className="px-4 py-2 font-bold text-[var(--theme-heading)]">{r.name}</td>
+                      <td className="px-4 py-2 text-[var(--theme-text)]">{r.id}</td>
                       <td className="px-4 py-2">
                         <Button variant="primary" size="sm" onClick={() => handleAction(pm, "install", [r.id])} disabled={isProcessing}>
                           Install
@@ -382,7 +385,7 @@ export default function PackageManagerPage() {
               </table>
             </div>
           )}
-        </Container>
+        </div>
       </div>
     );
   };
@@ -407,15 +410,11 @@ export default function PackageManagerPage() {
               {renderPMTab("winget", cache.winget, selectedWinget, setSelectedWinget)}
             </div>
           )}
-        </ModernTabContent>
-        <ModernTabContent activeTab={activeTab}>
           {activeTab === 'scoop' && (
             <div>
               {renderPMTab("scoop", cache.scoop, selectedScoop, setSelectedScoop)}
             </div>
           )}
-        </ModernTabContent>
-        <ModernTabContent activeTab={activeTab}>
           {activeTab === 'choco' && (
             <div>
               {renderPMTab("choco", cache.choco, selectedChoco, setSelectedChoco)}
@@ -426,14 +425,14 @@ export default function PackageManagerPage() {
       
       {/* Bottom Terminal Logs */}
       <div className="w-full flex flex-col space-y-4">
-        <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden min-h-[300px] flex flex-col">
-          <div className="bg-zinc-900 border-b border-zinc-800 p-3 flex items-center gap-2">
-            <Icon name="terminal" size={16} className="text-zinc-400" />
-            <span className="text-sm font-medium text-zinc-300">Terminal Log</span>
+        <div className="bg-[#0c0c0c] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden min-h-[300px] flex flex-col shadow-sm">
+          <div className="bg-[var(--theme-ui-bg)] border-b border-[var(--theme-ui-border)] p-3 flex items-center gap-2 backdrop-blur-md">
+            <Icon name="terminal" size={16} className="text-[var(--theme-text)]" />
+            <span className="text-sm font-bold text-[var(--theme-heading)]">Terminal Log</span>
           </div>
           <div 
             ref={terminalContainerRef}
-            className="p-4 overflow-y-auto flex-1 bg-black text-green-400 font-mono text-xs whitespace-pre-wrap max-h-[400px]"
+            className="p-4 overflow-y-auto flex-1 text-green-400 font-mono text-xs whitespace-pre-wrap max-h-[400px] custom-scrollbar"
           >
             {logs || "Ready."}
           </div>

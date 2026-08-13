@@ -30,7 +30,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative flex items-center">
           <select
             ref={ref}
-            className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-2.5 text-sm text-white appearance-none focus:outline-none focus:ring-2 transition-all backdrop-blur-sm shadow-inner cursor-pointer ${className}`}
+            className={`w-full bg-[var(--theme-ui-bg)] border rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] appearance-none focus:outline-none focus:ring-2 transition-all backdrop-blur-sm shadow-inner cursor-pointer ${className}`}
             style={{
               borderColor: "var(--theme-ui-border)",
               // @ts-expect-error CSS custom properties
@@ -39,7 +39,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {...props}
           >
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
+              <option key={opt.value} value={opt.value} className="bg-[var(--theme-bg)] text-[var(--theme-text)]">
                 {opt.label}
               </option>
             ))}

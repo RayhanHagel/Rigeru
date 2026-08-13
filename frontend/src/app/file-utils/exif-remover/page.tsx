@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState } from "react";
 
@@ -97,11 +98,9 @@ export default function ExifRemoverPage() {
       <Header title="EXIF Metadata Stripper" subtitle="Upload a photo to view hidden metadata (like GPS coordinates or camera info) and strip it out for privacy." />
 
       <div className="flex flex-col gap-6 animate-slide-up w-full">
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Upload Image
-          </h3>
+        <SectionHeader title="Upload Image" />
         {!fileHash ? (
-          <div className="flex flex-col items-center justify-center w-full h-40 rounded-xl bg-zinc-900/50 transition-colors">
+          <div className="flex flex-col items-center justify-center w-full min-h-[160px] rounded-xl transition-colors">
             <DirectUploadBox 
               accept=".jpg,.jpeg,.png,.webp,.tiff"
               label="Upload Image"
@@ -123,13 +122,13 @@ export default function ExifRemoverPage() {
             />
           </div>
         ) : (
-          <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl mb-6">
+          <div className="flex items-center justify-between bg-[var(--theme-bg)] p-4 border border-[var(--theme-ui-border)] rounded-xl mb-6">
             <div className="flex items-center gap-3">
-              <Icon name="image" size={24} className="text-secondary" />
-              <span className="text-zinc-200 font-medium truncate max-w-[200px]">{fileName}</span>
+              <Icon name="image" size={24} className="text-[var(--theme-heading)]" />
+              <span className="text-[var(--theme-heading)] font-medium truncate max-w-[200px]">{fileName}</span>
             </div>
             <button
-              className="cursor-pointer text-sm font-medium text-secondary hover:text-indigo-300 bg-secondary/10 px-4 py-2 rounded-lg transition-colors"
+              className="cursor-pointer text-sm font-medium text-[var(--theme-text)] hover:text-[var(--theme-heading)] bg-[var(--theme-heading)]/10 px-4 py-2 rounded-lg transition-colors"
               onClick={() => {
                 setFileHash(null);
                 setFileName("");
@@ -145,19 +144,18 @@ export default function ExifRemoverPage() {
           <div className="mt-6">
             <div className="flex flex-col gap-6 w-full">
               <div className="w-full">
-                <div className="border border-white/10 rounded-xl overflow-hidden bg-zinc-950 flex items-center justify-center min-h-[300px]">
+                <div className="border border-[var(--theme-ui-border)] rounded-xl overflow-hidden bg-[var(--theme-bg)] flex items-center justify-center min-h-[300px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewUrl} alt="Preview" className="max-w-full max-h-[400px] object-contain" />
                 </div>
               </div>
               
               <div className="w-full">
-                <div className="bg-zinc-900/80 border border-white/5 rounded-xl p-6 h-full space-y-4">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">Extracted Metadata
-                  </h3>
+                <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 h-full space-y-4 backdrop-blur-md shadow-sm">
+                  <SectionHeader title="Extracted Metadata" />
                   
                   {isAnalyzing && (
-                    <div className="text-zinc-400 animate-pulse text-sm">Analyzing EXIF data</div>
+                    <div className="text-[var(--theme-text)] animate-pulse text-sm">Analyzing EXIF data</div>
                   )}
                   
                   {analyzeError && (
@@ -179,19 +177,19 @@ export default function ExifRemoverPage() {
                           Found {Object.keys(exifData).length} metadata tags in this image.
                         </div>
                         
-                        <div className="bg-zinc-950 border border-white/10 rounded-lg overflow-hidden max-h-[250px] overflow-y-auto">
+                        <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg overflow-hidden max-h-[250px] overflow-y-auto custom-scrollbar">
                           <table className="w-full text-sm text-left">
-                            <thead className="bg-zinc-900 text-zinc-400 sticky top-0">
+                            <thead className="bg-[var(--theme-bg)]/80 text-[var(--theme-text)] sticky top-0 backdrop-blur-sm">
                               <tr>
                                 <th className="px-4 py-3 font-medium">Tag</th>
                                 <th className="px-4 py-3 font-medium">Value</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-[var(--theme-ui-border)]">
                               {Object.entries(exifData).map(([key, value]) => (
-                                <tr key={key} className="hover:bg-zinc-800/30">
-                                  <td className="px-4 py-2 font-medium text-zinc-300 w-1/3">{key}</td>
-                                  <td className="px-4 py-2 text-zinc-400 break-words">{String(value)}</td>
+                                <tr key={key} className="hover:bg-[var(--theme-bg)]/50">
+                                  <td className="px-4 py-2 font-medium text-[var(--theme-text)] w-1/3">{key}</td>
+                                  <td className="px-4 py-2 text-[var(--theme-text)] break-words">{String(value)}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -215,7 +213,7 @@ export default function ExifRemoverPage() {
                           variant="primary" 
                           onClick={handleStripExif}
                           disabled={isStripping}
-                          className="w-full py-4 shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-shadow"
+                          className="w-full py-4 transition-shadow"
                         >
                           <Icon name="ink_eraser" size={18} className="mr-2" />
                           {isStripping ? "Sanitizing image locally..." : "🧹 Strip Metadata & Download Clean Image"}
@@ -230,6 +228,5 @@ export default function ExifRemoverPage() {
         )}
       </div>
     </div>
-      </div>
   );
 }

@@ -113,15 +113,15 @@ export default function ClientDetailsPage() {
   };
 
   const renderSection = (title: string, icon: React.ReactNode, items: {label: string, value: any}[]) => (
-    <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 shadow-lg">
-      <h3 className="font-semibold text-lg text-zinc-100 flex items-center gap-2 mb-4 border-b border-white/10 pb-3">
+    <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm">
+      <h3 className="font-bold text-lg text-[var(--theme-heading)] flex items-center gap-2 mb-4 border-b border-[var(--theme-ui-border)] pb-3">
         {icon} {title}
       </h3>
       <div className="space-y-3">
         {items.map((item, i) => (
           <div key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 group">
-            <span className="text-zinc-500 text-sm font-medium">{item.label}</span>
-            <span className="text-zinc-300 font-mono text-sm text-left sm:text-right bg-zinc-950 px-2 py-1 rounded group-hover:text-primary transition-colors break-all">
+            <span className="text-[var(--theme-text)] text-sm font-medium">{item.label}</span>
+            <span className="text-[var(--theme-heading)] font-mono text-sm text-left sm:text-right bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] px-2 py-1 rounded-md group-hover:border-[var(--theme-heading)] transition-colors break-all">
               {item.value !== undefined && item.value !== null ? item.value.toString() : "N/A"}
             </span>
           </div>
@@ -136,38 +136,38 @@ export default function ClientDetailsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[var(--theme-heading)]/30 border-t-[var(--theme-heading)] rounded-full animate-spin" />
         </div>
       ) : (
         <div className="space-y-6">
           {/* Top Banner */}
-          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm relative overflow-hidden hover:border-[var(--theme-heading)] transition-colors duration-300">
+            <div className="absolute top-0 right-0 p-8 opacity-5 text-[var(--theme-heading)]">
               <Icon name="language" size={120} />
             </div>
             <div className="z-10">
-              <h2 className="text-zinc-400 text-sm font-medium mb-1 tracking-wider uppercase">Public IP Address</h2>
-              <div className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-2 flex items-center gap-3">
+              <h2 className="text-[var(--theme-text)] text-sm font-medium mb-1 tracking-wider uppercase">Public IP Address</h2>
+              <div className="text-4xl md:text-5xl font-bold text-[var(--theme-heading)] tracking-tight mb-2 flex items-center gap-3">
                 {data.ip}
                 {data.ip !== "Unknown" ? (
-                  <Icon name="verified_user" className="text-emerald-500" size={28} />
+                  <Icon name="verified_user" className="text-green-500" size={28} />
                 ) : (
                   <Icon name="gpp_maybe" className="text-amber-500" size={28} />
                 )}
               </div>
-              <p className="text-zinc-400 text-sm">
-                Connected via <span className="text-primary font-medium">{data.connection}</span> network
+              <p className="text-[var(--theme-text)] text-sm">
+                Connected via <span className="text-[var(--theme-heading)] font-medium">{data.connection}</span> network
               </p>
             </div>
             <div className="z-10 w-full md:w-auto">
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex gap-4 text-purple-200">
+              <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 flex gap-4 text-[var(--theme-heading)]">
                 <div className="flex flex-col">
-                  <span className="text-xs uppercase tracking-wider text-primary/70 font-semibold">OS</span>
+                  <span className="text-xs uppercase tracking-wider text-[var(--theme-text)] font-semibold">OS</span>
                   <span className="text-lg font-medium">{data.os}</span>
                 </div>
-                <div className="w-px bg-primary/20"></div>
+                <div className="w-px bg-[var(--theme-ui-border)]"></div>
                 <div className="flex flex-col">
-                  <span className="text-xs uppercase tracking-wider text-primary/70 font-semibold">Browser</span>
+                  <span className="text-xs uppercase tracking-wider text-[var(--theme-text)] font-semibold">Browser</span>
                   <span className="text-lg font-medium">{data.browser}</span>
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function ClientDetailsPage() {
           </div>
 
           <div className="flex flex-col gap-6 animate-slide-up">
-            {renderSection("Device & Display", <Icon name="desktop_windows" className="text-secondary" size={20} />, [
+            {renderSection("Device & Display", <Icon name="desktop_windows" className="text-[var(--theme-heading)]" size={20} />, [
               { label: "Screen Resolution", value: `${data.screenWidth} x ${data.screenHeight}` },
               { label: "Color Depth", value: `${data.colorDepth}-bit` },
               { label: "Pixel Ratio", value: data.pixelRatio },
@@ -184,7 +184,7 @@ export default function ClientDetailsPage() {
               { label: "Platform", value: data.platform },
             ])}
 
-            {renderSection("Software & Privacy", <Icon name="verified_user" className="text-emerald-400" size={20} />, [
+            {renderSection("Software & Privacy", <Icon name="verified_user" className="text-green-500" size={20} />, [
               { label: "Language", value: data.language },
               { label: "Timezone", value: data.timezone },
               { label: "Cookies Enabled", value: data.cookiesEnabled ? "Yes" : "No" },
@@ -197,7 +197,7 @@ export default function ClientDetailsPage() {
               { label: "WebGL Renderer", value: data.webglRenderer },
             ])}
 
-            {renderSection("Network", <Icon name="dns" className="text-secondary" size={20} />, [
+            {renderSection("Network", <Icon name="dns" className="text-[var(--theme-heading)]" size={20} />, [
               { label: "Effective Connection", value: data.connection },
             ])}
           </div>

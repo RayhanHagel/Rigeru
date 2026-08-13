@@ -371,10 +371,10 @@ export default function ModelSettingsPage() {
               className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
             >
               {options.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={opt} value={opt}>{opt}</option>
               ))}
               {!options.includes(currentValue) && currentValue !== "" && (
-                  <option value={currentValue}>{currentValue} (Custom)</option>
+                  <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={currentValue}>{currentValue} (Custom)</option>
               )}
             </select>
             {isModelDownloaded ? (
@@ -434,9 +434,9 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                     title="Configures whether PyTorch models and HuggingFace pipelines should try to load into GPU VRAM or stay on CPU (System RAM). Applies to Whisper, Rembg, Transformers, etc."
                 >
-                    <option value="Auto-Detect">Auto-Detect</option>
-                    <option value="CPU Only">CPU Only</option>
-                    <option value="GPU Preference">GPU Preference</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Auto-Detect">Auto-Detect</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="CPU Only">CPU Only</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="GPU Preference">GPU Preference</option>
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -447,9 +447,9 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                     title="Use FP16 or INT8 precision for HuggingFace pipeline models to save VRAM and speed up inference. Applies to Whisper, Translation, and OCR."
                 >
-                    <option value="PyTorch (Standard)">PyTorch (Standard)</option>
-                    <option value="FP16 (GPU Speedup)">FP16 (GPU Speedup)</option>
-                    <option value="INT8 (Max GPU Memory Save)">INT8 (Max GPU Memory Save)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="PyTorch (Standard)">PyTorch (Standard)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="FP16 (GPU Speedup)">FP16 (GPU Speedup)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="INT8 (Max GPU Memory Save)">INT8 (Max GPU Memory Save)</option>
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -460,10 +460,10 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                     title="Converts YOLO object detection models into optimized ONNX or TensorRT engines dynamically for faster webcam tracking."
                 >
-                    <option value="cpu">CPU / OpenVINO (cpu)</option>
-                    <option value="cuda">NVIDIA GPU (cuda)</option>
-                    <option value="onnx">ONNX Runtime (onnx)</option>
-                    <option value="tensorrt">TensorRT (tensorrt)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="cpu">CPU / OpenVINO (cpu)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="cuda">NVIDIA GPU (cuda)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="onnx">ONNX Runtime (onnx)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="tensorrt">TensorRT (tensorrt)</option>
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -474,10 +474,10 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                     title="Base resolution used for YOLO vision tasks. Lower resolutions process significantly faster but with less accuracy."
                 >
-                    <option value="160">160x160 (Fastest, High RAM savings)</option>
-                    <option value="320">320x320 (Balanced)</option>
-                    <option value="640">640x640 (High Quality, Standard)</option>
-                    <option value="1024">1024x1024 (Highest Quality, Very Slow)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="160">160x160 (Fastest, High RAM savings)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="320">320x320 (Balanced)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="640">640x640 (High Quality, Standard)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="1024">1024x1024 (Highest Quality, Very Slow)</option>
                 </select>
             </div>
         </div>
@@ -494,9 +494,9 @@ export default function ModelSettingsPage() {
                     onChange={e => updateConfigVal("image_upscaler_scale", e.target.value)}
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                 >
-                    <option value="2">2x Upscale</option>
-                    <option value="4">4x Upscale</option>
-                    <option value="8">8x Upscale</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="2">2x Upscale</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="4">4x Upscale</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="8">8x Upscale</option>
                 </select>
             </div>
 
@@ -507,9 +507,9 @@ export default function ModelSettingsPage() {
                     onChange={e => updateConfigVal("background_removal", e.target.value)}
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
                 >
-                    <option value="u2net">rembg (u2net) - Lightweight & Fast</option>
-                    <option value="briaai-rmbg-1.4">briaai (RMBG-1.4) - High Quality</option>
-                    <option value="briaai-rmbg-2.0">briaai (RMBG-2.0) - Best Quality (Needs HF Token)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="u2net">rembg (u2net) - Lightweight & Fast</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="briaai-rmbg-1.4">briaai (RMBG-1.4) - High Quality</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="briaai-rmbg-2.0">briaai (RMBG-2.0) - Best Quality (Needs HF Token)</option>
                 </select>
             </div>
             {renderDropdownWithDownload("Expense Tracker / Receipt Parsing", "expense_tracker", PRESET_MODELS.expense_tracker)}
@@ -534,8 +534,8 @@ export default function ModelSettingsPage() {
                     onChange={e => updateConfigVal("obsidian_provider", e.target.value)}
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
                 >
-                    <option value="Hugging Face API">Hugging Face API (Cloud)</option>
-                    <option value="Ollama">Ollama (Local CPU/GPU)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Hugging Face API">Hugging Face API (Cloud)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Ollama">Ollama (Local CPU/GPU)</option>
                 </select>
             </div>
             
@@ -548,10 +548,10 @@ export default function ModelSettingsPage() {
                     disabled={config.obsidian_provider !== "Ollama"}
                 >
                     {ollamaModels.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
                     ))}
                     {!ollamaModels.find(m => m.name === config.obsidian_ollama_model) && config.obsidian_ollama_model && (
-                        <option value={config.obsidian_ollama_model}>{config.obsidian_ollama_model} (Missing)</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={config.obsidian_ollama_model}>{config.obsidian_ollama_model} (Missing)</option>
                     )}
                 </select>
             </div>
@@ -565,10 +565,10 @@ export default function ModelSettingsPage() {
                     disabled={config.obsidian_provider !== "Ollama"}
                 >
                     {ollamaModels.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
                     ))}
                     {!ollamaModels.find(m => m.name === (config.obsidian_ollama_generator_model || config.obsidian_ollama_model)) && (config.obsidian_ollama_generator_model || config.obsidian_ollama_model) && (
-                        <option value={config.obsidian_ollama_generator_model || config.obsidian_ollama_model}>{config.obsidian_ollama_generator_model || config.obsidian_ollama_model} (Missing)</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={config.obsidian_ollama_generator_model || config.obsidian_ollama_model}>{config.obsidian_ollama_generator_model || config.obsidian_ollama_model} (Missing)</option>
                     )}
                 </select>
             </div>
@@ -580,10 +580,10 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
                 >
                     {ollamaModels.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
                     ))}
                     {!ollamaModels.find(m => m.name === (config.obsidian_ollama_vision_model || "llava")) && (
-                        <option value={config.obsidian_ollama_vision_model || "llava"}>{config.obsidian_ollama_vision_model || "llava"} (Missing)</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={config.obsidian_ollama_vision_model || "llava"}>{config.obsidian_ollama_vision_model || "llava"} (Missing)</option>
                     )}
                 </select>
             </div>
@@ -606,10 +606,10 @@ export default function ModelSettingsPage() {
                     onChange={e => updateConfigVal("obsidian_context_length", e.target.value)}
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
                 >
-                    <option value="4096">4096</option>
-                    <option value="8192">8192 (Recommended)</option>
-                    <option value="16384">16384</option>
-                    <option value="32768">32768</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="4096">4096</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="8192">8192 (Recommended)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="16384">16384</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="32768">32768</option>
                 </select>
             </div>
 
@@ -621,10 +621,10 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
                 >
                     {ollamaModels.map(m => (
-                        <option key={m.name} value={m.name}>{m.name}</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
                     ))}
                     {!ollamaModels.find(m => m.name === config.obsidian_embedding_model) && config.obsidian_embedding_model && (
-                        <option value={config.obsidian_embedding_model}>{config.obsidian_embedding_model} (Missing)</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={config.obsidian_embedding_model}>{config.obsidian_embedding_model} (Missing)</option>
                     )}
                 </select>
             </div>
@@ -637,8 +637,8 @@ export default function ModelSettingsPage() {
                     className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
                     title="Uses facebook/bart-large-cnn model to summarize search context locally before providing it to the main LLM."
                 >
-                    <option value="true">Yes (Enable Summarization)</option>
-                    <option value="false">No (Disable Summarization)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="true">Yes (Enable Summarization)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="false">No (Disable Summarization)</option>
                 </select>
             </div>
             

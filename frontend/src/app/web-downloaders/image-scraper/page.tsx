@@ -60,12 +60,12 @@ function ImagePreviewModal({
       onClick={onClose}
     >
       <div
-        className="flex flex-col rounded-2xl border border-white/10 bg-zinc-950/90 backdrop-blur-md w-[88vw] h-[75vh]"
+        className="flex flex-col rounded-2xl border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)]/90 backdrop-blur-md w-[88vw] h-[75vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* Top toolbar — always visible */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-black/40 border-b border-white/5 flex-shrink-0 rounded-t-2xl">
-          <span className="text-xs text-zinc-400 truncate max-w-[300px]" title={img.filename}>{img.filename}</span>
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--theme-bg)]/40 border-b border-[var(--theme-ui-border)] flex-shrink-0 rounded-t-2xl">
+          <span className="text-xs text-[var(--theme-text)] truncate max-w-[300px]" title={img.filename}>{img.filename}</span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
@@ -74,7 +74,7 @@ function ImagePreviewModal({
             >
               <Icon name="zoom_out" size={16} />
             </button>
-            <span className="text-xs text-zinc-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
+            <span className="text-xs text-[var(--theme-text)] w-12 text-center">{Math.round(zoom * 100)}%</span>
             <button
               onClick={() => setZoom(z => Math.min(z + 0.25, 4))}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
@@ -84,7 +84,7 @@ function ImagePreviewModal({
             </button>
             <button
               onClick={() => setZoom(1)}
-              className="text-xs text-zinc-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+              className="text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)] px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
             >
               Reset
             </button>
@@ -107,7 +107,7 @@ function ImagePreviewModal({
 
         {/* Bottom navigation — always visible */}
         {images.length > 1 && (
-          <div className="flex items-center justify-center gap-4 py-3 border-t border-white/5 bg-black/40 flex-shrink-0 rounded-b-2xl">
+          <div className="flex items-center justify-center gap-4 py-3 border-t border-[var(--theme-ui-border)] bg-[var(--theme-bg)]/40 flex-shrink-0 rounded-b-2xl">
             <button
               onClick={prev}
               disabled={index === 0}
@@ -115,7 +115,7 @@ function ImagePreviewModal({
             >
               <Icon name="chevron_left" size={20} />
             </button>
-            <span className="text-sm text-zinc-400">{index + 1} / {images.length}</span>
+            <span className="text-sm text-[var(--theme-text)]">{index + 1} / {images.length}</span>
             <button
               onClick={next}
               disabled={index === images.length - 1}
@@ -163,7 +163,7 @@ function ImageGridItem({
       className={`group relative rounded-xl overflow-hidden border aspect-square flex items-center justify-center cursor-pointer transition-all duration-200
         ${isSelected
           ? "border-[var(--theme-heading)] ring-2 ring-[var(--theme-heading)]/50 scale-[0.97]"
-          : "border-white/5 bg-black/40 hover:border-white/20"
+          : "border-[var(--theme-ui-border)] bg-[var(--theme-bg)]/40 hover:border-[var(--theme-heading)]/50"
         }`}
       title={img.filename}
       onClick={handleClick}
@@ -179,7 +179,7 @@ function ImageGridItem({
       </div>
 
       {failed ? (
-        <div className="flex flex-col items-center gap-1 text-zinc-600 p-2 text-center">
+        <div className="flex flex-col items-center gap-1 text-[var(--theme-text)] p-2 text-center">
           <Icon name="image" size={24} />
           <span className="text-xs truncate w-full">{img.filename}</span>
         </div>
@@ -442,7 +442,7 @@ export default function ImageScraperPage() {
             <div className="flex justify-between items-center text-sm font-medium">
               <span className="text-[var(--theme-heading)]">{statusMsg || "Processing..."}</span>
               {progress.total > 0 && (
-                <span className="text-zinc-400 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                <span className="text-[var(--theme-text)] bg-[var(--theme-bg)]/40 px-3 py-1 rounded-full border border-[var(--theme-ui-border)]">
                   {progress.completed + progress.failed} / {progress.total}
                 </span>
               )}
@@ -450,7 +450,7 @@ export default function ImageScraperPage() {
 
             {progress.total > 0 && (
               <>
-                <div className="h-2 bg-black rounded-full overflow-hidden border border-white/5">
+                <div className="h-2 bg-[var(--theme-bg)] rounded-full overflow-hidden border border-[var(--theme-ui-border)]">
                   <div
                     className="h-full bg-[var(--theme-heading)] transition-all duration-300 relative"
                     style={{
@@ -480,7 +480,7 @@ export default function ImageScraperPage() {
           <div className="p-6 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl backdrop-blur-md">
             {/* Grid Header */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">Downloaded Images
+              <h2 className="text-base font-semibold text-[var(--theme-heading)] flex items-center gap-2">Downloaded Images
                 <span className="ml-1 text-xs font-medium bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] px-2 py-0.5 rounded-full">
                   {downloadedImages.length}
                 </span>
@@ -489,28 +489,28 @@ export default function ImageScraperPage() {
               <div className="flex items-center gap-2">
                 {selectionMode ? (
                   <>
-                    <span className="text-xs text-zinc-400 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                    <span className="text-xs text-[var(--theme-text)] bg-[var(--theme-bg)]/40 px-3 py-1 rounded-full border border-[var(--theme-ui-border)]">
                       {selectedPaths.size} selected
                     </span>
                     <Button
-                      variant="primary"
+                      variant="secondary"
                       onClick={() => setSelectedPaths(new Set(downloadedImages.map(img => img.path)))}
-                      className="text-xs h-8 px-3 bg-white/10 hover:bg-white/20 text-white"
+                      className="text-xs h-8 px-3"
                     >
                       Select All
                     </Button>
                     <Button
-                      variant="primary"
+                      variant="danger"
                       onClick={handleDeleteSelected}
                       disabled={selectedPaths.size === 0 || isDeleting}
                       icon={<Icon name="delete" size={14} />}
-                      className="text-xs h-8 px-3 bg-red-600 hover:bg-red-700 text-white disabled:opacity-40"
+                      className="text-xs h-8 px-3 disabled:opacity-40"
                     >
                       {isDeleting ? "Deleting..." : `Delete (${selectedPaths.size})`}
                     </Button>
                     <button
                       onClick={exitSelectionMode}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
                     >
                       <Icon name="close" size={16} />
                     </button>
@@ -518,7 +518,7 @@ export default function ImageScraperPage() {
                 ) : (
                   <button
                     onClick={() => setSelectionMode(true)}
-                    className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-[var(--theme-ui-border)] transition-colors"
                   >
                     <Icon name="ads_click" size={13} />
                     Select to Delete

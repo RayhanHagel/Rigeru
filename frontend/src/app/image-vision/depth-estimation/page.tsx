@@ -13,11 +13,11 @@ import { Icon } from "@/lib/utils";
 
 export default function DepthEstimationPage() {
   const [activeTab, setActiveTab] = useState("Image");
-  
+
   // Config State
   const [colormap, setColormap] = useState("INFERNO");
   const [invert, setInvert] = useState(false);
-  
+
   // Media State
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaHash, setMediaHash] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default function DepthEstimationPage() {
   const [mediaDepthUrl, setMediaDepthUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mediaError, setMediaError] = useState("");
-  
+
   // Preview
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -35,7 +35,7 @@ export default function DepthEstimationPage() {
   const [aiFps, setAiFps] = useState(5);
   const [webcamActive, setWebcamActive] = useState(false);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
-  
+
   const streamImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function DepthEstimationPage() {
 
   const processMedia = async () => {
     if (!mediaHash) return;
-    
+
     setIsProcessing(true);
     setMediaError("");
     setMediaDepthUrl(null);
@@ -67,7 +67,7 @@ export default function DepthEstimationPage() {
     formData.append("file_hash", mediaHash);
     formData.append("colormap", colormap);
     formData.append("invert", invert.toString());
-    
+
     let endpoint = "http://127.0.0.1:8000/api/media-vision/depth-image";
     if (activeTab === "Video") {
       formData.append("encoder", "libx264"); // Default encoder
@@ -136,9 +136,9 @@ export default function DepthEstimationPage() {
   const renderSettings = () => (
     <div className="flex flex-col gap-2 mt-8">
       <SectionHeader title="Configuration" />
-      
+
       <div className="grid grid-cols-1 gap-6 mt-4">
-        
+
         {/* CARD 1: Depth Details */}
         <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
           <div className="flex items-center gap-2 font-medium pb-2 border-b" style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}>
@@ -148,27 +148,27 @@ export default function DepthEstimationPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-[var(--theme-text)]">Depth Colormap</label>
-              <select value={colormap} 
+              <select value={colormap}
                 onChange={e => setColormap(e.target.value)}
                 className="w-full bg-[var(--theme-bg)] rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors border"
                 style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                 onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                 onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               >
-                <option value="inferno">Inferno (Standard)</option>
-                <option value="plasma">Plasma</option>
-                <option value="magma">Magma</option>
-                <option value="viridis">Viridis</option>
-                <option value="cividis">Cividis</option>
-                <option value="twilight">Twilight</option>
-                <option value="gray">Grayscale (Linear Depth)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="inferno">Inferno (Standard)</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="plasma">Plasma</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="magma">Magma</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="viridis">Viridis</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="cividis">Cividis</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="twilight">Twilight</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="gray">Grayscale (Linear Depth)</option>
               </select>
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer pt-2">
-              <input 
-                type="checkbox" 
-                checked={invert} 
+              <input
+                type="checkbox"
+                checked={invert}
                 onChange={(e) => setInvert(e.target.checked)}
                 className="rounded accent-[var(--theme-heading)] border border-[var(--theme-ui-border)] w-4 h-4 cursor-pointer"
               />
@@ -183,8 +183,8 @@ export default function DepthEstimationPage() {
                     {aiFps}
                   </span>
                 </div>
-                <input 
-                  type="range" min="1" max="60" step="1" value={aiFps} 
+                <input
+                  type="range" min="1" max="60" step="1" value={aiFps}
                   onChange={(e) => {
                     setAiFps(parseInt(e.target.value));
                     if (webcamActive) {
@@ -211,18 +211,18 @@ export default function DepthEstimationPage() {
           <p className="text-[var(--theme-text)] text-sm font-medium">Generate high-quality monocular depth maps from images, videos, and webcams.</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-          <ModernTabs 
+          <ModernTabs
             tabs={[
               { id: "Image", label: "Image Depth", icon: <Icon name="image" size={18} /> },
               { id: "Video", label: "Video Depth", icon: <Icon name="movie" size={18} /> },
               { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
-            ]} 
-            activeTab={activeTab} 
+            ]}
+            activeTab={activeTab}
             setActiveTab={(tab) => {
               setActiveTab(tab);
               clearState();
               if (webcamActive) toggleWebcam();
-            }} 
+            }}
           />
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function DepthEstimationPage() {
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-2">
                 <SectionHeader title="Upload media" />
-                
+
                 <DirectUploadBox
                   accept={activeTab === "Image" ? "image/png, image/jpeg, image/webp" : "video/mp4, video/webm, video/quicktime"}
                   label={`Upload ${activeTab}`}
@@ -257,7 +257,7 @@ export default function DepthEstimationPage() {
                   className="w-full h-12 text-lg mt-2 border-none !shadow-none !ring-0 !outline-none transition-colors"
                   onClick={processMedia}
                   disabled={!mediaHash || isProcessing}
-                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
+                  style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isProcessing ? "Processing..." : `Process ${activeTab}`}
                 </Button>
               </div>
@@ -267,41 +267,41 @@ export default function DepthEstimationPage() {
             <div className="flex flex-col gap-2 mt-8 h-full">
               <SectionHeader title="Download Output" />
 
-                <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
-                  {!mediaDepthUrl ? (
-                    <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
-                      {activeTab === "Image" ? <Icon name="image" size={48} className="opacity-30" /> : <Icon name="movie" size={48} className="opacity-30" />}
-                      <p>Processed {activeTab.toLowerCase()} will appear here.</p>
-                    </div>
-                  ) : activeTab === "Image" && mediaOriginalUrl ? (
-                    <div className="w-full h-full flex flex-col gap-4">
-                      <ImageCompareSlider 
-                        originalImage={mediaOriginalUrl}
-                        processedImage={mediaDepthUrl}
-                        processedLabel="Depth Map"
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="self-center"
-                        onClick={() => setPreviewImage(mediaDepthUrl)}
-                      >
-                        View Fullscreen
-                      </Button>
-                    </div>
-                  ) : (
-                    <video src={mediaDepthUrl} controls className="w-full h-full object-contain" />
-                  )}
-                </div>
-                <Button variant="primary"
-                    className="w-full mt-4 h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
-                    style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
-                    onClick={() => mediaDepthUrl && downloadBlob(mediaDepthUrl, `depth_${activeTab.toLowerCase()}.${activeTab === "Image" ? 'png' : 'mp4'}`)}
-                    disabled={!mediaDepthUrl}
-                    icon={<Icon name="download" size={16} />}
-                  >
-                    Download
-                  </Button>
+              <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+                {!mediaDepthUrl ? (
+                  <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                    {activeTab === "Image" ? <Icon name="image" size={48} className="opacity-30" /> : <Icon name="movie" size={48} className="opacity-30" />}
+                    <p>Processed {activeTab.toLowerCase()} will appear here.</p>
+                  </div>
+                ) : activeTab === "Image" && mediaOriginalUrl ? (
+                  <div className="w-full h-full flex flex-col gap-4">
+                    <ImageCompareSlider
+                      originalImage={mediaOriginalUrl}
+                      processedImage={mediaDepthUrl}
+                      processedLabel="Depth Map"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="self-center"
+                      onClick={() => setPreviewImage(mediaDepthUrl)}
+                    >
+                      View Fullscreen
+                    </Button>
+                  </div>
+                ) : (
+                  <video src={mediaDepthUrl} controls className="w-full h-full object-contain" />
+                )}
+              </div>
+              <Button variant="primary"
+                className="w-full mt-4 h-12 text-lg border-none !shadow-none !ring-0 !outline-none transition-colors"
+                style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
+                onClick={() => mediaDepthUrl && downloadBlob(mediaDepthUrl, `depth_${activeTab.toLowerCase()}.${activeTab === "Image" ? 'png' : 'mp4'}`)}
+                disabled={!mediaDepthUrl}
+                icon={<Icon name="download" size={16} />}
+              >
+                Download
+              </Button>
             </div>
           </div>
         )}
@@ -311,69 +311,69 @@ export default function DepthEstimationPage() {
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-2">
                 <SectionHeader title="Upload media" />
-                  
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-[var(--theme-text)]">Select Camera Index</label>
-                    <select value={cameraIndex} 
-                      onChange={(e) => setCameraIndex(Number(e.target.value))}
-                      className="w-full bg-[var(--theme-bg)] rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors border"
-                      style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
-                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
-                    >
-                      {cameras.length === 0 ? <option value={0}>Camera 0</option> : cameras.map(c => (
-                        <option key={c} value={c}>Camera {c}</option>
-                      ))}
-                    </select>
-                  </div>
 
-                  {renderSettings()}
-
-                  <Button variant="primary" 
-                    onClick={toggleWebcam}
-                    icon={webcamActive ? <Icon name="stop_circle" size={18} /> : <Icon name="play_arrow" size={18} />}
-                    className={`w-full h-12 text-lg border-none transition-colors mt-2 ${webcamActive ? 'bg-red-600 hover:bg-red-500' : 'bg-primary hover:bg-primary/90'}`}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[var(--theme-text)]">Select Camera Index</label>
+                  <select value={cameraIndex}
+                    onChange={(e) => setCameraIndex(Number(e.target.value))}
+                    className="w-full bg-[var(--theme-bg)] rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors border"
+                    style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   >
-                    {webcamActive ? "Stop Webcam" : "Start Webcam Stream"}
-                  </Button>
+                    {cameras.length === 0 ? <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={0}>Camera 0</option> : cameras.map(c => (
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>Camera {c}</option>
+                    ))}
+                  </select>
                 </div>
+
+                {renderSettings()}
+
+                <Button variant="primary"
+                  onClick={toggleWebcam}
+                  icon={webcamActive ? <Icon name="stop_circle" size={18} /> : <Icon name="play_arrow" size={18} />}
+                  className={`w-full h-12 text-lg border-none transition-colors mt-2 ${webcamActive ? 'bg-red-600 hover:bg-red-500' : 'bg-primary hover:bg-primary/90'}`}
+                >
+                  {webcamActive ? "Stop Webcam" : "Start Webcam Stream"}
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-2 mt-8 h-full">
               <SectionHeader title="Download Output" />
-                <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
-                  {!streamUrl ? (
-                    <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
-                      <Icon name="videocam" size={48} className="opacity-30" />
-                      <p>Webcam stream is inactive.</p>
-                    </div>
-                  ) : (
-                    <img 
-                      ref={streamImageRef}
-                      crossOrigin="anonymous"
-                      src={streamUrl} 
-                      alt="Live Stream" 
-                      className="w-full h-full object-contain transition-opacity duration-300" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )}
-                </div>
-                
-                {streamUrl && (
-                  <VirtualCameraBroadcast 
-                    sourceRef={streamImageRef} 
-                    isStreamActive={webcamActive} 
-                    mode="backend"
+              <div className="flex-1 w-full bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] relative overflow-hidden min-h-[400px] flex items-center justify-center p-4">
+                {!streamUrl ? (
+                  <div className="flex flex-col items-center justify-center text-[var(--theme-text)] gap-3">
+                    <Icon name="videocam" size={48} className="opacity-30" />
+                    <p>Webcam stream is inactive.</p>
+                  </div>
+                ) : (
+                  <img
+                    ref={streamImageRef}
+                    crossOrigin="anonymous"
+                    src={streamUrl}
+                    alt="Live Stream"
+                    className="w-full h-full object-contain transition-opacity duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 )}
               </div>
+
+              {streamUrl && (
+                <VirtualCameraBroadcast
+                  sourceRef={streamImageRef}
+                  isStreamActive={webcamActive}
+                  mode="backend"
+                />
+              )}
             </div>
+          </div>
         )}
       </div>
 
-      <ImageZoomModal 
+      <ImageZoomModal
         isOpen={!!previewImage}
         onClose={() => setPreviewImage(null)}
         imageUrl={previewImage || ""}

@@ -1,7 +1,22 @@
 import io
 import zipfile
 
-def extract_pdf_images(pdf_bytes: bytes) -> tuple[bool, bytes | str]:
+def parse_pages(pages_str: str, max_pages: int) -> list[int]:
+    if not pages_str or pages_str.lower() == "all":
+        return list(range(max_pages))
+    try:
+        indices = []
+        for p in pages_str.split(","):
+            p = p.strip()
+            if p.isdigit():
+                idx = int(p) - 1
+                if 0 <= idx < max_pages:
+                    indices.append(idx)
+        return indices if indices else list(range(max_pages))
+    except:
+        return list(range(max_pages))
+
+def extract_pdf_images(pdf_bytes: bytes, pages: str = "all") -> tuple[bool, bytes | str]:
     '''Extracts all images and zips them.'''
     try:
         import fitz
@@ -14,7 +29,8 @@ def extract_pdf_images(pdf_bytes: bytes) -> tuple[bool, bytes | str]:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             count = 0
-            for page_index in range(len(doc)):
+            page_indices = parse_pages(pages, len(doc))
+            for page_index in page_indices:
                 page = doc[page_index]
                 image_list = page.get_images()
                 
@@ -38,8 +54,8 @@ def extract_pdf_images(pdf_bytes: bytes) -> tuple[bool, bytes | str]:
         return False, f"Extract images failed: {str(e)}"
 
 
-def pdf_to_image(pdf_bytes: bytes, dpi: int = 150) -> tuple[bool, bytes | str]:
-    '''Converts each page to a PNG and zips them. If 1 page, returns just PNG.'''
+def pdf_to_image(pdf_bytes: bytes, dpi: int = 150, pages: str = "all", fmt: str = "png") -> tuple[bool, bytes | str]:
+    '''Converts each page to an image and zips them. If 1 page selected, returns just image.'''
     try:
         import fitz
     except ImportError:
@@ -48,18 +64,19 @@ def pdf_to_image(pdf_bytes: bytes, dpi: int = 150) -> tuple[bool, bytes | str]:
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         
-        if len(doc) == 1:
-            pix = doc[0].get_pixmap(dpi=dpi)
+        page_indices = parse_pages(pages, len(doc))
+        if len(page_indices) == 1:
+            pix = doc[page_indices[0]].get_pixmap(dpi=dpi)
             doc.close()
-            return True, pix.tobytes("png")
+            return True, pix.tobytes(fmt)
             
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-            for page_index in range(len(doc)):
+            for page_index in page_indices:
                 page = doc[page_index]
                 pix = page.get_pixmap(dpi=dpi)
-                filename = f"page_{page_index+1}.png"
-                zip_file.writestr(filename, pix.tobytes("png"))
+                filename = f"page_{page_index+1}.{fmt}"
+                zip_file.writestr(filename, pix.tobytes(fmt))
                 
         doc.close()
         return True, zip_buffer.getvalue()

@@ -14,7 +14,7 @@ export default function CategoryPage() {
   if (!category) return null;
 
   return (
-    <div className="p-8 w-full animate-slide-up">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title={category.title} subtitle={category.description || "Select a tool from the grid below to get started"} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-slide-up">

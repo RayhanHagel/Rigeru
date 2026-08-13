@@ -251,28 +251,28 @@ export default function DictationPage() {
       <div className="flex flex-col gap-6 animate-slide-up">
         
         {/* Recorder */}
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-6 flex flex-col items-center justify-center shadow-xl backdrop-blur-sm shrink-0">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 flex flex-col items-center justify-center shadow-xl backdrop-blur-sm shrink-0">
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isUploading}
-              className={`relative group w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl ${
+              className={`relative group w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
                 isRecording 
                   ? "bg-red-500 hover:bg-red-600 shadow-red-500/30" 
-                  : "bg-zinc-800 hover:bg-zinc-700 hover:scale-105 border border-white/10"
+                  : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:scale-105"
               } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {isRecording ? (
                 <>
                   <div className="absolute inset-0 rounded-full animate-ping bg-red-500/50"></div>
-                  <Icon name="stop" className="text-white fill-white z-10" size={32} />
+                  <Icon name="stop" className="text-[var(--theme-heading)] fill-[var(--theme-heading)] z-10" size={32} />
                 </>
               ) : isUploading ? (
-                <Icon name="progress_activity" className="text-zinc-300 animate-spin" size={32} />
+                <Icon name="progress_activity" className="text-[var(--theme-text)] animate-spin" size={32} />
               ) : (
-                <Icon name="mic" className="text-zinc-300" size={36} />
+                <Icon name="mic" className="text-[var(--theme-text)]" size={36} />
               )}
             </button>
-            <p className="mt-4 text-center text-sm text-zinc-400 font-medium">
+            <p className="mt-4 text-center text-sm text-[var(--theme-text)] font-medium">
               {isRecording 
                 ? "Recording... Click to stop & save" 
                 : isUploading 
@@ -282,35 +282,36 @@ export default function DictationPage() {
           </div>
 
         {/* Dictation List */}
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl flex flex-col shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className="p-4 border-b border-white/5 bg-zinc-950/50 space-y-3 shrink-0">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl flex flex-col shadow-xl backdrop-blur-sm overflow-hidden">
+            <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-bg)] space-y-3 shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-zinc-200">Saved Dictations</h3>
+                <h3 className="font-bold text-[var(--theme-heading)]">Saved Dictations</h3>
                 <Button 
                   variant="primary" 
                   size="sm" 
                   onClick={handleBatchTranscribe}
                   disabled={batchTranscribing || dictations.filter(d => !d.is_transcribed).length === 0}
                   icon={batchTranscribing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="description" size={16} />}
+                  className="!text-[var(--theme-bg)] font-bold shadow-md"
                 >
                   {batchTranscribing ? "Transcribing" : "Batch Transcribe"}
                 </Button>
               </div>
               <div className="relative">
-                <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
                 <input 
                   type="text" 
                   placeholder="Search dictations..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50"
+                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg pl-9 pr-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-amber-500/50"
                 />
               </div>
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
+            <div className="max-h-[400px] min-h-[250px] flex flex-col overflow-y-auto p-2 space-y-2 custom-scrollbar">
               {filteredDictations.length === 0 ? (
-                <div className="text-center text-zinc-500 text-sm mt-8">No dictations found.</div>
+                <div className="flex-1 flex items-center justify-center text-center text-[var(--theme-text)] text-sm">No dictations found.</div>
               ) : (
                 filteredDictations.map(item => (
                   <div 
@@ -319,7 +320,7 @@ export default function DictationPage() {
                     className={`p-3 rounded-lg border transition-all cursor-pointer group ${
                       selectedId === item.id 
                         ? "bg-amber-500/10 border-amber-500/30" 
-                        : "bg-zinc-950/50 border-white/5 hover:border-white/10"
+                        : "bg-[var(--theme-bg)] border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-sm"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -331,18 +332,18 @@ export default function DictationPage() {
                               value={editNameValue}
                               onChange={e => setEditNameValue(e.target.value)}
                               onKeyDown={e => e.key === 'Enter' && handleRename(item.id)}
-                              className="bg-zinc-900 border border-white/20 rounded px-2 py-1 text-sm text-white w-full"
+                              className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded px-2 py-1 text-sm text-[var(--theme-heading)] w-full"
                               autoFocus
                             />
-                            <button onClick={() => handleRename(item.id)} className="p-1 text-emerald-400 hover:bg-zinc-800 rounded">
+                            <button onClick={() => handleRename(item.id)} className="p-1 text-emerald-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
                               <Icon name="check" size={14} />
                             </button>
-                            <button onClick={() => setEditingNameId(null)} className="p-1 text-red-400 hover:bg-zinc-800 rounded">
+                            <button onClick={() => setEditingNameId(null)} className="p-1 text-red-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
                               <Icon name="close" size={14} />
                             </button>
                           </div>
                         ) : (
-                          <h4 className="font-medium text-zinc-200 text-sm truncate flex items-center gap-2">
+                          <h4 className="font-bold text-[var(--theme-heading)] text-sm truncate flex items-center gap-2">
                             {item.name}
                             <button 
                               onClick={(e) => {
@@ -350,14 +351,14 @@ export default function DictationPage() {
                                 setEditNameValue(item.name);
                                 setEditingNameId(item.id);
                               }}
-                              className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-300 transition-opacity"
+                              className="opacity-0 group-hover:opacity-100 text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-opacity"
                             >
                               <Icon name="edit" size={12} />
                             </button>
                           </h4>
                         )}
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-[var(--theme-text)]">
                             {new Date(item.date * 1000).toLocaleString()}
                           </span>
                           {item.is_transcribed ? (
@@ -372,7 +373,7 @@ export default function DictationPage() {
                         <button 
                           onClick={(e) => togglePlay(item.id, e)}
                           className={`p-1.5 rounded-md transition-colors ${
-                            playingId === item.id ? "bg-amber-500 text-amber-950" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                            playingId === item.id ? "bg-amber-500 text-amber-950" : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)]"
                           }`}
                         >
                           {playingId === item.id ? <Icon name="pause" size={14} className="fill-current" /> : <Icon name="play_arrow" size={14} className="fill-current" />}
@@ -380,7 +381,7 @@ export default function DictationPage() {
                         {!item.is_transcribed && (
                           <button 
                             onClick={async (e) => { e.stopPropagation(); await transcribeItem(item.id); }}
-                            className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 transition-colors"
+                            className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-amber-400 hover:text-amber-400 transition-colors"
                             title="Transcribe now"
                           >
                             <Icon name="description" size={14} />
@@ -388,14 +389,14 @@ export default function DictationPage() {
                         )}
                         <button 
                           onClick={(e) => handleClean(item.id, e)}
-                          className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-primary/20 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)] transition-colors opacity-0 group-hover:opacity-100"
                           title="Clean Background Noise"
                         >
                           {cleaningId === item.id ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="auto_fix_high" size={14} />}
                         </button>
                         <button 
                           onClick={(e) => handleDelete(item.id, e)}
-                          className="p-1.5 rounded-md bg-zinc-800 text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-red-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                         >
                           <Icon name="delete" size={14} />
                         </button>
@@ -409,13 +410,13 @@ export default function DictationPage() {
 
         {/* Viewer */}
         <div className="w-full">
-          <div className="bg-zinc-900/50 border border-white/5 rounded-xl flex flex-col min-h-[400px] shadow-xl backdrop-blur-sm overflow-hidden">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl flex flex-col min-h-[400px] shadow-xl backdrop-blur-sm overflow-hidden">
             {selectedItem ? (
               <>
-                <div className="flex items-center justify-between p-4 border-b border-white/5 bg-zinc-950/50">
+                <div className="flex items-center justify-between p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-bg)]">
                   <div>
-                    <h3 className="font-medium text-zinc-200">{selectedItem.name}</h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">Transcript Viewer</p>
+                    <h3 className="font-bold text-[var(--theme-heading)]">{selectedItem.name}</h3>
+                    <p className="text-xs text-[var(--theme-text)] mt-0.5 font-bold">Transcript Viewer</p>
                   </div>
                   <Button 
                     variant="secondary" 
@@ -428,9 +429,9 @@ export default function DictationPage() {
                   </Button>
                 </div>
                 
-                <div className="flex-1 p-6 overflow-y-auto bg-zinc-950/30 custom-scrollbar">
+                <div className="flex-1 p-6 overflow-y-auto bg-[var(--theme-bg)] custom-scrollbar">
                   {!selectedItem.is_transcribed ? (
-                    <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+                    <div className="flex flex-col items-center justify-center h-full text-[var(--theme-text)]">
                       {batchTranscribing ? (
                         <>
                           <Icon name="progress_activity" className="animate-spin mb-4" size={32} />
@@ -438,7 +439,7 @@ export default function DictationPage() {
                         </>
                       ) : (
                         <>
-                          <Icon name="description" size={48} className="mb-4 text-zinc-800" />
+                          <Icon name="description" size={48} className="mb-4 text-[var(--theme-text)]" />
                           <p>This dictation hasn't been transcribed yet.</p>
                           <Button 
                             variant="primary" 
@@ -451,22 +452,22 @@ export default function DictationPage() {
                       )}
                     </div>
                   ) : selectedItem.transcript ? (
-                    <div className="text-zinc-200 text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                    <div className="text-[var(--theme-text)] text-lg leading-relaxed whitespace-pre-wrap font-medium">
                       {selectedItem.transcript}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-zinc-600 italic">
+                    <div className="flex items-center justify-center h-full text-[var(--theme-text)] italic">
                       Transcript is empty.
                     </div>
                   )}
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center">
-                <Icon name="description" size={64} className="mb-6 text-zinc-800" />
-                <h3 className="text-xl font-medium text-zinc-300 mb-2">No Dictation Selected</h3>
-                <p className="text-zinc-500 max-w-sm">
-                  Select a dictation from the list on the left to view its transcript, or record a new one.
+              <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] text-[var(--theme-text)] p-8 text-center opacity-70">
+                <Icon name="description" size={64} className="mb-6 text-[var(--theme-text)] opacity-50" />
+                <h3 className="text-xl font-bold text-[var(--theme-heading)] mb-2">No Dictation Selected</h3>
+                <p className="text-[var(--theme-text)] max-w-sm">
+                  Select a dictation from the list above to view its transcript, or record a new one.
                 </p>
               </div>
             )}

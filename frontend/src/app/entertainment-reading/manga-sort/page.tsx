@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/ui/Header";
 import { Icon } from "@/lib/utils";
 
 type MangaData = {
@@ -62,28 +63,28 @@ function SortableItem({ id, item }: { id: string, item: MangaData }) {
     <div 
       ref={setNodeRef} 
       style={style} 
-      className={`bg-zinc-900/80 border rounded-xl overflow-hidden flex flex-col transition-shadow ${isDragging ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.4)] opacity-80' : 'border-white/5 shadow-md'}`}
+      className={`bg-[var(--theme-ui-bg)] backdrop-blur-md border rounded-xl overflow-hidden flex flex-col transition-shadow ${isDragging ? 'border-[var(--theme-heading)] shadow-[0_0_15px_rgba(var(--theme-heading),0.4)] opacity-80' : 'border-[var(--theme-ui-border)] shadow-sm hover:shadow-md'}`}
     >
       <div 
         {...attributes} 
         {...listeners}
-        className="bg-zinc-950 p-2 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-white/5 group"
+        className="bg-[var(--theme-bg)] p-2 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-[var(--theme-ui-border)] group"
       >
-        <span className="text-xs font-semibold text-zinc-400 truncate pr-2" title={cleanTitle}>{cleanTitle}</span>
-        <Icon name="drag_handle" size={14} className="text-zinc-600 group-hover:text-primary" />
+        <span className="text-xs font-semibold text-[var(--theme-text)] truncate pr-2" title={cleanTitle}>{cleanTitle}</span>
+        <Icon name="drag_handle" size={14} className="text-[var(--theme-text)] group-hover:text-[var(--theme-heading)]" />
       </div>
       
       <div className="p-3 flex gap-3 flex-1">
-        <div className="w-16 h-24 shrink-0 rounded-md overflow-hidden bg-zinc-950 border border-white/5 relative">
+        <div className="w-16 h-24 shrink-0 rounded-md overflow-hidden bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] relative">
            {/* eslint-disable-next-line @next/next/no-img-element */}
            <img src={coverUrl} alt={cleanTitle} className="w-full h-full object-cover" />
         </div>
         <div className="flex flex-col justify-center">
-           <div className="text-xs text-zinc-500 font-mono mb-1">{item.type}</div>
-           <div className="text-sm font-bold text-white mb-1">
-             ★ {item.rating}
+           <div className="text-xs text-[var(--theme-text)] font-mono mb-1">{item.type}</div>
+           <div className="text-sm font-bold text-[var(--theme-heading)] mb-1">
+             â˜… {item.rating}
            </div>
-           <div className="text-xs text-primary bg-primary/10 px-2 py-1 rounded-md w-fit">
+           <div className="text-xs text-[var(--theme-heading)] bg-[var(--theme-heading)]/10 px-2 py-1 rounded-md w-fit">
              Ch. {item.chapter_read || 0} / {item.chapters_amount}
            </div>
         </div>
@@ -148,32 +149,29 @@ export default function MangaSortPage() {
   };
 
   if (isLoading) {
-    return <div className="p-10 text-white">Loading library</div>;
+    return <div className="p-10 text-[var(--theme-heading)]">Loading library</div>;
   }
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Sort Library</h1>
-            <p className="text-zinc-400 text-sm">Drag and drop manga cards to reorder your library.</p>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header 
+        title="Sort Library"
+        subtitle="Drag and drop manga cards to reorder your library."
+        actions={
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")} icon={<Icon name="arrow_back" size={16} />}>
+              Back to Library
+            </Button>
+            <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Icon name="save" size={16} />}>
+              Save Order
+            </Button>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")} icon={<Icon name="arrow_back" size={16} />}>
-            Back to Library
-          </Button>
-          <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Icon name="save" size={16} />}>
-            Save Order
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {items.length === 0 ? (
-        <div className="bg-zinc-900/50 border border-white/5 rounded-xl p-10 text-center">
-          <p className="text-zinc-400">Your library is empty. Add some manga first.</p>
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-10 text-center">
+          <p className="text-[var(--theme-text)]">Your library is empty. Add some manga first.</p>
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -189,3 +187,4 @@ export default function MangaSortPage() {
     </div>
   );
 }
+

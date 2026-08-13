@@ -80,8 +80,8 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
       {name && <span className="text-xs font-mono text-zinc-400 px-2 shrink-0 select-none">{name}:</span>}
       {typeof value === 'boolean' ? (
         <select value={value ? "true" : "false"} onChange={(e) => onChange(e.target.value === "true")} className="bg-zinc-950 text-emerald-400 text-xs p-1.5 outline-none rounded border border-white/5 flex-1 font-mono cursor-pointer">
-          <option value="true">true</option>
-          <option value="false">false</option>
+          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="true">true</option>
+          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="false">false</option>
         </select>
       ) : typeof value === 'number' ? (
         <input type="number" value={value} onChange={(e) => onChange(Number(e.target.value))} className="bg-transparent text-secondary text-xs p-1.5 outline-none flex-1 font-mono w-full" />

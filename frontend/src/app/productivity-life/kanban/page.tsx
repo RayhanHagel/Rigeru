@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
 
@@ -119,21 +120,18 @@ export default function KanbanPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Kanban Board</h1>
-            <p className="text-zinc-400 text-sm font-medium">Organize your tasks and sync them with Google Calendar.</p>
-          </div>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <Header 
+          title="Kanban Board" 
+          subtitle="Organize your tasks and sync them with Google Calendar." 
+        />
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
           <Button 
             variant="secondary" 
             onClick={handleSyncCalendar} 
             disabled={syncing}
-            icon={syncing ? <Icon name="refresh" size={18} className="animate-spin text-primary" /> : <Icon name="calendar_today" size={18} className="text-primary" />}
+            icon={syncing ? <Icon name="refresh" size={18} className="animate-spin text-[var(--theme-heading)]" /> : <Icon name="calendar_today" size={18} className="text-[var(--theme-heading)]" />}
           >
             {syncing ? "Syncing" : "Sync to Calendar"}
           </Button>
@@ -148,16 +146,16 @@ export default function KanbanPage() {
       )}
 
       {loading ? (
-        <div className="h-64 flex items-center justify-center text-zinc-500">Loading tasks</div>
+        <div className="h-64 flex items-center justify-center text-[var(--theme-text)]">Loading tasks</div>
       ) : (
-        <div className="flex flex-col gap-6 animate-slide-up w-full">
+        <div className="flex flex-col md:flex-row gap-6 animate-slide-up w-full">
           {columns.map(col => (
-            <div key={col.id} className={`rounded-2xl border ${col.color} p-4 flex flex-col min-h-[300px]`}>
-              <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                <h3 className={`text-lg font-semibold ${col.textColor}`}>{col.title} <span className="text-zinc-500 text-sm ml-2">({tasks.filter(t => t.status === col.id).length})</span></h3>
+            <div key={col.id} className={`rounded-2xl border ${col.color} p-4 flex flex-col min-h-[300px] flex-1 bg-[var(--theme-ui-bg)] backdrop-blur-md shadow-sm`}>
+              <div className="flex items-center justify-between mb-4 border-b border-[var(--theme-ui-border)] pb-2">
+                <h3 className={`text-lg font-bold ${col.textColor}`}>{col.title} <span className="text-[var(--theme-text)] text-sm ml-2">({tasks.filter(t => t.status === col.id).length})</span></h3>
                 <button 
                   onClick={() => setIsAdding(col.id)}
-                  className="p-1.5 hover:bg-white/10 rounded transition-colors text-zinc-400 hover:text-white"
+                  className="p-1.5 hover:bg-[var(--theme-bg)] rounded transition-colors text-[var(--theme-text)] hover:text-[var(--theme-heading)]"
                 >
                   <Icon name="add" size={18} />
                 </button>
@@ -165,38 +163,37 @@ export default function KanbanPage() {
               
               <div className="flex flex-col gap-3">
                 {isAdding === col.id && (
-                  <div className="bg-zinc-900 border border-white/10 rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
                     <input 
                       autoFocus
                       type="text" 
                       placeholder="Task title..."
                       value={newTaskTitle}
                       onChange={e => setNewTaskTitle(e.target.value)}
-                      className="w-full bg-transparent text-sm text-white focus:outline-none mb-3"
+                      className="w-full bg-transparent text-sm text-[var(--theme-heading)] focus:outline-none mb-3 placeholder-[var(--theme-text)]"
                     />
-                    <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                    <div className="flex items-center justify-between border-t border-[var(--theme-ui-border)] pt-3">
                       <input 
                         type="date" 
                         value={newTaskDate}
                         onChange={e => setNewTaskDate(e.target.value)}
-                        className="bg-zinc-950 text-xs text-zinc-400 p-1 rounded border border-white/5 outline-none"
-                        style={{ colorScheme: 'dark' }}
+                        className="bg-[var(--theme-ui-bg)] text-xs text-[var(--theme-text)] p-1 rounded border border-[var(--theme-ui-border)] outline-none"
                       />
                       <div className="flex gap-2">
-                        <button onClick={() => setIsAdding(null)} className="text-xs text-zinc-500 hover:text-zinc-300">Cancel</button>
-                        <button onClick={() => handleCreateTask(col.id)} className={`text-xs font-medium ${col.textColor}`}>Add</button>
+                        <button onClick={() => setIsAdding(null)} className="text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)]">Cancel</button>
+                        <button onClick={() => handleCreateTask(col.id)} className={`text-xs font-bold ${col.textColor}`}>Add</button>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {tasks.filter(t => t.status === col.id).map(task => (
-                  <div key={task.id} className="group bg-zinc-900/80 border border-white/10 hover:border-white/20 rounded-xl p-4 shadow-sm transition-all relative">
+                  <div key={task.id} className="group bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] rounded-xl p-4 shadow-sm transition-all duration-300 relative">
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-zinc-200">{task.title}</h4>
+                        <h4 className="text-sm font-bold text-[var(--theme-heading)]">{task.title}</h4>
                         {task.due_date && (
-                          <div className="flex items-center gap-1.5 mt-3 text-xs text-zinc-500 bg-zinc-950 inline-flex px-2 py-1 rounded-md border border-white/5">
+                          <div className="flex items-center gap-1.5 mt-3 text-xs text-[var(--theme-text)] bg-[var(--theme-ui-bg)] inline-flex px-2 py-1 rounded-md border border-[var(--theme-ui-border)]">
                             <Icon name="calendar_today" size={12} />
                             {task.due_date}
                           </div>
@@ -208,13 +205,13 @@ export default function KanbanPage() {
                       <select 
                         value={task.status} 
                         onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                        className="text-xs bg-zinc-800 text-zinc-300 border-none outline-none rounded px-2 py-1 cursor-pointer"
+                        className="text-xs bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] border border-[var(--theme-ui-border)] outline-none rounded px-2 py-1 cursor-pointer focus:border-[var(--theme-heading)]"
                       >
-                        <option value="todo">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="done">Done</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="todo">To Do</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="in_progress">In Progress</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="done">Done</option>
                       </select>
-                      <button onClick={() => handleDeleteTask(task.id)} className="text-zinc-500 hover:text-red-400 px-2 py-1">✕</button>
+                      <button onClick={() => handleDeleteTask(task.id)} className="text-[var(--theme-text)] hover:text-red-400 px-2 py-1 transition-colors">✕</button>
                     </div>
                   </div>
                 ))}

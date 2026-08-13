@@ -71,7 +71,7 @@ export default function FaceBlurPage() {
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [useExtrapolation, setUseExtrapolation] = useState(true);
   const [activeTab, setActiveTab] = useState("Image");
-  
+
   const streamImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -304,31 +304,31 @@ export default function FaceBlurPage() {
                 <SectionHeader title="Configuration" className="mt-8" />
                 {/* Unified Symmetrical Grid */}
                 <div className={`grid grid-cols-1 ${activeTab === "Video" ? "md:grid-cols-2" : ""} gap-6 mt-4`}>
-                  
+
                   {/* CARD 1: Blur Appearance (Applies to both Image and Video) */}
                   <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                    <div 
+                    <div
                       className="flex items-center gap-2 font-medium pb-2 border-b"
                       style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                     >
                       <h3 className="text-[var(--theme-heading)]">Blur Appearance</h3>
                     </div>
-                    
+
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium block" style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>
                         Blur Style
                       </label>
                       <select value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
                         className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                        style={{ 
+                        style={{
                           backgroundColor: "var(--theme-bg)",
                           borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                         }}
                         onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                         onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                       >
-                        <option>Gaussian</option>
-                        <option>Pixelate</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Gaussian</option>
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Pixelate</option>
                       </select>
                     </div>
 
@@ -349,7 +349,7 @@ export default function FaceBlurPage() {
                   {/* CARD 2: Output Format (Video Only) */}
                   {activeTab === "Video" && (
                     <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                      <div 
+                      <div
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
@@ -362,15 +362,15 @@ export default function FaceBlurPage() {
                         </label>
                         <select value={outMethod} onChange={e => setOutMethod(e.target.value)}
                           className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                          style={{ 
+                          style={{
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                           onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                         >
-                          <option>Re-encode (Hard Blur)</option>
-                          <option>Subtitle Overlay (.ass)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Re-encode (Hard Blur)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Subtitle Overlay (.ass)</option>
                         </select>
                       </div>
 
@@ -380,14 +380,14 @@ export default function FaceBlurPage() {
                         </label>
                         <select value={chosenEncoder} onChange={e => setChosenEncoder(e.target.value)}
                           className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                          style={{ 
+                          style={{
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                           onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                         >
-                          {encoders.map(e => <option key={e} value={e}>{e}</option>)}
+                          {encoders.map(e => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={e} value={e}>{e}</option>)}
                         </select>
                       </div>
                     </div>
@@ -396,7 +396,7 @@ export default function FaceBlurPage() {
                   {/* CARD 3: Detection & Clustering (Video Only) */}
                   {activeTab === "Video" && (
                     <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                      <div 
+                      <div
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
@@ -409,15 +409,15 @@ export default function FaceBlurPage() {
                         </label>
                         <select value={clusterMethod} onChange={e => setClusterMethod(e.target.value)}
                           className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                          style={{ 
+                          style={{
                             backgroundColor: "var(--theme-bg)",
                             borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                           onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                         >
-                          <option>Global (Immich-style, High Accuracy)</option>
-                          <option>Sequential (Fast, Low RAM)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Global (Immich-style, High Accuracy)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Sequential (Fast, Low RAM)</option>
                         </select>
                       </div>
 
@@ -453,7 +453,7 @@ export default function FaceBlurPage() {
                   {/* CARD 4: Scan Timing (Video Only) */}
                   {activeTab === "Video" && (
                     <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                      <div 
+                      <div
                         className="flex items-center gap-2 font-medium pb-2 border-b"
                         style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                       >
@@ -508,7 +508,7 @@ export default function FaceBlurPage() {
                   isLoading={isScanning}
                   disabled={!mediaHash}
                   className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-500 border-none mt-4 border-none !shadow-none !ring-0 !outline-none transition-colors"
-                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
+                  style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isScanning ? `Scanning ${activeTab} (This may take a while)...` : "Scan & Detect Faces"}
                 </Button>
               </div>
@@ -604,7 +604,7 @@ export default function FaceBlurPage() {
                   onClick={runProcess}
                   disabled={isProcessing}
                   className="w-full h-12 text-lg bg-green-600 hover:bg-green-500 border-none mt-4 border-none !shadow-none !ring-0 !outline-none transition-colors"
-                 style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
+                  style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isProcessing ? `Processing ${activeTab} (This may take a while)...` : `Process ${activeTab} & Apply Blur`}
                 </Button>
               )}
@@ -630,7 +630,7 @@ export default function FaceBlurPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 {/* CARD 1: Camera Source */}
                 <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                  <div 
+                  <div
                     className="flex items-center gap-2 font-medium pb-2 border-b"
                     style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                   >
@@ -644,15 +644,15 @@ export default function FaceBlurPage() {
                     <select value={cameraIndex}
                       onChange={(e) => setCameraIndex(Number(e.target.value))}
                       className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                      style={{ 
+                      style={{
                         backgroundColor: "var(--theme-bg)",
                         borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                       }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
-                      {cameras.length === 0 ? <option value={0}>Camera 0</option> : cameras.map(c => (
-                        <option key={c} value={c}>Camera {c}</option>
+                      {cameras.length === 0 ? <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={0}>Camera 0</option> : cameras.map(c => (
+                        <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>Camera {c}</option>
                       ))}
                     </select>
                   </div>
@@ -660,7 +660,7 @@ export default function FaceBlurPage() {
 
                 {/* CARD 2: Blur Appearance */}
                 <div className="p-5 rounded-xl space-y-5 shadow-sm border border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] backdrop-blur-md">
-                  <div 
+                  <div
                     className="flex items-center gap-2 font-medium pb-2 border-b"
                     style={{ borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)" }}
                   >
@@ -673,15 +673,15 @@ export default function FaceBlurPage() {
                     </label>
                     <select value={blurStyle} onChange={e => setBlurStyle(e.target.value)}
                       className="w-full border rounded-md py-2 px-3 text-[var(--theme-heading)] outline-none text-sm transition-colors"
-                      style={{ 
+                      style={{
                         backgroundColor: "var(--theme-bg)",
                         borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
                       }}
                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     >
-                      <option>Gaussian</option>
-                      <option>Pixelate</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Gaussian</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Pixelate</option>
                     </select>
                   </div>
 
@@ -697,7 +697,7 @@ export default function FaceBlurPage() {
                       style={{ accentColor: "var(--theme-heading)" }}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center text-sm font-medium">
                       <label style={{ color: "color-mix(in srgb, var(--theme-heading) 80%, white)" }}>AI Inference Rate (FPS)</label>
@@ -737,8 +737,8 @@ export default function FaceBlurPage() {
                 variant="primary"
                 onClick={toggleWebcam}
                 className={`w-full h-12 text-lg border-none !shadow-none !ring-0 !outline-none mt-4 transition-colors ${webcamActive ? 'bg-red-600 hover:bg-red-500 text-[var(--theme-heading)]' : ''}`}
-                style={!webcamActive 
-                  ? { backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" } 
+                style={!webcamActive
+                  ? { backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }
                   : { boxShadow: "none" }
                 }
               >
@@ -768,10 +768,10 @@ export default function FaceBlurPage() {
                   />
                 )}
               </div>
-              
+
               {streamUrl && (
-                <VirtualCameraBroadcast 
-                  sourceRef={streamImageRef} 
+                <VirtualCameraBroadcast
+                  sourceRef={streamImageRef}
                   isStreamActive={webcamActive}
                   mode="backend"
                 />

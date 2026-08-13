@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { ModernTabs, ModernTabContent } from "@/components/ui/ModernTabs";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/utils";
+import { Header } from "@/components/ui/Header";
 
 type ServiceInfo = {
   "Service Name": string;
@@ -47,7 +48,6 @@ export default function ServicesPage() {
       let valA = a[sortColumn] || "";
       let valB = b[sortColumn] || "";
       
-      // If sorting by Status, running comes first when asc
       if (sortColumn === "Status") {
         const isRunningA = valA.toLowerCase() === "running";
         const isRunningB = valB.toLowerCase() === "running";
@@ -64,7 +64,7 @@ export default function ServicesPage() {
   const fetchServices = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/services/list");
+      const res = await fetch("/api/system/services/list");
       const data = await res.json();
       setStartup(data.startup || []);
       setMsServices(data.ms || []);
@@ -83,7 +83,7 @@ export default function ServicesPage() {
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
-      await fetch("http://127.0.0.1:8000/api/system/services/refresh", { method: "POST" });
+      await fetch("/api/system/services/refresh", { method: "POST" });
       await fetchServices();
     } catch (e: any) {
       console.error(e);
@@ -94,14 +94,14 @@ export default function ServicesPage() {
   const renderServiceTable = (services: ServiceInfo[]) => {
     const sorted = getSortedServices(services);
     return (
-      <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden max-h-[600px] overflow-y-auto mt-4">
+      <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden max-h-[600px] overflow-y-auto mt-4 custom-scrollbar">
         <table className="w-full text-sm text-left">
-          <thead className="bg-zinc-900 text-zinc-400 sticky top-0 shadow-sm z-10">
+          <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] sticky top-0 shadow-sm z-10 border-b border-[var(--theme-ui-border)]">
             <tr>
               {["Display Name", "Service Name", "Status", "Start Type", "Purpose (Description)"].map((col) => (
                 <th 
                   key={col}
-                  className="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors select-none"
+                  className="px-4 py-3 font-medium cursor-pointer hover:text-[var(--theme-heading)] transition-colors select-none"
                   onClick={() => handleSort(col as SortColumn)}
                 >
                   <div className="flex items-center gap-1">
@@ -114,26 +114,26 @@ export default function ServicesPage() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-[var(--theme-ui-border)]">
             {sorted.map((s, i) => {
             const isRunning = s.Status.toLowerCase() === 'running';
             return (
-              <tr key={i} className="hover:bg-zinc-800/50">
-                <td className="px-4 py-3 font-medium text-white">{s["Display Name"]}</td>
-                <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{s["Service Name"]}</td>
+              <tr key={i} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                <td className="px-4 py-3 font-bold text-[var(--theme-heading)]">{s["Display Name"]}</td>
+                <td className="px-4 py-3 text-[var(--theme-text)] font-mono text-xs">{s["Service Name"]}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${isRunning ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                  <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${isRunning ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-[var(--theme-ui-bg)] text-[var(--theme-text)] border border-[var(--theme-ui-border)]'}`}>
                     {s.Status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-zinc-300">{s["Start Type"]}</td>
-                <td className="px-4 py-3 text-zinc-500 text-xs truncate max-w-xs" title={s["Purpose (Description)"]}>{s["Purpose (Description)"]}</td>
+                <td className="px-4 py-3 text-[var(--theme-text)]">{s["Start Type"]}</td>
+                <td className="px-4 py-3 text-[var(--theme-text)] opacity-70 text-xs truncate max-w-xs" title={s["Purpose (Description)"]}>{s["Purpose (Description)"]}</td>
               </tr>
             );
           })}
             {sorted.length === 0 && !isLoading && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-[var(--theme-text)]">
                   No services found.
                 </td>
               </tr>
@@ -146,79 +146,72 @@ export default function ServicesPage() {
 
   return (
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Services & Startup</h1>
-            <p className="text-zinc-400 text-sm font-medium">View background Windows services and applications that start with your PC.</p>
-          </div>
-        </div>
-        <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
-          Refresh Lists
-        </Button>
       
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <Header title="Services & Startup" subtitle="View background Windows services and applications that start with your PC." />
+        <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
+          <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
+            Refresh Lists
+          </Button>
+          <div className="w-px h-6 bg-[var(--theme-ui-border)] mx-2" />
           <ModernTabs 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        tabs={[
-          { id: 'startup', label: `Startup Apps (${startup.length})`, icon: ':material/bolt:' },
-          { id: 'nonms', label: `Non-MS Services (${nonMsServices.length})`, icon: ':material/dns:' },
-          { id: 'ms', label: `MS Services (${msServices.length})`, icon: ':material/shield:' }
-        ]} 
-      />
+            activeTab={activeTab}
+            setActiveTab={setActiveTab as (id: string) => void}
+            tabs={[
+              { id: "startup", label: "Startup Apps" },
+              { id: "non-ms", label: "3rd Party Services" },
+              { id: "ms", label: "Windows Services" }
+            ]}
+          />
         </div>
       </div>
 
-      
-      
-      <div className="flex-1 min-h-0 flex flex-col mt-4">
-        <ModernTabContent activeTab={activeTab}>
-          {activeTab === 'startup' && (
-          <div className="bg-zinc-950 border border-white/10 rounded-xl overflow-hidden mt-4">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-zinc-900 text-zinc-400">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Scope</th>
-                  <th className="px-4 py-3 font-medium">Path</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {startup.map((s, i) => (
-                  <tr key={i} className="hover:bg-zinc-800/50">
-                    <td className="px-4 py-3 font-medium text-white">{s.Name}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${s.Scope === 'System' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
-                        {s.Scope}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{s.Path}</td>
-                  </tr>
-                ))}
-                {startup.length === 0 && !isLoading && (
-                  <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-zinc-500">
-                      No startup apps found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          )}
-          {activeTab === 'nonms' && (
-            <div>
-              {renderServiceTable(nonMsServices)}
-            </div>
-          )}
-          {activeTab === 'ms' && (
-            <div>
-              {renderServiceTable(msServices)}
-            </div>
-          )}
-        </ModernTabContent>
+      <div className="flex flex-col gap-6 animate-slide-up w-full flex-1">
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 shadow-sm flex-1">
+          <ModernTabContent activeTab={activeTab}>
+            {activeTab === 'startup' && (
+              <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl overflow-hidden max-h-[600px] overflow-y-auto mt-4 custom-scrollbar">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] sticky top-0 shadow-sm z-10 border-b border-[var(--theme-ui-border)]">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Name</th>
+                      <th className="px-4 py-3 font-medium">Path</th>
+                      <th className="px-4 py-3 font-medium">Scope</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--theme-ui-border)]">
+                    {startup.map((s, i) => (
+                      <tr key={i} className="hover:bg-[var(--theme-ui-bg)] transition-colors">
+                        <td className="px-4 py-3 font-bold text-[var(--theme-heading)]">{s.Name}</td>
+                        <td className="px-4 py-3 text-[var(--theme-text)] font-mono text-xs max-w-sm truncate" title={s.Path}>{s.Path}</td>
+                        <td className="px-4 py-3 text-[var(--theme-text)] text-xs">{s.Scope}</td>
+                      </tr>
+                    ))}
+                    {startup.length === 0 && !isLoading && (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-8 text-center text-[var(--theme-text)]">
+                          No startup apps found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {activeTab === 'non-ms' && (
+              <div>
+                {renderServiceTable(nonMsServices)}
+              </div>
+            )}
+
+            {activeTab === 'ms' && (
+              <div>
+                {renderServiceTable(msServices)}
+              </div>
+            )}
+          </ModernTabContent>
+        </div>
       </div>
     </div>
   );

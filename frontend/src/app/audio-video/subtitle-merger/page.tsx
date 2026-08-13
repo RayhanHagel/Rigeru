@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 
 import { Header } from "@/components/ui/Header";
-import { Container } from "@/components/ui/Container";
-import { Columns, Column } from "@/components/ui/Columns";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Button } from "@/components/ui/Button";
 import { DirectUploadBox } from "@/components/ui/DirectUploadBox";
 import { Icon } from "@/lib/utils";
@@ -17,8 +16,6 @@ export default function SubtitleMergerPage() {
   const [isMerging, setIsMerging] = useState(false);
   const [mergeError, setMergeError] = useState("");
   const [resultUrl, setResultUrl] = useState<string | null>(null);
-
-
 
   const runMerge = async () => {
     if (!baseFileHash || !overlayFileHash) {
@@ -66,15 +63,16 @@ export default function SubtitleMergerPage() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="ASS Subtitle Merger" subtitle="Combine two .ass subtitle files together. Automatically handles coordinate scaling." />
 
-      <Container title="Upload Subtitles" icon={<Icon name="description" className="text-secondary" size={20} />}>
+      <SectionHeader title="Upload Subtitles" />
+      <div className="flex flex-col gap-6 mt-4">
         <div className="space-y-6">
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="w-full">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300">1️⃣ Upload Base Subtitle (.ass)</label>
-                <p className="text-xs text-zinc-500 mb-2">Your main text subtitle. Its resolution will be kept.</p>
+                <label className="text-sm font-bold text-[var(--theme-heading)]">Upload Base Subtitle (.ass)</label>
+                <p className="text-xs text-[var(--theme-text)] mb-2">Your main text subtitle. Its resolution will be kept.</p>
                 {!baseFileHash ? (
-                  <div className="flex flex-col items-center justify-center w-full h-32 rounded-xl bg-zinc-900/50 transition-colors">
+                  <>
                     <DirectUploadBox 
                       accept=".ass"
                       label="Upload Base Subtitle"
@@ -89,15 +87,15 @@ export default function SubtitleMergerPage() {
                         setBaseFileName("");
                       }}
                     />
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between bg-[var(--theme-bg)] p-4 border border-[var(--theme-ui-border)] rounded-xl">
                     <div className="flex items-center gap-3">
-                      <Icon name="description" size={20} className="text-zinc-400" />
-                      <span className="text-zinc-200 font-medium truncate max-w-[200px]">{baseFileName}</span>
+                      <Icon name="description" size={20} className="text-[var(--theme-text)]" />
+                      <span className="text-[var(--theme-text)] font-bold truncate max-w-[200px]">{baseFileName}</span>
                     </div>
                     <button
-                      className="cursor-pointer text-sm font-medium text-secondary hover:text-indigo-300 bg-secondary/10 px-3 py-1.5 rounded-lg transition-colors"
+                      className="cursor-pointer text-sm font-medium text-[var(--theme-heading)] hover:text-opacity-80 bg-[var(--theme-heading)]/10 px-3 py-1.5 rounded-lg transition-colors"
                       onClick={() => {
                         setBaseFileHash(null);
                         setBaseFileName("");
@@ -112,10 +110,10 @@ export default function SubtitleMergerPage() {
 
             <div className="w-full">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300">2️⃣ Upload Overlay (.ass)</label>
-                <p className="text-xs text-zinc-500 mb-2">The subtitle you want to paste on top (e.g. Censor Boxes).</p>
+                <label className="text-sm font-bold text-[var(--theme-heading)]">Upload Overlay (.ass)</label>
+                <p className="text-xs text-[var(--theme-text)] mb-2">The subtitle you want to paste on top (e.g. Censor Boxes).</p>
                 {!overlayFileHash ? (
-                  <div className="flex flex-col items-center justify-center w-full h-32 rounded-xl bg-zinc-900/50 transition-colors">
+                  <>
                     <DirectUploadBox 
                       accept=".ass"
                       label="Upload Overlay"
@@ -130,15 +128,15 @@ export default function SubtitleMergerPage() {
                         setOverlayFileName("");
                       }}
                     />
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex items-center justify-between bg-zinc-950 p-4 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between bg-[var(--theme-bg)] p-4 border border-[var(--theme-ui-border)] rounded-xl">
                     <div className="flex items-center gap-3">
-                      <Icon name="description" size={20} className="text-zinc-400" />
-                      <span className="text-zinc-200 font-medium truncate max-w-[200px]">{overlayFileName}</span>
+                      <Icon name="description" size={20} className="text-[var(--theme-text)]" />
+                      <span className="text-[var(--theme-text)] font-bold truncate max-w-[200px]">{overlayFileName}</span>
                     </div>
                     <button
-                      className="cursor-pointer text-sm font-medium text-secondary hover:text-indigo-300 bg-secondary/10 px-3 py-1.5 rounded-lg transition-colors"
+                      className="cursor-pointer text-sm font-medium text-[var(--theme-heading)] hover:text-opacity-80 bg-[var(--theme-heading)]/10 px-3 py-1.5 rounded-lg transition-colors"
                       onClick={() => {
                         setOverlayFileHash(null);
                         setOverlayFileName("");
@@ -162,25 +160,24 @@ export default function SubtitleMergerPage() {
             variant="primary" 
             onClick={runMerge} 
             disabled={!baseFileHash || !overlayFileHash || isMerging}
-            className="w-full py-4 text-base font-medium shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-shadow"
+            className="w-full py-4 text-base font-medium transition-shadow"
           >
-            {isMerging ? "Calculating coordinate scaling and merging files..." : "🔄 Merge Subtitles"}
+            {isMerging ? "Calculating coordinate scaling and merging files..." : "Merge Subtitles"}
           </Button>
 
           {resultUrl && (
-            <div className="p-6 bg-zinc-900/50 border border-white/5 rounded-xl space-y-4 animate-in slide-in-from-bottom-4 text-center">
-              <div className="flex items-center justify-center gap-2 text-green-400 font-medium text-lg">
+            <div className="p-6 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl space-y-4 animate-in slide-in-from-bottom-4 text-center">
+              <div className="flex items-center justify-center gap-2 text-[var(--theme-heading)] font-medium text-lg">
                 <Icon name="check_circle" size={24} />
                 Successfully merged subtitles!
               </div>
-              <Button onClick={downloadResult} variant="secondary" className="w-full bg-zinc-800 hover:bg-zinc-700">
-                <Icon name="download" size={18} className="mr-2" />
+              <Button onClick={downloadResult} variant="secondary" className="w-full bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] hover:bg-[var(--theme-bg)]">
                 Download Merged Subtitle
               </Button>
             </div>
           )}
         </div>
-      </Container>
+      </div>
     </div>
   );
 }

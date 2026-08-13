@@ -292,8 +292,8 @@ export default function ObjectDetectPage() {
                           onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                           onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                         >
-                          <option>Re-encode (Hard Burn)</option>
-                          <option>Subtitle Overlay (.ass)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Re-encode (Hard Burn)</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]">Subtitle Overlay (.ass)</option>
                         </select>
                       </div>
 
@@ -305,7 +305,7 @@ export default function ObjectDetectPage() {
                           onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                           onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                         >
-                          {encoders.map(e => <option key={e} value={e}>{e}</option>)}
+                          {encoders.map(e => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={e} value={e}>{e}</option>)}
                         </select>
                       </div>
                     </div>
@@ -400,9 +400,9 @@ export default function ObjectDetectPage() {
                         onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                       >
                         {cameras.length > 0 ? (
-                          cameras.map(c => <option key={c} value={c}>Camera {c}</option>)
+                          cameras.map(c => <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={c} value={c}>Camera {c}</option>)
                         ) : (
-                          <option value={0}>Camera 0</option>
+                          <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value={0}>Camera 0</option>
                         )}
                       </select>
                     </div>

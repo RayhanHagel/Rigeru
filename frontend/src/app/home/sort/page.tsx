@@ -351,12 +351,12 @@ export default function HomeSortPage() {
                 onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                 onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               >
-                <option value="link button">Link Button</option>
-                <option value="image">Image</option>
-                <option value="clickable image">Clickable Image</option>
-                <option value="text">Text</option>
-                <option value="caption">Caption</option>
-                <option value="internal page">Internal Page</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="link button">Link Button</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="image">Image</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="clickable image">Clickable Image</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="text">Text</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="caption">Caption</option>
+                <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="internal page">Internal Page</option>
               </select>
             </div>
             <div className="md:col-span-2">
@@ -418,96 +418,96 @@ export default function HomeSortPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                     onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                   >
-                    <option value="">Select a page...</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="">Select a page...</option>
 
                     <optgroup label="Files & Documents">
-                      <option value="/productivity-life/cv-builder">CV Builder</option>
-                      <option value="/documents-text/excel-cleaner">Excel Cleaner</option>
-                      <option value="/productivity-life/expense-tracker">Expense Tracker</option>
-                      <option value="/file-utils/everything-search">Everything Search</option>
-                      <option value="/file-utils/file-organizer">File Organizer</option>
-                      <option value="/file-utils/hash-integrity">Hash Integrity</option>
-                      <option value="/file-utils/link-cleaner">Link Cleaner</option>
-                      <option value="/documents-text/math-latex">Math LaTeX</option>
-                      <option value="/documents-text/pdf-studio">PDF Studio</option>
-                      <option value="/productivity-life/korean-study">Korean Study SRS</option>
-                      <option value="/productivity-life/whiteboard">Digital Whiteboard</option>
-                      <option value="/productivity-life/qr-code">QR Code Tools</option>
-                      <option value="/documents-text/chart-maker">Chart Maker</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/cv-builder">CV Builder</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/documents-text/excel-cleaner">Excel Cleaner</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/expense-tracker">Expense Tracker</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/everything-search">Everything Search</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/file-organizer">File Organizer</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/hash-integrity">Hash Integrity</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/link-cleaner">Link Cleaner</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/documents-text/math-latex">Math LaTeX</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/documents-text/pdf-studio">PDF Studio</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/korean-study">Korean Study SRS</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/whiteboard">Digital Whiteboard</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/qr-code">QR Code Tools</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/documents-text/chart-maker">Chart Maker</option>
                     </optgroup>
 
                     <optgroup label="Media & Entertainment">
-                      <option value="/entertainment-reading/malsync">MAL Sync</option>
-                      <option value="/entertainment-reading/manga-library">Manga Library</option>
-                      <option value="/entertainment-reading/manga-read">Manga Read</option>
-                      <option value="/entertainment-reading/manga-search">Manga Search</option>
-                      <option value="/entertainment-reading/manga-sort">Manga Sort</option>
-                      <option value="/entertainment-reading/spotify-scrobbler">Spotify Scrobbler</option>
-                      <option value="/entertainment-reading/twitch-watch">Twitch Watch</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/malsync">MAL Sync</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/manga-library">Manga Library</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/manga-read">Manga Read</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/manga-search">Manga Search</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/manga-sort">Manga Sort</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/spotify-scrobbler">Spotify Scrobbler</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/entertainment-reading/twitch-watch">Twitch Watch</option>
                     </optgroup>
 
                     <optgroup label="Artificial Intelligence">
-                      <option value="/data-science/quickmachine">Visual ML Builder</option>
-                      <option value="/data-science/obsidian-builder">Obsidian AI Builder</option>
-                      <option value="/data-science/llm-chat">LLM Chat Bot</option>
-                      <option value="/data-science/translation">Local Translation</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/data-science/quickmachine">Visual ML Builder</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/data-science/obsidian-builder">Obsidian AI Builder</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/data-science/llm-chat">LLM Chat Bot</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/data-science/translation">Local Translation</option>
                     </optgroup>
 
                     <optgroup label="Image & Vision">
-                      <option value="/image-vision/background-remover">Background Remover</option>
-                      <option value="/image-vision/code-to-image">Code to Image</option>
-                      <option value="/image-vision/color-picker">Color Picker</option>
-                      <option value="/audio-video/media-compressor">Compressor</option>
-                      <option value="/image-vision/depth-estimation">Depth Estimation</option>
-                      <option value="/image-vision/face-blur">Face Blur</option>
-                      <option value="/image-vision/image-upscaler">Image Upscaler</option>
-                      <option value="/audio-video/media-compressor">Media Compressor</option>
-                      <option value="/image-vision/object-detect">Object Detect</option>
-                      <option value="/image-vision/vision-censor">Vision Censor</option>
-                      <option value="/audio-video/voice-clone">Voice Cloning TTS</option>
-                      <option value="/image-vision/pinhole-photography">Pinhole Photography</option>
-                      <option value="/image-vision/fisheye">Fisheye Effect</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/background-remover">Background Remover</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/code-to-image">Code to Image</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/color-picker">Color Picker</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/media-compressor">Compressor</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/depth-estimation">Depth Estimation</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/face-blur">Face Blur</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/image-upscaler">Image Upscaler</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/media-compressor">Media Compressor</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/object-detect">Object Detect</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/vision-censor">Vision Censor</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/voice-clone">Voice Cloning TTS</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/pinhole-photography">Pinhole Photography</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/fisheye">Fisheye Effect</option>
                     </optgroup>
 
                     <optgroup label="Settings">
-                      <option value="/settings/model-settings">Model Settings</option>
-                      <option value="/settings/configurations">Configurations</option>
-                      <option value="/settings/api-endpoints">API Endpoints</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/settings/model-settings">Model Settings</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/settings/configurations">Configurations</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/settings/api-endpoints">API Endpoints</option>
                     </optgroup>
 
                     <optgroup label="Subtitles & Metadata">
-                      <option value="/file-utils/exif-remover">EXIF Remover</option>
-                      <option value="/file-utils/file-timestamps">File Timestamps</option>
-                      <option value="/file-utils/media-tags">Media Tags</option>
-                      <option value="/audio-video/subtitle-fetcher">Subtitle Fetcher</option>
-                      <option value="/audio-video/subtitle-merger">Subtitle Merger</option>
-                      <option value="/audio-video/transcriber">Transcriber</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/exif-remover">EXIF Remover</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/file-timestamps">File Timestamps</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/file-utils/media-tags">Media Tags</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/subtitle-fetcher">Subtitle Fetcher</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/subtitle-merger">Subtitle Merger</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/transcriber">Transcriber</option>
                     </optgroup>
 
                     <optgroup label="System & Network">
-                      <option value="/system-network/docker-manager">Docker Manager</option>
-                      <option value="/system-network/environment-variables">Environment Variables</option>
-                      <option value="/system-network/package-manager">Package Manager</option>
-                      <option value="/system-network/ping-test">Ping Test</option>
-                      <option value="/system-network/services">Services</option>
-                      <option value="/system-network/system-monitor">System Monitor</option>
-                      <option value="/system-network/bluetooth-tracker">Bluetooth Tracker</option>
-                      <option value="/system-network/wifi-mapper">Wi-Fi Mapper</option>
-                      <option value="/system-network/lan-radar">Local Network Radar</option>
-                      <option value="/system-network/windows-tweaks">Windows Tweaks</option>
-                      <option value="/system-network/client-details">Web Client Details</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/docker-manager">Docker Manager</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/environment-variables">Environment Variables</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/package-manager">Package Manager</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/ping-test">Ping Test</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/services">Services</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/system-monitor">System Monitor</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/bluetooth-tracker">Bluetooth Tracker</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/wifi-mapper">Wi-Fi Mapper</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/lan-radar">Local Network Radar</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/windows-tweaks">Windows Tweaks</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/system-network/client-details">Web Client Details</option>
                     </optgroup>
 
                     <optgroup label="Web & Downloads">
-                      <option value="/productivity-life/currency-view">Currency View</option>
-                      <option value="/productivity-life/price-monitor">Price Monitor</option>
-                      <option value="/web-downloaders/rss">RSS Reader</option>
-                      <option value="/web-downloaders/scraper">Visual Scraper</option>
-                      <option value="/web-downloaders/image-scraper">Image Scraper</option>
-                      <option value="/web-downloaders/sitemap">Sitemap Generator</option>
-                      <option value="/web-downloaders/spotify">Spotify Download</option>
-                      <option value="/web-downloaders/youtube">YouTube Download</option>
-                      <option value="/web-downloaders/youtube-rss">YouTube RSS</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/currency-view">Currency View</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/productivity-life/price-monitor">Price Monitor</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/rss">RSS Reader</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/scraper">Visual Scraper</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/image-scraper">Image Scraper</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/sitemap">Sitemap Generator</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/spotify">Spotify Download</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/youtube">YouTube Download</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/web-downloaders/youtube-rss">YouTube RSS</option>
                     </optgroup>
                   </select>
                 )}

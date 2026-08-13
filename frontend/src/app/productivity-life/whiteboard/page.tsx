@@ -158,7 +158,7 @@ export default function DigitalWhiteboardPage() {
     <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
       <Header title="Digital Whiteboard" subtitle="Pressure-sensitive drawing with export & AI transcription." />
 
-      <div className="flex-1 w-full relative flex flex-col min-h-0 bg-zinc-900/20 rounded-xl border border-white/5 overflow-hidden shadow-inner">
+      <div className="flex-1 w-full relative flex flex-col min-h-0 bg-[var(--theme-bg)] rounded-xl border border-[var(--theme-ui-border)] overflow-hidden shadow-inner">
         {/* Canvas Area */}
         <div className="flex-1 w-full flex justify-center overflow-auto p-4 md:p-12 relative z-10" id="canvas-container">
           <WhiteboardCanvas 
@@ -175,13 +175,13 @@ export default function DigitalWhiteboardPage() {
         
         {/* Floating Toolbar */}
         <div className="absolute top-4 left-4 flex flex-col gap-4 w-64 max-h-[calc(100%-80px)] overflow-y-auto scrollbar-none z-40 pointer-events-auto">
-          <div className="bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 shadow-xl transition-all hover:bg-zinc-900/90">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">Tools & Settings
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-md rounded-xl p-4 flex-1 shadow-sm transition-all duration-300">
+            <h3 className="text-sm font-bold text-[var(--theme-heading)] mb-3 flex items-center gap-2">Tools & Settings
             </h3>
             
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs text-zinc-500 mb-1">Color</label>
+                <label className="block text-xs font-bold text-[var(--theme-text)] mb-1">Color</label>
                 <div className="flex gap-2 flex-wrap">
                   {['#000000', '#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#ffffff'].map(color => (
                     <button
@@ -201,7 +201,7 @@ export default function DigitalWhiteboardPage() {
               </div>
               
               <div>
-                <label className="block text-xs text-zinc-500 mb-1">Brush Size: {currentSize}px</label>
+                <label className="block text-xs font-bold text-[var(--theme-text)] mb-1">Brush Size: {currentSize}px</label>
                 <input 
                   type="range" 
                   min="1" 
@@ -213,27 +213,27 @@ export default function DigitalWhiteboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-500 mb-1">Page Size</label>
+                <label className="block text-xs font-bold text-[var(--theme-text)] mb-1">Page Size</label>
                 <select 
                   value={pageSize}
                   onChange={e => setPageSize(e.target.value as keyof typeof PAGE_SIZES)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg p-2 text-sm text-white outline-none focus:border-primary"
+                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-2 text-sm text-[var(--theme-heading)] outline-none focus:border-[var(--theme-heading)] transition-colors"
                 >
                   {Object.keys(PAGE_SIZES).map(key => (
-                    <option key={key} value={key}>{PAGE_SIZES[key as keyof typeof PAGE_SIZES].name}</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={key} value={key}>{PAGE_SIZES[key as keyof typeof PAGE_SIZES].name}</option>
                   ))}
                 </select>
               </div>
               
-              <div className="flex gap-2 pt-2 border-t border-white/10">
+              <div className="flex gap-2 pt-2 border-t border-[var(--theme-ui-border)]">
                 <Button variant="secondary" onClick={handleUndo} icon={<Icon name="undo" size={16} />} className="flex-1">Undo</Button>
                 <Button variant="secondary" onClick={handleClear} icon={<Icon name="delete" size={16} />} className="flex-1 text-red-400 hover:text-red-300">Clear</Button>
               </div>
             </div>
           </div>
           
-          <div className="bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-xl transition-all hover:bg-zinc-900/90">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">Export Options
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-md rounded-xl p-4 shadow-sm transition-all duration-300">
+            <h3 className="text-sm font-bold text-[var(--theme-heading)] mb-3 flex items-center gap-2">Export Options
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="secondary" onClick={() => exportCurrentPage('png')} isLoading={isExporting} className="text-xs">PNG</Button>
@@ -243,44 +243,44 @@ export default function DigitalWhiteboardPage() {
             </div>
           </div>
           
-          <div className="bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl p-4 flex-1 shadow-xl transition-all hover:bg-zinc-900/90">
-            <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">AI Transcription
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-md rounded-xl p-4 flex-1 shadow-sm transition-all duration-300">
+            <h3 className="text-sm font-bold text-[var(--theme-heading)] mb-3 flex items-center gap-2">AI Transcription
             </h3>
             <Button variant="primary" onClick={transcribeNote} isLoading={isTranscribing} className="w-full text-xs" icon={<Icon name="description" size={16} />}>
               Transcribe Handwriting
             </Button>
             
             {transcription && (
-              <div className="mt-3 p-3 bg-zinc-950 border border-white/10 rounded-lg max-h-[150px] overflow-y-auto">
-                <p className="text-xs text-zinc-400 mb-1">Result:</p>
-                <p className="text-sm text-zinc-200 whitespace-pre-wrap">{transcription}</p>
+              <div className="mt-3 p-3 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg max-h-[150px] overflow-y-auto">
+                <p className="text-xs font-bold text-[var(--theme-text)] mb-1">Result:</p>
+                <p className="text-sm font-bold text-[var(--theme-text)] whitespace-pre-wrap">{transcription}</p>
               </div>
             )}
           </div>
         </div>
         
         {/* Page Controls - Floating at bottom */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-zinc-900/90 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 shadow-2xl overflow-x-auto max-w-[90%] z-30">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-[var(--theme-ui-bg)] backdrop-blur-xl px-4 py-2 rounded-full border border-[var(--theme-ui-border)] shadow-md overflow-x-auto max-w-[90%] z-30">
           {/* Zoom Controls */}
           <button 
             onClick={() => setScale(s => Math.max(0.2, s - 0.2))}
-            className="p-1 text-zinc-400 hover:text-white transition-colors font-mono font-bold text-lg leading-none"
+            className="p-1 text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors font-mono font-bold text-lg leading-none"
             title="Zoom Out"
           >
             -
           </button>
-          <span className="text-sm font-medium text-zinc-300 min-w-[48px] text-center" title="Reset Zoom" onClick={() => setScale(1)} style={{cursor: 'pointer'}}>
+          <span className="text-sm font-bold text-[var(--theme-text)] min-w-[48px] text-center hover:text-[var(--theme-heading)] transition-colors" title="Reset Zoom" onClick={() => setScale(1)} style={{cursor: 'pointer'}}>
             {Math.round(scale * 100)}%
           </span>
           <button 
             onClick={() => setScale(s => Math.min(5.0, s + 0.2))}
-            className="p-1 text-zinc-400 hover:text-white transition-colors font-mono font-bold text-lg leading-none"
+            className="p-1 text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors font-mono font-bold text-lg leading-none"
             title="Zoom In"
           >
             +
           </button>
           
-          <div className="w-px h-4 bg-white/10 mx-1"></div>
+          <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1"></div>
           
           <button 
             onClick={() => {
@@ -292,44 +292,44 @@ export default function DigitalWhiteboardPage() {
                 setScale(Math.min(2, Math.max(0.1, availableHeight / targetHeight)));
               }
             }}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
             title="Fit to Height"
           >
             <Icon name="fullscreen" size={18} />
           </button>
 
-          <div className="w-px h-4 bg-white/10 mx-1"></div>
+          <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1"></div>
           
           <button 
             onClick={() => setCurrentPageIndex(Math.max(0, currentPageIndex - 1))}
             disabled={currentPageIndex === 0}
-            className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
+            className="p-1 text-[var(--theme-text)] hover:text-[var(--theme-heading)] disabled:opacity-30 transition-colors"
           >
             <Icon name="chevron_left" size={20} />
           </button>
-          <span className="text-sm font-medium text-zinc-300 min-w-[60px] text-center">
+          <span className="text-sm font-bold text-[var(--theme-text)] min-w-[60px] text-center">
             {currentPageIndex + 1} / {pages.length}
           </span>
           <button 
             onClick={() => setCurrentPageIndex(Math.min(pages.length - 1, currentPageIndex + 1))}
             disabled={currentPageIndex === pages.length - 1}
-            className="p-1 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
+            className="p-1 text-[var(--theme-text)] hover:text-[var(--theme-heading)] disabled:opacity-30 transition-colors"
           >
             <Icon name="chevron_right" size={20} />
           </button>
           
-          <div className="w-px h-4 bg-white/10 mx-2"></div>
+          <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-2"></div>
           
           <button 
             onClick={addPage}
-            className="p-1 text-zinc-400 hover:text-green-400 transition-colors"
+            className="p-1 text-[var(--theme-text)] hover:text-green-400 transition-colors"
             title="Add Page"
           >
             <Icon name="add" size={18} />
           </button>
           <button 
             onClick={deletePage}
-            className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
+            className="p-1 text-[var(--theme-text)] hover:text-red-400 transition-colors"
             title="Delete Page"
           >
             <Icon name="delete" size={18} />
