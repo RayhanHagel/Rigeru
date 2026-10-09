@@ -41,7 +41,7 @@ export default function PackageManagerPage() {
   const fetchCache = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/packages/cache");
+      const res = await fetch("/api/system/packages/cache");
       if (res.ok) {
         const data = await res.json();
         setCache(data);
@@ -83,7 +83,7 @@ export default function PackageManagerPage() {
     setIsProcessing(true);
     setLogs("Starting package list revalidation. This may take a few minutes...\n");
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/packages/revalidate", { method: "POST" });
+      const res = await fetch("/api/system/packages/revalidate", { method: "POST" });
       if (!res.ok) {
         const js = await res.json().catch(() => ({}));
         throw new Error(js.detail || "Revalidation failed");
@@ -109,13 +109,41 @@ export default function PackageManagerPage() {
     }
   };
 
+  const handleForceFetch = async () => {
+    if (activeTab === "scoop") {
+      setIsProcessing(true);
+      setLogs("Renewing Scoop lists (scoop update)...\n");
+      try {
+        const res = await fetch("/api/system/packages/scoop/update-manager", { method: "POST" });
+        if (res.ok) {
+          const reader = res.body?.getReader();
+          if (reader) {
+            const decoder = new TextDecoder("utf-8");
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              setLogs(prev => prev + decoder.decode(value, { stream: true }));
+            }
+          }
+        } else {
+          const js = await res.json().catch(() => ({}));
+          throw new Error(js.detail || "Failed to update scoop");
+        }
+      } catch (e: any) {
+        setLogs(prev => prev + `Scoop update failed: ${e.message}\n`);
+      }
+      setIsProcessing(false);
+    }
+    triggerRevalidate();
+  };
+
   const handleAction = async (pm: string, action: string, pkgs: string[]) => {
     if (pkgs.length === 0 && action !== "upgrade-all") return;
     setIsProcessing(true);
     setLogs(`Starting ${action} for ${pkgs.length} package(s) via ${pm}...\n`);
     
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/system/packages/${pm}/${action}`, {
+      const res = await fetch(`/api/system/packages/${pm}/${action}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(action === "upgrade-all" ? {} : { packages: pkgs })
@@ -169,7 +197,7 @@ export default function PackageManagerPage() {
     setSearchResults([]);
     setLogs(`Searching ${pm} for '${searchQuery}'...`);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/system/packages/${pm}/search`, {
+      const res = await fetch(`/api/system/packages/${pm}/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: searchQuery })
@@ -202,45 +230,9 @@ export default function PackageManagerPage() {
     );
 
     return (
-      <div className="w-full h-full relative z-10 overflow-y-auto animate-slide-up flex flex-col gap-8 font-sans">
+      <div className="w-full h-full relative z-10 overflow-y-auto animate-slide-up flex flex-col gap-8 font-sans custom-scrollbar">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-[var(--theme-heading)]">{pkgs.length} Installed Packages</h3>
-          <div className="flex gap-2">
-            <Button 
-              variant="primary" 
-              onClick={async () => {
-                if (pm === "scoop") {
-                  setIsProcessing(true);
-                  setLogs("Renewing Scoop lists (scoop update)...\n");
-                  try {
-                    const res = await fetch("http://127.0.0.1:8000/api/system/packages/scoop/update-manager", { method: "POST" });
-                    if (res.ok) {
-                      const reader = res.body?.getReader();
-                      if (reader) {
-                        const decoder = new TextDecoder("utf-8");
-                        while (true) {
-                          const { done, value } = await reader.read();
-                          if (done) break;
-                          setLogs(prev => prev + decoder.decode(value, { stream: true }));
-                        }
-                      }
-                    } else {
-                      const js = await res.json().catch(() => ({}));
-                      throw new Error(js.detail || "Failed to update scoop");
-                    }
-                  } catch (e: any) {
-                    setLogs(prev => prev + `Scoop update failed: ${e.message}\n`);
-                  }
-                  setIsProcessing(false);
-                }
-                triggerRevalidate();
-              }} 
-              disabled={isProcessing} 
-              icon={<Icon name="refresh" size={16} />}
-            >
-              Force Fetch Updates
-            </Button>
-          </div>
         </div>
 
         {/* Search for Installed Packages & Batch Actions */}
@@ -393,17 +385,31 @@ export default function PackageManagerPage() {
   return (
     <div className="p-6 w-full h-full space-y-8 animate-in fade-in flex flex-col gap-6">
       <div className="w-full space-y-6">
-        <Header title="Universal Package Manager" subtitle="Search, install, and manage your Windows software from a single interface." />
-
-        <ModernTabs 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          tabs={[
-            { id: 'winget', label: 'Winget', icon: '💻 ' },
-            { id: 'scoop', label: 'Scoop', icon: '🍦 ' },
-            { id: 'choco', label: 'Chocolatey', icon: '🍫 ' }
-          ]} 
+        <Header 
+          title="Universal Package Manager" 
+          subtitle="Search, install, and manage your Windows software from a single interface." 
+          actions={
+            <ModernTabs 
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              tabs={[
+                { id: 'winget', label: 'Winget' },
+                { id: 'scoop', label: 'Scoop' },
+                { id: 'choco', label: 'Chocolatey' }
+              ]} 
+              actionButton={
+                <button 
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                  onClick={handleForceFetch} 
+                  disabled={isProcessing}
+                >
+                  Force Fetch Updates
+                </button>
+              }
+            />
+          }
         />
+
         <ModernTabContent activeTab={activeTab}>
           {activeTab === 'winget' && (
             <div>

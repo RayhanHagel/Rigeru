@@ -120,7 +120,7 @@ export default function PingTestPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Ping & DNS Test" subtitle="Test network latency and configure DNS settings." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-slide-up">

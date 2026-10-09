@@ -126,7 +126,7 @@ export default function EbookReaderPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Ebook Reader" subtitle="Read and listen to your PDF, DOCX, or TXT documents." />
 
       <div className="flex flex-col gap-6 w-full animate-slide-up mt-6">

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Header } from '@/components/ui/Header';
+import { ModernTabs } from "@/components/ui/ModernTabs";
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -128,15 +129,14 @@ export default function Dashboard() {
           title="Dashboard" 
           subtitle="Welcome back" 
           actions={
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => router.push('/home/sort')}
-              className="flex items-center gap-2 rounded-xl h-9 text-xs font-medium bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] hover:bg-white/10"
-            >
-              <Icon name="tune" size={14} />
-              Manage Shortcuts
-            </Button>
+            <ModernTabs actionButton={
+              <button
+                onClick={() => router.push('/home/sort')}
+                className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+              >
+                Manage Shortcuts
+              </button>
+            } />
           }
         />
 

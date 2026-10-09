@@ -48,13 +48,13 @@ export default function TranscriberPage() {
   useEffect(() => {
     const fetchTokenAndConfig = async () => {
       try {
-        const resToken = await fetch("http://127.0.0.1:8000/api/settings/hf/token");
+        const resToken = await fetch("/api/settings/hf/token");
         if (resToken.ok) {
           const data = await resToken.json();
           setHfToken(data.token);
         }
         
-        const resConfig = await fetch("http://127.0.0.1:8000/api/settings/models/config");
+        const resConfig = await fetch("/api/settings/models/config");
         if (resConfig.ok) {
           const data = await resConfig.json();
           if (data.config && data.config.audio_transcription) {
@@ -78,7 +78,7 @@ export default function TranscriberPage() {
     formData.append("file_hash", fileInfo.hash_name);
     
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/subtitles/upload", {
+      const res = await fetch("/api/subtitles/upload", {
         method: "POST",
         body: formData,
       });
@@ -86,7 +86,7 @@ export default function TranscriberPage() {
         const data = await res.json();
         
         // Fetch preview frame
-        const frameRes = await fetch(`http://127.0.0.1:8000/api/subtitles/preview-frame/${data.file_id}`);
+        const frameRes = await fetch(`/api/subtitles/preview-frame/${data.file_id}`);
         if (frameRes.ok) {
           const frameData = await frameRes.json();
           if (frameData.image_base64) {
@@ -111,7 +111,7 @@ export default function TranscriberPage() {
     setRawSpeakerIds([]);
     
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/subtitles/transcribe", {
+      const res = await fetch("/api/subtitles/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -146,7 +146,7 @@ export default function TranscriberPage() {
         const firstSeg = data.segments.find((s: any) => s.speaker === id);
         if (firstSeg) {
           try {
-            const thumbRes = await fetch(`http://127.0.0.1:8000/api/subtitles/speaker-thumbnail/${fileId}?start=${firstSeg.start}`);
+            const thumbRes = await fetch(`/api/subtitles/speaker-thumbnail/${fileId}?start=${firstSeg.start}`);
             if (thumbRes.ok) {
               const thumbData = await thumbRes.json();
               if (thumbData.image_base64) {
@@ -187,7 +187,7 @@ export default function TranscriberPage() {
     const duration = Math.min(firstSeg.end - firstSeg.start + 0.5, 5.0);
     const end = firstSeg.start + duration;
     
-    const audioUrl = `http://127.0.0.1:8000/api/subtitles/speaker-clip/${fileId}?start=${firstSeg.start}&end=${end}`;
+    const audioUrl = `/api/subtitles/speaker-clip/${fileId}?start=${firstSeg.start}&end=${end}`;
     
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
@@ -213,7 +213,7 @@ export default function TranscriberPage() {
     if (segments.length === 0) return alert("No segments to export");
     
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/subtitles/export", {
+      const res = await fetch("/api/subtitles/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -240,7 +240,7 @@ export default function TranscriberPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
         <Header title="Transcriber" subtitle="Transcribe media, identify speakers, and style subtitles." />
         <div className="flex items-center gap-2">
@@ -248,9 +248,9 @@ export default function TranscriberPage() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             tabs={[
-              { id: "transcribe", label: "Transcribe", icon: <Icon name="mic" size={16} /> },
-              { id: "speakers", label: "Speakers", icon: <Icon name="group" size={16} /> },
-              { id: "export", label: "Export", icon: <Icon name="download" size={16} /> }
+              { id: "transcribe", label: "Transcribe" },
+              { id: "speakers", label: "Speakers" },
+              { id: "export", label: "Export" }
             ]}
           />
         </div>
@@ -294,7 +294,7 @@ export default function TranscriberPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-6 animate-slide-up">
-                                  <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 flex flex-col items-center justify-center min-h-[300px]">
+                                  <div className="w-full">
                                     {fileHash ? (
                                       <div className="w-full space-y-4">
                                         <div className="flex items-center justify-between bg-[var(--theme-bg)] p-3 rounded-lg border border-[var(--theme-ui-border)]">
@@ -498,7 +498,7 @@ export default function TranscriberPage() {
                                   <div className="w-full">
                                     <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 h-full min-h-[300px]">
                                       <h3 className="font-bold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Transcript Preview</h3>
-                                      <div className="bg-[var(--theme-bg)] rounded-lg border border-[var(--theme-ui-border)] p-4 h-[300px] overflow-y-auto">
+                                      <div className="bg-[var(--theme-bg)] rounded-lg border border-[var(--theme-ui-border)] p-4 h-[300px] overflow-y-auto custom-scrollbar">
                                         {segments.length === 0 ? (
                                           <div className="h-full flex items-center justify-center text-[var(--theme-text)] text-sm">
                                             No segments transcribed yet

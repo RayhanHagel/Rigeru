@@ -231,7 +231,7 @@ export default function ExcelCleanerPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Excel & CSV Cleaner" subtitle="Upload a dataset, clean up rows, apply logic filters, and export the result." />
       
       <div className="flex flex-col gap-8">
@@ -240,18 +240,21 @@ export default function ExcelCleanerPage() {
         <div className="flex flex-col gap-6">
           {/* Upload Data */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <SectionHeader title="Upload Data" icon={<Icon name="upload" size={18} />} className="mb-0" />
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--theme-text)]">
-                <input 
-                  type="checkbox" 
-                  checked={hasHeader} 
-                  onChange={handleHeaderChange}
-                  className="w-4 h-4 rounded border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] text-[var(--theme-heading)] focus:ring-[var(--theme-heading)]"
-                />
-                File has Headers
-              </label>
-            </div>
+            <SectionHeader 
+              title="Upload Data" 
+              icon={<Icon name="upload" size={18} />} 
+              action={
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--theme-text)] whitespace-nowrap">
+                  <input 
+                    type="checkbox" 
+                    checked={hasHeader} 
+                    onChange={handleHeaderChange}
+                    className="w-4 h-4 rounded border-[var(--theme-ui-border)] bg-[var(--theme-bg)] text-[var(--theme-heading)] focus:ring-[var(--theme-heading)]"
+                  />
+                  File has Headers
+                </label>
+              }
+            />
             
             <DirectUploadBox
               accept=".csv,.xlsx,.xls"
@@ -448,10 +451,15 @@ export default function ExcelCleanerPage() {
         {/* Data Preview Section: Placed underneath */}
         <div className="w-full">
           {!originalData ? (
-            <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed border-[var(--theme-ui-border)] rounded-2xl bg-[var(--theme-ui-bg)]">
-              <div className="text-center text-[var(--theme-text)]">
-                <Icon name="table_chart" size={48} className="mx-auto mb-4 opacity-20" />
-                <p>Upload a file to see preview</p>
+            <div className="w-full min-h-[400px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-2xl flex flex-col items-center justify-center p-8 text-center gap-4 mt-8">
+              <div className="p-4 bg-[var(--theme-ui-bg)] rounded-full text-[var(--theme-text)] border border-[var(--theme-ui-border)] shadow-sm">
+                <Icon name="table_chart" size={48} />
+              </div>
+              <div>
+                <p className="text-[var(--theme-heading)] font-bold">No Data Preview Yet</p>
+                <p className="text-sm text-[var(--theme-text)] max-w-sm mx-auto">
+                  Upload an Excel or CSV file to see the data preview here.
+                </p>
               </div>
             </div>
           ) : (

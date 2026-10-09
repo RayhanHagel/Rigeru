@@ -131,7 +131,7 @@ export default function ClientDetailsPage() {
   );
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Web Client Details" subtitle="Detailed fingerprint and environment analysis of your current browser." />
 
       {loading ? (

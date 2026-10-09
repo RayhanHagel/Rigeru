@@ -89,7 +89,7 @@ export default function YouTubeDownloader() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="YouTube Downloader" subtitle="Download videos and audio tracks in high quality." />
 
       <form onSubmit={handleSearch} className="flex gap-4 mb-10 items-end">
@@ -99,10 +99,9 @@ export default function YouTubeDownloader() {
             placeholder="Enter YouTube URL or search query..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            icon={<Icon name="search" size={18} />}
           />
         </div>
-        <Button variant="primary" type="submit" isLoading={loading} className="px-8">
+        <Button variant="primary" type="submit" isLoading={loading} className="!w-auto shrink-0 px-8">
           Search
         </Button>
       </form>
@@ -199,7 +198,7 @@ function ResultCard({ vid, downloadState, onDownload }: {
                 onChange={(e) => setQuality(e.target.value)}
               />
             </div>
-            <Button variant="primary" icon={<Icon name="download" size={16} />} onClick={() => onDownload(vid, format, quality)} className="px-6">
+            <Button variant="primary" onClick={() => onDownload(vid, format, quality)} className="!w-auto shrink-0 px-6">
               Download
             </Button>
           </div>

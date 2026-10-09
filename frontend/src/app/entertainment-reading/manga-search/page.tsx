@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/lib/utils";
 
@@ -70,9 +71,14 @@ export default function MangaSearch() {
         title="Manga Search"
         subtitle="Find and add new manga to your library."
         actions={
-          <Button variant="secondary" icon={<Icon name="menu_book" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')}>
-            Library
-          </Button>
+          <ModernTabs actionButton={
+            <button 
+              onClick={() => router.push('/entertainment-reading/manga-library')}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+            >
+              Library
+            </button>
+          } />
         }
       />
 

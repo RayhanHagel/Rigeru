@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 
 import React, { useState, useEffect } from 'react';
 
@@ -96,19 +97,20 @@ export default function EverythingSearchPage() {
     };
 
     return (
-      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
         <Header 
           title="Everything Search" 
           subtitle="Lightning-fast local file search powered by Everything CLI" 
           actions={
-            <Button 
-              variant="secondary" 
-              onClick={handleStartService} 
-              disabled={startingService}
-              icon={startingService ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="play_arrow" size={16} />}
-            >
-              Start Service
-            </Button>
+            <ModernTabs actionButton={
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={handleStartService} 
+                disabled={startingService}
+              >
+                {startingService ? "Starting..." : "Start Service"}
+              </button>
+            } />
           }
         />
 
@@ -130,7 +132,7 @@ export default function EverythingSearchPage() {
 
         {status === "ready" && (
             <div className="space-y-6">
-                <form onSubmit={handleSearch} className="bg-[var(--theme-ui-bg)] p-6 rounded-2xl border border-[var(--theme-ui-border)] space-y-4 shadow-sm backdrop-blur-md">
+                <form onSubmit={handleSearch} className="bg-[var(--theme-ui-bg)] p-6 rounded-xl border border-[var(--theme-ui-border)] space-y-4 shadow-sm backdrop-blur-md">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div className="md:col-span-8 flex flex-col gap-1.5">
                             <label className="text-xs font-semibold text-[var(--theme-text)] uppercase tracking-wider ml-1">Filename</label>
@@ -139,7 +141,7 @@ export default function EverythingSearchPage() {
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="e.g. report, final_draft"
-                                className="w-full rounded-xl p-3 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
+                                className="w-full rounded-lg px-4 py-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
                                 autoFocus
                                 style={{ 
                                   backgroundColor: "var(--theme-bg)",
@@ -156,7 +158,7 @@ export default function EverythingSearchPage() {
                                 value={extension}
                                 onChange={(e) => setExtension(e.target.value)}
                                 placeholder="e.g. pdf, png"
-                                className="w-full rounded-xl p-3 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
+                                className="w-full rounded-lg px-4 py-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
                                 style={{ 
                                   backgroundColor: "var(--theme-bg)",
                                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -169,28 +171,31 @@ export default function EverythingSearchPage() {
                     
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-semibold text-[var(--theme-text)] uppercase tracking-wider ml-1">Search Path (Optional)</label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
-                                    <Icon name="folder" size={16} />
-                                </div>
-                                <input
-                                    type="text"
-                                    value={searchPath}
-                                    onChange={(e) => setSearchPath(e.target.value)}
-                                    placeholder="e.g. C:\Users\Rigeru\Downloads"
-                                    className="w-full rounded-xl py-3 pl-10 pr-4 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
-                                    style={{ 
-                                      backgroundColor: "var(--theme-bg)",
-                                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
-                                    }}
-                                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-                                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
-                                />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+                                <Icon name="folder" size={16} />
                             </div>
-                            <Button type="button" variant="secondary" onClick={() => setIsExplorerOpen(true)}>
-                                Browse
-                            </Button>
+                            <input
+                                type="text"
+                                value={searchPath}
+                                onChange={(e) => setSearchPath(e.target.value)}
+                                placeholder="e.g. C:\Users\Rigeru\Downloads"
+                                className="w-full rounded-lg py-2.5 pl-10 pr-12 text-[var(--theme-text)] border focus:outline-none transition-colors font-mono text-sm"
+                                style={{ 
+                                  backgroundColor: "var(--theme-bg)",
+                                  borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                                onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsExplorerOpen(true)}
+                                className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                title="Browse folder"
+                            >
+                                <Icon name="folder_open" size={18} />
+                            </button>
                         </div>
                     </div>
                     
@@ -201,7 +206,7 @@ export default function EverythingSearchPage() {
                     </div>
                 </form>
 
-                <div className="bg-[var(--theme-ui-bg)] rounded-2xl border border-[var(--theme-ui-border)] overflow-hidden backdrop-blur-sm min-h-[400px]">
+                <div className="bg-[var(--theme-ui-bg)] rounded-xl border border-[var(--theme-ui-border)] overflow-hidden backdrop-blur-sm min-h-[400px]">
                     {results.length > 0 ? (
                         <div className="overflow-auto max-h-[600px] custom-scrollbar">
                             <table className="w-full text-left border-collapse">

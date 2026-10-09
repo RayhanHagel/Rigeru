@@ -66,7 +66,9 @@ export default function CurrencyView() {
     }
     setLoadingTrend(true);
     try {
-      const res = await fetch(`/api/web-downloads/currency/trend?base=${currentBase}&target=${currentTarget}`);
+      const res = await fetch(`/api/web-downloads/currency/trend?base=${currentBase}&target=${currentTarget}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setTrendData(data.trend_data);
@@ -85,7 +87,9 @@ export default function CurrencyView() {
     if (!currentAmount || currentAmount <= 0 || !currentBase || !currentTarget) return;
     setConverting(true);
     try {
-      const res = await fetch(`/api/web-downloads/currency/convert?amount=${currentAmount}&base=${currentBase}&target=${currentTarget}`);
+      const res = await fetch(`/api/web-downloads/currency/convert?amount=${currentAmount}&base=${currentBase}&target=${currentTarget}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setConvertResult(data.result);
@@ -129,64 +133,90 @@ export default function CurrencyView() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       {errorMsg && (
         <div className="fixed top-4 right-4 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg shadow-lg animate-slide-up flex items-center gap-2">
           <Icon name="error" size={18} />
           {errorMsg}
-          <button onClick={() => setErrorMsg("")} className="ml-2 font-bold hover:text-red-200">✕</button>
+          <Button size="sm" onClick={() => setErrorMsg("")} className="!w-auto !h-auto !p-0 !bg-transparent !text-white hover:!text-red-200 font-bold ml-2">✕</Button>
         </div>
       )}
 
       <Header title="Currency Converter & Tracker" subtitle="Check real-time exchange rates, historical trends, and an extrapolated 7-day forecast." />
 
       <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md p-6 rounded-xl border border-[var(--theme-ui-border)] shadow-sm mb-6 mt-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="text-[var(--theme-text)] font-semibold text-sm">Amount & Base Currency</label>
-            <div className="flex gap-2">
-              <TextInput 
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-24 text-center font-mono font-semibold"
-                placeholder="1.0"
-              />
-              <div className="flex-1">
-                {loadingCurrencies ? (
-                  <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-md w-full" />
-                ) : (
-                  <Select 
-                    options={currencyOptions}
-                    value={base}
-                    onChange={(e) => setBase(e.target.value)}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-center mt-6">
-            <Button variant="secondary" onClick={handleSwap} icon={<Icon name="swap_horiz" size={24} />} title="Swap Currencies" className="rounded-full w-12 h-12 p-0 flex items-center justify-center" />
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex flex-col gap-1 w-full md:w-auto">
+            <label className="text-[var(--theme-text)] font-semibold text-xs uppercase tracking-wider">Amount</label>
+            <input 
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full md:w-32 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] focus:border-[var(--theme-heading)] rounded-lg px-4 py-2 text-center font-mono font-semibold text-[var(--theme-heading)] outline-none"
+              placeholder="1.0"
+            />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-[var(--theme-text)] font-semibold text-sm">Target Currency & Result</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                {loadingCurrencies ? (
-                  <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-md w-full" />
-                ) : (
-                  <Select 
-                    options={currencyOptions}
-                    value={target}
-                    onChange={(e) => setTarget(e.target.value)}
-                  />
-                )}
+          <div className="flex flex-col gap-1 w-full md:flex-1">
+            <label className="text-[var(--theme-text)] font-semibold text-xs uppercase tracking-wider">From</label>
+            {loadingCurrencies ? (
+              <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-lg w-full" />
+            ) : (
+              <div className="relative">
+                <select 
+                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-4 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] appearance-none cursor-pointer"
+                  value={base}
+                  onChange={(e) => setBase(e.target.value)}
+                >
+                  {currencyOptions.map(opt => (
+                    <option key={opt.value} value={opt.value} className="bg-[var(--theme-bg)] text-[var(--theme-text)]">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <Icon name="expand_more" size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)] pointer-events-none" />
               </div>
-              <div className="w-40 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg flex items-center justify-center px-4 font-mono font-bold text-[var(--theme-heading)] overflow-hidden shrink-0">
+            )}
+          </div>
+
+          <Button 
+            size="md"
+            onClick={handleSwap}
+            className="!w-auto shrink-0 mt-0 md:mt-5"
+            title="Swap Currencies"
+          >
+            Swap
+          </Button>
+
+          <div className="flex flex-col gap-1 w-full md:flex-1">
+            <label className="text-[var(--theme-text)] font-semibold text-xs uppercase tracking-wider">To</label>
+            {loadingCurrencies ? (
+              <div className="h-10 bg-[var(--theme-ui-border)] animate-pulse rounded-lg w-full" />
+            ) : (
+              <div className="relative">
+                <select 
+                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-4 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-[var(--theme-heading)] appearance-none cursor-pointer"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                >
+                  {currencyOptions.map(opt => (
+                    <option key={opt.value} value={opt.value} className="bg-[var(--theme-bg)] text-[var(--theme-text)]">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <Icon name="expand_more" size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)] pointer-events-none" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1 w-full md:w-48 shrink-0">
+            <label className="text-[var(--theme-text)] font-semibold text-xs uppercase tracking-wider">Result</label>
+            <div className="h-10 w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg flex items-center justify-between px-4 font-mono font-bold overflow-hidden">
+              <span className="text-[var(--theme-text)] text-xs">{target}</span>
+              <div className="text-[var(--theme-heading)] flex items-center">
                 {converting ? (
-                  <Icon name="sync" size={18} className="animate-spin text-[var(--theme-text)]" />
+                  <Icon name="sync" size={16} className="animate-spin text-[var(--theme-text)] opacity-50" />
                 ) : convertResult !== null ? (
                   convertResult.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 ) : (
@@ -214,7 +244,7 @@ export default function CurrencyView() {
             <p>Loading market data...</p>
           </div>
         ) : chartData.length > 0 ? (
-          <div className="flex-1 w-full min-h-[300px]">
+          <div className="flex-1 w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-ui-border)" vertical={false} />

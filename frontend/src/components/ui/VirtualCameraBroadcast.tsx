@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/lib/utils";
@@ -43,7 +44,7 @@ export function VirtualCameraBroadcast({
     if (mode === "backend") {
       try {
         const token = localStorage.getItem("auth_token") || "";
-        await fetch("http://localhost:8000/api/virtual-camera/toggle-backend", {
+        await fetch("/api/virtual-camera/toggle-backend", {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
           body: JSON.stringify({ active: false, width, height })
@@ -69,7 +70,7 @@ export function VirtualCameraBroadcast({
     
     try {
       const token = localStorage.getItem("auth_token") || "";
-      const res = await fetch("http://localhost:8000/api/virtual-camera/status", {
+      const res = await fetch("/api/virtual-camera/status", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -88,7 +89,7 @@ export function VirtualCameraBroadcast({
     if (mode === "backend") {
       try {
         const token = localStorage.getItem("auth_token") || "";
-        const toggleRes = await fetch("http://localhost:8000/api/virtual-camera/toggle-backend", {
+        const toggleRes = await fetch("/api/virtual-camera/toggle-backend", {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
           body: JSON.stringify({ active: true, width, height })
@@ -103,7 +104,9 @@ export function VirtualCameraBroadcast({
       return;
     }
 
-    const ws = new WebSocket("ws://localhost:8000/api/virtual-camera/stream");
+    const wsProto = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsHost = typeof window !== "undefined" ? window.location.hostname : "127.0.0.1";
+    const ws = new WebSocket(`${wsProto}//${wsHost}:8000/api/virtual-camera/stream`);
     wsRef.current = ws;
 
     ws.onopen = () => {

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { PopupModal } from '@/components/ui/PopupModal';
 import { Icon } from "@/lib/utils";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 
 const MapComponent = dynamic(() => import('./Map'), { ssr: false });
 
@@ -27,8 +28,8 @@ export default function WifiMapperPage() {
   const fetchData = async () => {
     try {
       const [statusRes, networksRes] = await Promise.all([
-        fetch('http://localhost:8000/api/system/wifi/status'),
-        fetch('http://localhost:8000/api/system/wifi/networks')
+        fetch('/api/system/wifi/status'),
+        fetch('/api/system/wifi/networks')
       ]);
       
       if (statusRes.ok) {
@@ -56,7 +57,7 @@ export default function WifiMapperPage() {
 
   const startTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/wifi/start', { method: 'POST' });
+      const res = await fetch('/api/system/wifi/start', { method: 'POST' });
       if (res.ok) {
         toast.success("Wi-Fi tracking started");
         setIsRunning(true);
@@ -68,7 +69,7 @@ export default function WifiMapperPage() {
 
   const stopTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/wifi/stop', { method: 'POST' });
+      const res = await fetch('/api/system/wifi/stop', { method: 'POST' });
       if (res.ok) {
         toast.success("Wi-Fi tracking stopped");
         setIsRunning(false);
@@ -80,7 +81,7 @@ export default function WifiMapperPage() {
 
   const clearHistory = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/wifi/clear', { method: 'POST' });
+      const res = await fetch('/api/system/wifi/clear', { method: 'POST' });
       if (res.ok) {
         toast.success("History cleared");
         setNetworks([]);
@@ -94,7 +95,7 @@ export default function WifiMapperPage() {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/system/bluetooth/search-location?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`/api/system/wifi/search-location?q=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
       setSearchResults(data);
       if (data.length === 0) {
@@ -115,7 +116,7 @@ export default function WifiMapperPage() {
     setExpandedNetwork(bssid);
     setNetworkHistory([]);
     try {
-      const res = await fetch(`http://localhost:8000/api/system/wifi/history/${bssid}`);
+      const res = await fetch(`/api/system/wifi/history/${bssid}`);
       if (res.ok) {
         const data = await res.json();
         setNetworkHistory(data.history || []);
@@ -127,7 +128,7 @@ export default function WifiMapperPage() {
 
   const selectLocation = async (lat: number, lon: number) => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/wifi/set-location', {
+      const res = await fetch('/api/system/wifi/set-location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lat, lon })
@@ -163,47 +164,45 @@ export default function WifiMapperPage() {
     : [0, 0];
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <Header 
-          title="Wi-Fi Network Mapper"
-          subtitle="Scan and map nearby Wi-Fi networks (Wardriving)."
-        />
-        <div className="flex items-center gap-4 bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
-          {isRunning && (
-            <span className="text-sm text-green-400 font-bold px-3 py-1.5 bg-green-500/10 rounded-lg border border-green-500/20">
-              Wi-Fi tracker is ON
-            </span>
-          )}
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowLocationModal(true)}
-            icon={<Icon name="location_on" size={16} />}
-          >
-            Set Location
-          </Button>
-          <div className="flex gap-2">
-            <Button 
-              variant="primary" 
-              onClick={startTracking}
-              disabled={isRunning}
-              className={isRunning ? "opacity-50" : ""}
-              icon={<Icon name="power_settings_new" size={16} />}
-            >
-              Start
-            </Button>
-            <Button 
-              variant="danger" 
-              onClick={stopTracking}
-              disabled={!isRunning}
-              className={!isRunning ? "opacity-50" : ""}
-              icon={<Icon name="power_settings_new" size={16} />}
-            >
-              Stop
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
+      <Header 
+        title="Wi-Fi Network Mapper"
+        subtitle="Scan and map nearby Wi-Fi networks (Wardriving)."
+        actions={
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-1">
+              {isRunning && (
+                <span className="text-sm font-medium px-3 text-green-400">
+                  Wi-Fi tracker is ON
+                </span>
+              )}
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={() => setShowLocationModal(true)}
+              >
+                <Icon name="location_on" size={16} />
+                Set Location
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                onClick={startTracking}
+                disabled={isRunning}
+              >
+                <Icon name="power_settings_new" size={16} />
+                Start
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                onClick={stopTracking}
+                disabled={!isRunning}
+              >
+                <Icon name="power_settings_new" size={16} />
+                Stop
+              </button>
+            </div>
+          } />
+        }
+      />
 
       <div className="flex-1 min-h-0 flex flex-col gap-6 w-full">
         {/* Map Section */}

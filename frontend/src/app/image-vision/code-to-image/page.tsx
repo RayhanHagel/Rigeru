@@ -35,15 +35,17 @@ export default function CodeToImagePage() {
     setPreviewUrl(null);
     
     try {
-      const formData = new FormData();
-      formData.append("code", code);
-      formData.append("language", language);
-      formData.append("theme", theme);
-      formData.append("bg_color", bgColor);
-      
       const res = await fetch("/api/media-vision/code-to-image", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          theme,
+          bg_color: bgColor
+        }),
       });
       
       if (!res.ok) {
@@ -69,7 +71,7 @@ export default function CodeToImagePage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Code to Image" subtitle="Transform your source code into beautiful, shareable images." />
 
       <div className="flex flex-col gap-8 w-full">

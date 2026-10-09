@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState } from "react";
 
@@ -75,9 +76,8 @@ export default function BackgroundRemoverPage() {
 
       // Direct call to backend — bypasses Next.js proxy to avoid timeout on long ops
       const token = localStorage.getItem("auth_token") || "";
-      const baseUrl = window.location.protocol + "//" + window.location.hostname + ":8000";
 
-      const res = await fetch(`${baseUrl}/api/media-vision/remove-background/batch`, {
+      const res = await fetch(`/api/media-vision/remove-background/batch`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
         body: batchData,
@@ -110,29 +110,27 @@ export default function BackgroundRemoverPage() {
   const handleDownload = () => {
     if (resultZipUrl) {
       const a = document.createElement("a");
-      a.href = `http://127.0.0.1:8000${resultZipUrl}`;
+      a.href = `${resultZipUrl}`;
       a.download = resultZipUrl.split('/').pop() || "processed_images.zip";
       a.click();
     } else if (processedUrls.length === 1) {
       const a = document.createElement("a");
-      a.href = `http://127.0.0.1:8000${processedUrls[0]}`;
+      a.href = `${processedUrls[0]}`;
       a.download = "processed_image.png";
       a.click();
     }
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">AI Background Remover</h1>
-          <p className="text-[var(--theme-text)] text-sm font-medium">Remove image backgrounds instantly in high quality.</p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="AI Background Remover"
+        subtitle="Remove image backgrounds instantly in high quality."
+        actions={
           <ModernTabs
             tabs={[
-              { id: "single", label: "Single File", icon: <Icon name="insert_drive_file" size={16} /> },
-              { id: "batch", label: "Batch Folder", icon: <Icon name="folder" size={16} /> }
+              { id: "single", label: "Single File" },
+              { id: "batch", label: "Batch Folder" }
             ]}
             activeTab={inputMode}
             setActiveTab={(tab) => {
@@ -141,8 +139,8 @@ export default function BackgroundRemoverPage() {
               setBatchFiles([]);
             }}
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col gap-8 w-full">
         {/* SECTION 1: INPUT */}
@@ -213,14 +211,14 @@ export default function BackgroundRemoverPage() {
               ) : processedUrls.length === 1 ? (
                 <div className="w-full h-full flex flex-col gap-4">
                   <ImageCompareSlider
-                    originalImage={`http://127.0.0.1:8000${originalUrls[0]}`}
-                    processedImage={`http://127.0.0.1:8000${processedUrls[0]}`}
+                    originalImage={`${originalUrls[0]}`}
+                    processedImage={`${processedUrls[0]}`}
                   />
                   <Button
                     variant="ghost"
                     size="sm"
                     className="self-center"
-                    onClick={() => setPreviewImage(`http://127.0.0.1:8000${processedUrls[0]}`)}
+                    onClick={() => setPreviewImage(`${processedUrls[0]}`)}
                   >
                     View Fullscreen
                   </Button>
@@ -238,20 +236,20 @@ export default function BackgroundRemoverPage() {
                     </div>
                   </div>
                   <ImageCompareSlider
-                    originalImage={`http://127.0.0.1:8000${originalUrls[selectedBatchIndex]}`}
-                    processedImage={`http://127.0.0.1:8000${processedUrls[selectedBatchIndex]}`}
+                    originalImage={`${originalUrls[selectedBatchIndex]}`}
+                    processedImage={`${processedUrls[selectedBatchIndex]}`}
                   />
                   <Button
                     variant="ghost"
                     size="sm"
                     className="self-center"
-                    onClick={() => setPreviewImage(`http://127.0.0.1:8000${processedUrls[selectedBatchIndex]}`)}
+                    onClick={() => setPreviewImage(`${processedUrls[selectedBatchIndex]}`)}
                   >
                     View Fullscreen
                   </Button>
                 </div>
               ) : (
-                <div className="w-full h-full flex flex-col overflow-y-auto">
+                <div className="w-full h-full flex flex-col overflow-y-auto custom-scrollbar">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2">
                     {processedUrls.map((url, i) => (
                       <div
@@ -260,7 +258,7 @@ export default function BackgroundRemoverPage() {
                         onClick={() => setSelectedBatchIndex(i)}
                       >
                         <img
-                          src={`http://127.0.0.1:8000${url}`}
+                          src={`${url}`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

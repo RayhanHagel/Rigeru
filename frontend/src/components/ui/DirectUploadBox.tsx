@@ -47,9 +47,8 @@ export const directUploadFile = async (
   const hashName = hash + ext;
   
   const token = localStorage.getItem("auth_token") || "";
-  const baseUrl = window.location.protocol + "//" + window.location.hostname + ":8000";
   
-  const checkRes = await fetch(`${baseUrl}/api/system/upload/check?file_hash=${encodeURIComponent(hashName)}`, {
+  const checkRes = await fetch(`/api/system/upload/check?file_hash=${encodeURIComponent(hashName)}`, {
     headers: { "Authorization": `Bearer ${token}` }
   });
   
@@ -62,7 +61,7 @@ export const directUploadFile = async (
   if (!exists) {
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${baseUrl}/api/system/upload/direct`, true);
+      xhr.open("POST", `/api/system/upload/direct`, true);
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       
       xhr.upload.onprogress = (event) => {

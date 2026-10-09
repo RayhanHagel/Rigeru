@@ -223,6 +223,8 @@ export function Sidebar() {
                 // Open all groups if searching
                 const allOpen = navigation.reduce((acc, group) => ({ ...acc, [group.title]: true }), {});
                 setOpenGroups(allOpen);
+              } else {
+                setOpenGroups({});
               }
             }}
             className="w-full bg-zinc-950/50 border rounded-lg py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors"

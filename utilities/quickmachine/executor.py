@@ -22,7 +22,16 @@ import os
 # { job_id: { "status": "running"|"completed"|"failed", "progress": int, "logs": [], "result": dict } }
 JOB_STORE: Dict[str, Dict[str, Any]] = {}
 
-def update_job(job_id: str, status: str = None, progress: int = None, log: str = None, result: dict = None):
+def update_job(job_id: str, status: str | None = None, progress: int | None = None, log: str | None = None, result: dict | None = None) -> None:
+    """Updates the status and state of an asynchronous ML training job.
+
+    Args:
+        job_id (str): Unique job identifier.
+        status (str | None): Pipeline status ('running', 'completed', 'failed'). Defaults to None.
+        progress (int | None): Progress percentage between 0 and 100. Defaults to None.
+        log (str | None): Log line or message to append. Defaults to None.
+        result (dict | None): Dictionary containing resulting evaluation metrics. Defaults to None.
+    """
     if job_id not in JOB_STORE:
         JOB_STORE[job_id] = {"status": "starting", "progress": 0, "logs": [], "result": None}
     
@@ -35,7 +44,19 @@ def update_job(job_id: str, status: str = None, progress: int = None, log: str =
     if result is not None:
         JOB_STORE[job_id]["result"] = result
 
-def build_preprocessor(int_cols, cat_cols, scaler_name, encoder_name, missing_strategy):
+def build_preprocessor(int_cols: list[str], cat_cols: list[str], scaler_name: str | None, encoder_name: str | None, missing_strategy: str) -> ColumnTransformer | None:
+    """Constructs a scikit-learn ColumnTransformer for numerical and categorical preprocessing.
+
+    Args:
+        int_cols (list[str]): Names of numerical feature columns.
+        cat_cols (list[str]): Names of categorical feature columns.
+        scaler_name (str | None): Name of numerical scaler class to apply.
+        encoder_name (str | None): Name of categorical encoder class to apply.
+        missing_strategy (str): Imputation strategy ('mean', 'median', 'drop', etc.).
+
+    Returns:
+        ColumnTransformer | None: Configured ColumnTransformer pipeline or None if no columns exist.
+    """
     transformers = []
     if int_cols:
         num_steps = []
@@ -68,7 +89,17 @@ def build_preprocessor(int_cols, cat_cols, scaler_name, encoder_name, missing_st
         return None
     return ColumnTransformer(transformers, remainder="passthrough")
 
-def optuna_suggest(trial, target, model_name):
+def optuna_suggest(trial: optuna.Trial, target: str, model_name: str) -> dict[str, Any]:
+    """Queries Optuna trial suggestions based on model hyperparameter metadata.
+
+    Args:
+        trial (optuna.Trial): Optuna trial instance.
+        target (str): Problem target type ('Classification' or 'Regression').
+        model_name (str): Identifier of the target machine learning model.
+
+    Returns:
+        dict[str, Any]: Dictionary of sampled hyperparameter values.
+    """
     model_options = get_json()
     library = None
     for lib, models in model_options[target].items():
@@ -96,7 +127,14 @@ def optuna_suggest(trial, target, model_name):
     
     return resolved
 
-def run_ml_pipeline(job_id: str, nodes: list, edges: list):
+def run_ml_pipeline(job_id: str, nodes: list[dict], edges: list[dict]) -> None:
+    """Executes end-to-end ML training pipeline based on visual graph specification.
+
+    Args:
+        job_id (str): Unique identifier for tracking job execution.
+        nodes (list[dict]): Graph node definitions from QuickMachine frontend.
+        edges (list[dict]): Graph edge connections linking pipeline stages.
+    """
     try:
         update_job(job_id, status="running", progress=5, log="Starting ML Pipeline Execution...")
         

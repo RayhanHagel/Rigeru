@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 
 import React, { useState, useEffect } from "react";
 
@@ -53,20 +54,29 @@ export default function EnvironmentVariablesPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Windows PATH Visualizer" 
         subtitle="Analyze and export your System and User PATH environment variables." 
         actions={
-          <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm">
-            <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
-              Refresh
-            </Button>
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-            <Button variant="primary" onClick={handleExport} disabled={isLoading} icon={<Icon name="download" size={16} />}>
-              Export Backup
-            </Button>
-          </div>
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-1">
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={handleRefresh} 
+                disabled={isLoading}
+              >
+                Refresh
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={handleExport} 
+                disabled={isLoading}
+              >
+                Export Backup
+              </button>
+            </div>
+          } />
         }
       />
 

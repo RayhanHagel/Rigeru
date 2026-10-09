@@ -16,9 +16,9 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
     if (Array.isArray(value)) {
       return (
         <div className="border-l-2 border-primary/20 pl-3 py-2 my-1 bg-black/10 rounded-r-lg">
-          <div className="flex items-center justify-between text-xs text-zinc-400 mb-2 font-mono">
-             <span className="font-semibold text-purple-300">{name} <span className="text-zinc-500 font-normal">[Array]</span></span>
-             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
+          <div className="flex items-center justify-between text-xs text-[var(--theme-text)] opacity-80 mb-2 font-mono">
+             <span className="font-semibold text-purple-300">{name} <span className="text-[var(--theme-text)] opacity-60 font-normal">[Array]</span></span>
+             {onDelete && <button onClick={onDelete} className="text-[var(--theme-text)] opacity-60 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
           </div>
           <div className="flex flex-col gap-1">
             {value.map((item, idx) => (
@@ -42,9 +42,9 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
     } else {
       return (
         <div className="border-l-2 border-secondary/20 pl-3 py-2 my-1 bg-black/10 rounded-r-lg">
-          <div className="flex items-center justify-between text-xs text-zinc-400 mb-2 font-mono">
-             <span className="font-semibold text-indigo-300">{name} <span className="text-zinc-500 font-normal">{'{Object}'}</span></span>
-             {onDelete && <button onClick={onDelete} className="text-zinc-500 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
+          <div className="flex items-center justify-between text-xs text-[var(--theme-text)] opacity-80 mb-2 font-mono">
+             <span className="font-semibold text-indigo-300">{name} <span className="text-[var(--theme-text)] opacity-60 font-normal">{'{Object}'}</span></span>
+             {onDelete && <button onClick={onDelete} className="text-[var(--theme-text)] opacity-60 hover:text-red-400 transition-colors"><Icon name="delete" size={12} /></button>}
           </div>
           <div className="flex flex-col gap-1">
             {Object.entries(value).map(([k, v]) => (
@@ -76,10 +76,10 @@ function JsonNode({ name, value, onChange, onDelete }: { name: string, value: an
   }
   
   return (
-    <div className="flex items-center gap-2 w-full bg-zinc-900/50 border border-white/5 p-1 rounded-lg hover:border-white/10 transition-colors group">
-      {name && <span className="text-xs font-mono text-zinc-400 px-2 shrink-0 select-none">{name}:</span>}
+    <div className="flex items-center gap-2 w-full bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)]/50 p-1 rounded-lg hover:border-[var(--theme-ui-border)] transition-colors group">
+      {name && <span className="text-xs font-mono text-[var(--theme-text)] opacity-80 px-2 shrink-0 select-none">{name}:</span>}
       {typeof value === 'boolean' ? (
-        <select value={value ? "true" : "false"} onChange={(e) => onChange(e.target.value === "true")} className="bg-zinc-950 text-emerald-400 text-xs p-1.5 outline-none rounded border border-white/5 flex-1 font-mono cursor-pointer">
+        <select value={value ? "true" : "false"} onChange={(e) => onChange(e.target.value === "true")} className="bg-[var(--theme-bg)] text-emerald-400 text-xs p-1.5 outline-none rounded border border-[var(--theme-ui-border)]/50 flex-1 font-mono cursor-pointer">
           <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="true">true</option>
           <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="false">false</option>
         </select>
@@ -199,45 +199,45 @@ export default function ConfigurationsPage() {
   const filteredConfigs = configs.filter(c => c.key.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
       <Header title="System Configurations" subtitle="Manage internal JSON settings safely using the sleek row editor." />
 
       <div className="flex flex-col gap-6 w-full flex-1 min-h-0 animate-slide-up">
         <div className="w-full flex flex-col gap-4 overflow-hidden h-64 shrink-0">
           <div className="relative shrink-0">
-            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)] opacity-60" />
             <input 
               type="text" 
               placeholder="Search configurations..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white outline-none focus:border-primary/50 transition-colors shadow-inner"
+              className="w-full bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl py-3 pl-10 pr-4 text-sm text-[var(--theme-heading)] outline-none focus:border-[var(--theme-heading)]/50 transition-colors shadow-inner"
             />
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
             {loading ? (
-              <div className="flex justify-center p-8 text-zinc-500"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
+              <div className="flex justify-center p-8 text-[var(--theme-text)] opacity-60"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
             ) : filteredConfigs.length === 0 ? (
-              <div className="text-center p-8 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-xl">No configurations found.</div>
+              <div className="text-center p-8 text-[var(--theme-text)] opacity-60 text-sm border border-dashed border-zinc-800 rounded-xl">No configurations found.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                 {filteredConfigs.map(config => (
                   <div 
                     key={config.key}
                     onClick={() => handleEdit(config)}
-                    className={`flex flex-col gap-2 p-4 rounded-xl cursor-pointer transition-all border ${selectedConfig?.key === config.key ? 'bg-primary/10 border-primary/50 shadow-md' : 'bg-zinc-900/40 border-white/5 hover:bg-zinc-800/50 hover:border-white/10'}`}
+                    className={`flex flex-col gap-2 p-4 rounded-xl cursor-pointer transition-all border ${selectedConfig?.key === config.key ? 'bg-primary/10 border-primary/50 shadow-md' : 'bg-[var(--theme-ui-bg)]/40 border-[var(--theme-ui-border)]/50 hover:bg-[var(--theme-ui-bg)]/80 hover:border-[var(--theme-ui-border)]'}`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-zinc-200">{config.key}</span>
+                      <span className="font-medium text-[var(--theme-text)]">{config.key}</span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleDelete(config.key); }}
-                        className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                        className="p-1.5 text-[var(--theme-text)] opacity-60 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
                       >
                         <Icon name="delete" size={14} />
                       </button>
                     </div>
-                    <div className="text-xs text-zinc-500 font-mono truncate">
+                    <div className="text-xs text-[var(--theme-text)] opacity-60 font-mono truncate">
                       {JSON.stringify(config.value).substring(0, 50)}...
                     </div>
                   </div>
@@ -247,17 +247,17 @@ export default function ConfigurationsPage() {
           </div>
         </div>
 
-        <div className="w-full flex flex-col flex-1 min-h-[500px] overflow-hidden bg-zinc-900/40 border border-white/10 rounded-2xl backdrop-blur-xl shadow-2xl">
+        <div className="w-full flex flex-col flex-1 min-h-[500px] overflow-hidden bg-[var(--theme-ui-bg)]/40 border border-[var(--theme-ui-border)] rounded-2xl backdrop-blur-xl shadow-2xl">
           {selectedConfig ? (
             <div className="flex flex-col h-full overflow-hidden">
-              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-zinc-950/80 shrink-0">
-                <div className="flex items-center gap-3 text-zinc-300 font-medium">
+              <div className="p-4 border-b border-[var(--theme-ui-border)] flex items-center justify-between bg-[var(--theme-bg)]/80 shrink-0">
+                <div className="flex items-center gap-3 text-[var(--theme-text)] font-medium">
                   {isAdvancedMode ? <Icon name="code" size={18} className="text-amber-400" /> : <Icon name="list" size={18} className="text-primary" />}
-                  Editing: <span className="text-white font-mono text-sm px-2 py-1 bg-white/5 rounded">{selectedConfig.key}</span>
+                  Editing: <span className="text-[var(--theme-heading)] font-mono text-sm px-2 py-1 bg-white/5 rounded">{selectedConfig.key}</span>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <div className="flex bg-zinc-900 rounded-lg p-1 border border-white/5">
+                  <div className="flex bg-[var(--theme-ui-bg)] rounded-lg p-1 border border-[var(--theme-ui-border)]/50">
                     <button 
                       onClick={() => {
                         if (isAdvancedMode) {
@@ -270,7 +270,7 @@ export default function ConfigurationsPage() {
                           }
                         }
                       }}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!isAdvancedMode ? 'bg-zinc-700 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!isAdvancedMode ? 'bg-zinc-700 text-[var(--theme-heading)] shadow' : 'text-[var(--theme-text)] opacity-60 hover:text-[var(--theme-text)]'}`}
                     >
                       Visual
                     </button>
@@ -281,7 +281,7 @@ export default function ConfigurationsPage() {
                           setIsAdvancedMode(true);
                         }
                       }}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isAdvancedMode ? 'bg-zinc-700 text-white shadow' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isAdvancedMode ? 'bg-zinc-700 text-[var(--theme-heading)] shadow' : 'text-[var(--theme-text)] opacity-60 hover:text-[var(--theme-text)]'}`}
                     >
                       Advanced
                     </button>
@@ -295,7 +295,7 @@ export default function ConfigurationsPage() {
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4 relative custom-scrollbar bg-zinc-950/30">
+              <div className="flex-1 overflow-y-auto p-4 relative custom-scrollbar bg-[var(--theme-bg)]/30">
                 {errorMsg && (
                   <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg flex items-center justify-center shrink-0">
                     {errorMsg}
@@ -306,11 +306,11 @@ export default function ConfigurationsPage() {
                   <textarea 
                     value={rawTextValue}
                     onChange={(e) => setRawTextValue(e.target.value)}
-                    className="w-full min-h-[500px] bg-zinc-950 border border-white/10 rounded-xl p-4 text-amber-300/90 font-mono text-sm outline-none focus:border-amber-500/50 transition-colors resize-y shadow-inner custom-scrollbar"
+                    className="w-full min-h-[500px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 text-amber-300/90 font-mono text-sm outline-none focus:border-amber-500/50 transition-colors resize-y shadow-inner custom-scrollbar"
                     spellCheck={false}
                   />
                 ) : (
-                  <div className="p-4 bg-zinc-950/50 border border-white/5 rounded-xl shadow-inner min-h-full">
+                  <div className="p-4 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)]/50 rounded-xl shadow-inner min-h-full">
                     <JsonNode 
                       name="root" 
                       value={parsedObjectValue} 

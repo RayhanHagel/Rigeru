@@ -67,30 +67,39 @@ function ImagePreviewModal({
         <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--theme-bg)]/40 border-b border-[var(--theme-ui-border)] flex-shrink-0 rounded-t-2xl">
           <span className="text-xs text-[var(--theme-text)] truncate max-w-[300px]" title={img.filename}>{img.filename}</span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-              title="Zoom Out (-)"
+              className="!w-auto shrink-0 !h-8"
             >
-              <Icon name="zoom_out" size={16} />
-            </button>
+              Zoom Out
+            </Button>
             <span className="text-xs text-[var(--theme-text)] w-12 text-center">{Math.round(zoom * 100)}%</span>
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setZoom(z => Math.min(z + 0.25, 4))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-              title="Zoom In (+)"
+              className="!w-auto shrink-0 !h-8"
             >
-              <Icon name="zoom_in" size={16} />
-            </button>
-            <button
+              Zoom In
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setZoom(1)}
-              className="text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)] px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors"
+              className="!w-auto shrink-0 !h-8"
             >
               Reset
-            </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 text-white transition-colors ml-2">
-              <Icon name="close" size={16} />
-            </button>
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={onClose}
+              className="!w-auto shrink-0 !h-8 !bg-red-500/10 border border-red-500/30 text-red-500 hover:!bg-red-500 hover:!text-[var(--theme-bg)] ml-2"
+            >
+              Close
+            </Button>
           </div>
         </div>
 
@@ -108,21 +117,25 @@ function ImagePreviewModal({
         {/* Bottom navigation — always visible */}
         {images.length > 1 && (
           <div className="flex items-center justify-center gap-4 py-3 border-t border-[var(--theme-ui-border)] bg-[var(--theme-bg)]/40 flex-shrink-0 rounded-b-2xl">
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={prev}
               disabled={index === 0}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white transition-colors"
+              className="!w-auto shrink-0"
             >
-              <Icon name="chevron_left" size={20} />
-            </button>
+              Prev
+            </Button>
             <span className="text-sm text-[var(--theme-text)]">{index + 1} / {images.length}</span>
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={next}
               disabled={index === images.length - 1}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white transition-colors"
+              className="!w-auto shrink-0"
             >
-              <Icon name="chevron_right" size={20} />
-            </button>
+              Next
+            </Button>
           </div>
         )}
       </div>
@@ -263,7 +276,7 @@ export default function ImageScraperPage() {
     });
 
     const eventSource = new EventSource(
-      `http://${host}:8000/api/web-downloads/bulk-images/stream?${qs.toString()}`
+      `/api/web-downloads/bulk-images/stream?${qs.toString()}`
     );
 
     eventSource.onmessage = (event) => {
@@ -315,7 +328,7 @@ export default function ImageScraperPage() {
     setIsDeleting(true);
     try {
       const host = typeof window !== "undefined" ? window.location.hostname : "127.0.0.1";
-      const res = await fetch(`http://${host}:8000/api/web-downloads/bulk-images/delete`, {
+      const res = await fetch(`/api/web-downloads/bulk-images/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paths: Array.from(selectedPaths) }),
@@ -340,7 +353,7 @@ export default function ImageScraperPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Image Scraper" subtitle="Search and bulk download images from SearxNG in parallel." />
 
       {isSearxngUp === false && (
@@ -352,7 +365,7 @@ export default function ImageScraperPage() {
               <p className="text-red-300 text-sm">Image scraping requires the SearXNG docker container to be active.</p>
             </div>
           </div>
-          <Button variant="danger" onClick={() => window.location.href = "/system-network/docker-manager"}>
+          <Button variant="danger" size="sm" onClick={() => window.location.href = "/system-network/docker-manager"} className="!w-auto shrink-0 px-4">
             Open Docker Manager
           </Button>
         </div>
@@ -365,7 +378,6 @@ export default function ImageScraperPage() {
             placeholder="e.g., cyberpunk city, nature landscape..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            icon={<Icon name="search" size={18} />}
           />
         </div>
         <div className="w-full lg:w-48">
@@ -377,23 +389,34 @@ export default function ImageScraperPage() {
             onChange={(e) => setCount(parseInt(e.target.value) || 10)}
           />
         </div>
-        <div className="flex-1 flex items-end gap-3">
-          <div className="flex-1">
-            <TextInput
-              label="Download Folder (Optional)"
+        <div className="flex-1 flex flex-col gap-1.5 justify-end">
+          <label className="text-sm font-medium text-[var(--theme-text)] ml-1">Download Folder (Optional)</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+              <Icon name="folder" size={18} />
+            </div>
+            <input 
+              type="text"
               placeholder="Leave empty for default Downloads"
               value={outputDir}
               onChange={(e) => setOutputDir(e.target.value)}
-              icon={<Icon name="folder" size={18} />}
+              className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
+              style={{ 
+                backgroundColor: "var(--theme-bg)",
+                borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
             />
+            <button
+              type="button"
+              onClick={() => setIsExplorerOpen(true)}
+              className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              title="Browse folder"
+            >
+              <Icon name="folder_open" size={18} />
+            </button>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => setIsExplorerOpen(true)}
-            className="h-11 px-4 border border-[var(--theme-ui-border)]"
-          >
-            Browse
-          </Button>
         </div>
       </div>
 
@@ -410,9 +433,8 @@ export default function ImageScraperPage() {
               Downloading...
             </span>
           ) : (
-            <span className="flex items-center justify-center gap-2">
-              <Icon name="download" size={20} />
-              Start Bulk Download
+            <span className="flex items-center justify-center">
+              Start scraping
             </span>
           )}
         </Button>
@@ -421,9 +443,9 @@ export default function ImageScraperPage() {
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center gap-3 backdrop-blur-md">
             <Icon name="error" size={20} />
             <p className="text-sm font-medium flex-1">{errorMsg}</p>
-            <button onClick={() => setErrorMsg("")} className="hover:text-red-300">
-              <Icon name="close" size={18} />
-            </button>
+            <Button size="sm" variant="secondary" onClick={() => setErrorMsg("")} className="!w-auto !h-auto !py-1 !px-2 shrink-0">
+              Close
+            </Button>
           </div>
         )}
 
@@ -431,9 +453,9 @@ export default function ImageScraperPage() {
           <div className="bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl flex items-center gap-3 backdrop-blur-md">
             <Icon name="check_circle" size={20} />
             <p className="text-sm font-medium flex-1">{successMsg}</p>
-            <button onClick={() => setSuccessMsg("")} className="hover:text-green-300">
-              <Icon name="close" size={18} />
-            </button>
+            <Button size="sm" variant="secondary" onClick={() => setSuccessMsg("")} className="!w-auto !h-auto !py-1 !px-2 shrink-0">
+              Close
+            </Button>
           </div>
         )}
 
@@ -508,21 +530,22 @@ export default function ImageScraperPage() {
                     >
                       {isDeleting ? "Deleting..." : `Delete (${selectedPaths.size})`}
                     </Button>
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={exitSelectionMode}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
+                      className="!w-auto shrink-0 !h-8 !px-3"
                     >
-                      <Icon name="close" size={16} />
-                    </button>
+                      Cancel
+                    </Button>
                   </>
                 ) : (
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setSelectionMode(true)}
-                    className="flex items-center gap-1.5 text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-[var(--theme-ui-border)] transition-colors"
+                    className="!w-auto shrink-0 !h-8 !px-3"
                   >
-                    <Icon name="ads_click" size={13} />
                     Select to Delete
-                  </button>
+                  </Button>
                 )}
 
                 {progress.failed > 0 && (

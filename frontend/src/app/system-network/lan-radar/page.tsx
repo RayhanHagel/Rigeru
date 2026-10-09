@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { Button } from '@/components/ui/Button';
 
 import toast from 'react-hot-toast';
@@ -14,8 +15,8 @@ export default function LanRadarPage() {
   const fetchData = async () => {
     try {
       const [statusRes, devicesRes] = await Promise.all([
-        fetch('http://localhost:8000/api/system/lan/status'),
-        fetch('http://localhost:8000/api/system/lan/devices')
+        fetch('/api/system/lan/status'),
+        fetch('/api/system/lan/devices')
       ]);
       
       if (statusRes.ok) {
@@ -40,7 +41,7 @@ export default function LanRadarPage() {
 
   const startTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/lan/start', { method: 'POST' });
+      const res = await fetch('/api/system/lan/start', { method: 'POST' });
       if (res.ok) {
         toast.success("LAN Radar started");
         setIsRunning(true);
@@ -52,7 +53,7 @@ export default function LanRadarPage() {
 
   const stopTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/lan/stop', { method: 'POST' });
+      const res = await fetch('/api/system/lan/stop', { method: 'POST' });
       if (res.ok) {
         toast.success("LAN Radar stopped");
         setIsRunning(false);
@@ -64,7 +65,7 @@ export default function LanRadarPage() {
 
   const clearDevices = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/lan/clear', { method: 'POST' });
+      const res = await fetch('/api/system/lan/clear', { method: 'POST' });
       if (res.ok) {
         toast.success("Devices cleared");
         setDevices([]);
@@ -83,7 +84,7 @@ export default function LanRadarPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Local Network Radar"
         subtitle="Discover devices connected to your Wi-Fi or Ethernet network."
@@ -96,27 +97,24 @@ export default function LanRadarPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
               </span>
             )}
-            <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm">
-              <Button 
-                variant="primary" 
-                onClick={startTracking}
-                disabled={isRunning}
-                className={isRunning ? "opacity-50" : ""}
-                icon={<Icon name="power_settings_new" size={16} />}
-              >
-                Scan
-              </Button>
-              <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-              <Button 
-                variant="secondary" 
-                className="border-red-500/30 text-red-400"
-                onClick={stopTracking}
-                disabled={!isRunning}
-                icon={<Icon name="power_settings_new" size={16} />}
-              >
-                Stop
-              </Button>
-            </div>
+            <ModernTabs actionButton={
+              <div className="flex items-center gap-1">
+                <button 
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                  onClick={startTracking}
+                  disabled={isRunning}
+                >
+                  Scan
+                </button>
+                <button 
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                  onClick={stopTracking}
+                  disabled={!isRunning}
+                >
+                  Stop
+                </button>
+              </div>
+            } />
           </div>
         }
       />

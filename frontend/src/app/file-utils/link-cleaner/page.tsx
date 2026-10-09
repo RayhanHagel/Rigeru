@@ -117,35 +117,32 @@ export default function LinkCleanerPage() {
   const aggregatedLogs = results?.filter(r => !r.error && r.logs).map(r => `--- ${r.link} ---\n${r.logs}`).join("\n\n") || "";
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Link Cleaner</h1>
-            <p className="text-[var(--theme-text)] text-sm font-medium">Extract individual file links from master MEGA folders, filter by size, and remove duplicates automatically.</p>
-          </div>
-        </div>
-        {results && (
-          <ModernTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab as (id: string) => void}
-            tabs={[
-              { id: "raw", label: "Raw Links" },
-              { id: "named", label: "With Names" },
-              { id: "logs", label: "Action Logs" }
-            ]}
-          />
-        )}
-      </div>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
+      <Header 
+        title="Link Cleaner" 
+        subtitle="Extract individual file links from master MEGA folders, filter by size, and remove duplicates automatically."
+        actions={
+          results && (
+            <ModernTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab as (id: string) => void}
+              tabs={[
+                { id: "raw", label: "Raw Links" },
+                { id: "named", label: "With Names" },
+                { id: "logs", label: "Action Logs" }
+              ]}
+            />
+          )
+        }
+      />
 
       <div className="flex flex-col gap-6 w-full">
-        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col gap-6">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm backdrop-blur-md flex flex-col gap-6">
         <div className="flex justify-between items-center border-b border-[var(--theme-ui-border)] pb-4">
           <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
             Target Links
           </label>
-          <Button variant="secondary" size="sm" onClick={addLink} icon={<Icon name="add" size={14} />} className="h-8 text-xs">
+          <Button variant="secondary" size="sm" onClick={addLink} icon={<Icon name="add" size={14} />} className="!w-auto px-4 h-8 text-xs">
             Add Link
           </Button>
         </div>
@@ -157,7 +154,7 @@ export default function LinkCleanerPage() {
                 value={link}
                 onChange={(e) => updateLink(idx, e.target.value)}
                 placeholder="https://mega.nz/folder/ID#KEY"
-                className="flex-1 rounded-lg px-4 py-2.5 text-sm text-white border focus:outline-none transition-colors font-mono"
+                className="flex-1 rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors font-mono"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -166,32 +163,31 @@ export default function LinkCleanerPage() {
                 onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
               />
               <div className="flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 text-[var(--theme-text)] hover:text-white"
+                <button 
+                  type="button"
+                  className="p-2 text-[var(--theme-text)] hover:text-white transition-colors"
                   onClick={() => moveLink(idx, 'up')}
                   disabled={idx === 0}
+                  style={{ opacity: idx === 0 ? 0.3 : 1 }}
                 >
-                  <Icon name="arrow_upward" size={16} />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 text-[var(--theme-text)] hover:text-white"
+                  <Icon name="arrow_upward" size={20} />
+                </button>
+                <button 
+                  type="button"
+                  className="p-2 text-[var(--theme-text)] hover:text-white transition-colors"
                   onClick={() => moveLink(idx, 'down')}
                   disabled={idx === links.length - 1}
+                  style={{ opacity: idx === links.length - 1 ? 0.3 : 1 }}
                 >
-                  <Icon name="arrow_downward" size={16} />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  <Icon name="arrow_downward" size={20} />
+                </button>
+                <button 
+                  type="button"
+                  className="p-2 text-red-500 hover:text-red-400 transition-colors"
                   onClick={() => removeLink(idx)}
                 >
-                  <Icon name="delete" size={16} />
-                </Button>
+                  <Icon name="delete" size={20} />
+                </button>
               </div>
             </div>
           ))}
@@ -208,7 +204,7 @@ export default function LinkCleanerPage() {
                 type="number"
                 value={maxImageSize}
                 onChange={(e) => setMaxImageSize(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                 min="0"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
@@ -224,7 +220,7 @@ export default function LinkCleanerPage() {
                 type="number"
                 value={maxVideoSize}
                 onChange={(e) => setMaxVideoSize(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                 min="0"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
@@ -240,7 +236,7 @@ export default function LinkCleanerPage() {
                 type="number"
                 value={maxOtherSize}
                 onChange={(e) => setMaxOtherSize(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg px-3 py-2 text-sm text-white border focus:outline-none transition-colors"
+                className="w-full rounded-lg px-3 py-2 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                 min="0"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
@@ -272,8 +268,7 @@ export default function LinkCleanerPage() {
               Processing Folders
             </span>
           ) : (
-            <span className="flex items-center gap-2">
-              <Icon name="bolt" size={18} />
+            <span className="flex items-center justify-center">
               Clean Links
             </span>
           )}

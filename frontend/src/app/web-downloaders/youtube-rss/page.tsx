@@ -52,6 +52,7 @@ function YoutubeRssContent() {
   const [channelSearch, setChannelSearch] = useState("");
   const [channelSort, setChannelSort] = useState("Added Order");
   const [selectedToDelete, setSelectedToDelete] = useState<Set<string>>(new Set());
+  const [hideShorts, setHideShorts] = useState(true);
 
   useEffect(() => {
     fetchChannels();
@@ -195,7 +196,11 @@ function YoutubeRssContent() {
     }
   }, [feedCache]); // Sync when feedCache updates
 
-  const filteredVideos = allVideos.filter(v => selectedYm && v.published.startsWith(selectedYm));
+  const filteredVideos = allVideos.filter(v => {
+    if (selectedYm && !v.published.startsWith(selectedYm)) return false;
+    if (hideShorts && v.link.includes("youtube.com/shorts/")) return false;
+    return true;
+  });
 
   // Channel View preparation
   let displayChannels = [...channels];
@@ -207,123 +212,59 @@ function YoutubeRssContent() {
 
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header
         title="YouTube RSS Feed"
         subtitle="Track your favorite YouTube channels locally without logging into an account."
         actions={
-          <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-            {isRefreshing && (
-              <span className="text-xs text-[var(--theme-text)] flex items-center gap-1.5 animate-pulse mr-2">
-                <Icon name="refresh" size={12} className="animate-spin" />
-                Refreshing...
-              </span>
-            )}
-            <Button variant="secondary" onClick={refreshFeeds} isLoading={isRefreshing}>
-              Refresh Feeds
-            </Button>
-            <ModernTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab as (id: string) => void}
-              tabs={[
-                { id: "timeline", label: "Timeline View" },
-                { id: "channels", label: "Channel View" }
-              ]}
-            />
-          </div>
+          <ModernTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab as (id: string) => void}
+            actionButton={
+              <button 
+                onClick={refreshFeeds}
+                disabled={isRefreshing}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+              >
+                {isRefreshing ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon name="refresh" size={16} />}
+                Refresh
+              </button>
+            }
+            tabs={[
+              { id: "timeline", label: "Timeline View" },
+              { id: "channels", label: "Channel View" }
+            ]}
+          />
         }
       />
 
-      <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 mb-8 backdrop-blur-md shadow-sm">
-        <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Track New Channel
-        </h2>
-        
-        <div className="flex gap-2 mb-6 border-b border-[var(--theme-ui-border)] pb-2">
-          <button onClick={() => setAddMethod("search")} className={`text-sm px-4 py-2 rounded-md transition-colors ${addMethod === "search" ? "bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] font-semibold" : "text-[var(--theme-text)] hover:text-[var(--theme-heading)]"}`}>Search by Name</button>
-          <button onClick={() => setAddMethod("manual")} className={`text-sm px-4 py-2 rounded-md transition-colors ${addMethod === "manual" ? "bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] font-semibold" : "text-[var(--theme-text)] hover:text-[var(--theme-heading)]"}`}>Manual ID Entry</button>
-          <button onClick={() => setAddMethod("import")} className={`text-sm px-4 py-2 rounded-md transition-colors ${addMethod === "import" ? "bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] font-semibold" : "text-[var(--theme-text)] hover:text-[var(--theme-heading)]"}`}>Import Takeout CSV</button>
-        </div>
-
-        {addMethod === "search" && (
-          <form onSubmit={handleSearchAdd} className="flex gap-4">
-            <input 
-              type="text" 
-              placeholder="e.g., Linus Tech Tips" 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
-              style={{ 
-                backgroundColor: "var(--theme-bg)",
-                borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
-            />
-            <Button variant="primary" type="submit" isLoading={isSearching} icon={<Icon name="search" size={18} />}>Search &amp; Add</Button>
-          </form>
-        )}
-
-        {addMethod === "manual" && (
-          <form onSubmit={handleManualAdd} className="flex gap-4">
-            <input 
-              type="text" 
-              placeholder="Channel Alias (e.g., MKBHD)" 
-              value={manualName}
-              onChange={e => setManualName(e.target.value)}
-              className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
-              style={{ 
-                backgroundColor: "var(--theme-bg)",
-                borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
-            />
-            <input 
-              type="text" 
-              placeholder="Channel ID (e.g., UCBJycsmduvYEL83R_U4JriQ)" 
-              value={manualId}
-              onChange={e => setManualId(e.target.value)}
-              className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
-              style={{ 
-                backgroundColor: "var(--theme-bg)",
-                borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-              onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
-            />
-            <Button variant="secondary" type="submit" isLoading={isAddingManual}>Track Channel</Button>
-          </form>
-        )}
-
-        {addMethod === "import" && (
-          <div>
-            <p className="text-[var(--theme-text)] text-sm mb-4">Import a <code className="bg-[var(--theme-bg)] px-1 rounded text-[var(--theme-text)]">subscriptions.csv</code> file directly from Google Takeout.</p>
-            <div className="relative">
-              <DirectUploadBox
-                accept=".csv"
-                label={isImporting ? "Importing..." : "Upload subscriptions.csv"}
-                onUploadComplete={handleUploadComplete}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-
       <ModernTabContent activeTab={activeTab}>
-          {activeTab === "timeline" && (
-                  <div className="flex gap-8">
+        {activeTab === "timeline" ? (
+          <div className="flex gap-8">
                     <div className="w-48 flex-shrink-0 border-r border-[var(--theme-ui-border)] pr-6">
                       <h3 className="text-[var(--theme-heading)] font-semibold mb-4">Jump to Date</h3>
+                      
+                      <div className="mb-6 bg-[var(--theme-ui-bg)] rounded-xl border border-[var(--theme-ui-border)] p-3">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <div className="relative">
+                            <input type="checkbox" className="sr-only" checked={hideShorts} onChange={(e) => setHideShorts(e.target.checked)} />
+                            <div className={`block w-10 h-6 rounded-full transition-colors ${hideShorts ? 'bg-[var(--theme-heading)]' : 'bg-[var(--theme-bg)] border border-[var(--theme-ui-border)]'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${hideShorts ? 'translate-x-4' : ''}`}></div>
+                          </div>
+                          <span className="text-sm font-medium text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] transition-colors">Hide Shorts</span>
+                        </label>
+                      </div>
+
                       <div className="flex flex-col gap-2">
                         {uniqueYms.map((ym, idx) => (
-                          <button 
+                          <Button 
                             key={ym}
+                            variant="secondary"
                             onClick={() => setSelectedYm(ym)}
-                            className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${selectedYm === ym ? "bg-[var(--theme-heading)]/20 text-[var(--theme-heading)] font-semibold" : "text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-[var(--theme-bg)]"}`}
+                            className={`!w-full justify-start text-left ${selectedYm === ym ? "!bg-[var(--theme-heading)] !text-[var(--theme-bg)]" : "!bg-[var(--theme-bg)] !text-[var(--theme-text)] border-transparent hover:!border-[var(--theme-heading)] hover:!text-[var(--theme-heading)]"}`}
                           >
                             {ymLabels[idx]}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -339,13 +280,22 @@ function YoutubeRssContent() {
                           } catch {}
                           
                           return (
-                            <div key={idx} className="p-4 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl hover:border-[var(--theme-heading)] transition-colors">
-                              <a href={vid.link} target="_blank" rel="noreferrer" className="text-lg font-semibold text-[var(--theme-text)] hover:text-[var(--theme-heading)] mb-1 block">
-                                {vid.title}
-                              </a>
-                              <div className="text-sm font-medium text-[var(--theme-text)] mb-2">{vid.channel_name}</div>
-                              <div className="text-xs text-[var(--theme-text)] flex items-center gap-1">
-                                <Icon name="schedule" size={12} /> {dateStr}
+                            <div key={idx} className="p-4 bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl hover:border-[var(--theme-heading)] transition-colors flex gap-4">
+                              <div className="w-32 h-20 rounded-lg overflow-hidden shrink-0 bg-black flex items-center justify-center relative">
+                                {vid.thumbnail ? (
+                                  <img src={vid.thumbnail} alt={vid.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Icon name="movie" size={24} className="text-white/20" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <a href={vid.link} target="_blank" rel="noreferrer" className="text-lg font-semibold text-[var(--theme-text)] hover:text-[var(--theme-heading)] mb-1 block truncate">
+                                  {vid.title}
+                                </a>
+                                <div className="text-sm font-medium text-[var(--theme-text)] mb-2 truncate">{vid.channel_name}</div>
+                                <div className="text-xs text-[var(--theme-text)] flex items-center gap-1">
+                                  <Icon name="schedule" size={12} /> {dateStr}
+                                </div>
                               </div>
                             </div>
                           )
@@ -353,12 +303,83 @@ function YoutubeRssContent() {
                       )}
                     </div>
                   </div>
-                )}
-          </ModernTabContent>
+          ) : (
+            <div>
+              <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 mb-8 backdrop-blur-md shadow-sm">
+                <h2 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 flex items-center gap-2">Track New Channel</h2>
+                
+                <div className="flex gap-2 mb-6 border-b border-[var(--theme-ui-border)] pb-2">
+                  <Button variant="secondary" onClick={() => setAddMethod("search")} className={`!w-auto shrink-0 ${addMethod === "search" ? "!bg-[var(--theme-heading)] !text-[var(--theme-bg)]" : "!bg-[var(--theme-bg)] !text-[var(--theme-text)] border-transparent hover:!border-[var(--theme-heading)] hover:!text-[var(--theme-heading)]"}`}>Search by Name</Button>
+                  <Button variant="secondary" onClick={() => setAddMethod("manual")} className={`!w-auto shrink-0 ${addMethod === "manual" ? "!bg-[var(--theme-heading)] !text-[var(--theme-bg)]" : "!bg-[var(--theme-bg)] !text-[var(--theme-text)] border-transparent hover:!border-[var(--theme-heading)] hover:!text-[var(--theme-heading)]"}`}>Manual ID Entry</Button>
+                  <Button variant="secondary" onClick={() => setAddMethod("import")} className={`!w-auto shrink-0 ${addMethod === "import" ? "!bg-[var(--theme-heading)] !text-[var(--theme-bg)]" : "!bg-[var(--theme-bg)] !text-[var(--theme-text)] border-transparent hover:!border-[var(--theme-heading)] hover:!text-[var(--theme-heading)]"}`}>Import Takeout CSV</Button>
+                </div>
 
-      <ModernTabContent activeTab={activeTab}>
-          {activeTab === "channels" && (
+                {addMethod === "search" && (
+                  <form onSubmit={handleSearchAdd} className="flex gap-4">
+                    <input 
+                      type="text" 
+                      placeholder="e.g., Linus Tech Tips" 
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                      style={{ 
+                        backgroundColor: "var(--theme-bg)",
+                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
+                    />
+                    <Button variant="primary" type="submit" isLoading={isSearching} className="!w-auto shrink-0 px-6">Search &amp; Add</Button>
+                  </form>
+                )}
+
+                {addMethod === "manual" && (
+                  <form onSubmit={handleManualAdd} className="flex gap-4">
+                    <input 
+                      type="text" 
+                      placeholder="Channel Alias (e.g., MKBHD)" 
+                      value={manualName}
+                      onChange={e => setManualName(e.target.value)}
+                      className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                      style={{ 
+                        backgroundColor: "var(--theme-bg)",
+                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Channel ID (e.g., UCBJycsmduvYEL83R_U4JriQ)" 
+                      value={manualId}
+                      onChange={e => setManualId(e.target.value)}
+                      className="flex-1 rounded-lg p-2.5 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                      style={{ 
+                        backgroundColor: "var(--theme-bg)",
+                        borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"} 
+                    />
+                    <Button variant="primary" type="submit" isLoading={isAddingManual} className="!w-auto shrink-0 px-6">Add Channel</Button>
+                  </form>
+                )}
+
+                {addMethod === "import" && (
                   <div>
+                    <p className="text-[var(--theme-text)] text-sm mb-4">Import a <code className="bg-[var(--theme-bg)] px-1 rounded text-[var(--theme-text)]">subscriptions.csv</code> file directly from Google Takeout.</p>
+                    <div className="relative">
+                      <DirectUploadBox
+                        accept=".csv"
+                        label={isImporting ? "Importing..." : "Upload subscriptions.csv"}
+                        onUploadComplete={handleUploadComplete}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div>
                     <div className="flex items-center gap-4 mb-6">
                       <div className="relative flex-1">
                         <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
@@ -451,10 +472,11 @@ function YoutubeRssContent() {
                           )
                         })
                       )}
-                    </div>
-                  </div>
-                )}
-          </ModernTabContent>
+              </div>
+            </div>
+            </div>
+          )}
+        </ModernTabContent>
     </div>
   );
 }

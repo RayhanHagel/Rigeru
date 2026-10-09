@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect, useRef } from "react";
 
@@ -40,7 +41,7 @@ export default function DepthEstimationPage() {
 
   useEffect(() => {
     // Fetch cameras
-    fetch("http://127.0.0.1:8000/api/media-vision/object-detect/cameras")
+    fetch("/api/media-vision/object-detect/cameras")
       .then(res => res.json())
       .then(data => {
         if (data.cameras) setCameras(data.cameras);
@@ -68,11 +69,11 @@ export default function DepthEstimationPage() {
     formData.append("colormap", colormap);
     formData.append("invert", invert.toString());
 
-    let endpoint = "http://127.0.0.1:8000/api/media-vision/depth-image";
+    let endpoint = "/api/media-vision/depth-image";
     if (activeTab === "Video") {
       formData.append("encoder", "libx264"); // Default encoder
       formData.append("ai_fps", aiFps.toString());
-      endpoint = "http://127.0.0.1:8000/api/media-vision/depth-video";
+      endpoint = "/api/media-vision/depth-video";
     }
 
     try {
@@ -101,10 +102,10 @@ export default function DepthEstimationPage() {
       setStreamUrl(null);
       const fd = new FormData();
       fd.append("camera_index", cameraIndex.toString());
-      fetch("http://127.0.0.1:8000/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
+      fetch("/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
     } else {
       setWebcamActive(true);
-      const url = new URL("http://127.0.0.1:8000/api/media-vision/depth-estimation/webcam-stream");
+      const url = new URL("/api/media-vision/depth-estimation/webcam-stream");
       url.searchParams.append("camera_index", cameraIndex.toString());
       url.searchParams.append("colormap", colormap);
       url.searchParams.append("invert", invert.toString());
@@ -116,7 +117,7 @@ export default function DepthEstimationPage() {
 
   useEffect(() => {
     if (webcamActive) {
-      const url = new URL("http://127.0.0.1:8000/api/media-vision/depth-estimation/webcam-stream");
+      const url = new URL("/api/media-vision/depth-estimation/webcam-stream");
       url.searchParams.append("camera_index", cameraIndex.toString());
       url.searchParams.append("colormap", colormap);
       url.searchParams.append("invert", invert.toString());
@@ -204,18 +205,16 @@ export default function DepthEstimationPage() {
   );
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">Depth Estimation</h1>
-          <p className="text-[var(--theme-text)] text-sm font-medium">Generate high-quality monocular depth maps from images, videos, and webcams.</p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="Depth Estimation"
+        subtitle="Generate high-quality monocular depth maps from images, videos, and webcams."
+        actions={
           <ModernTabs
             tabs={[
-              { id: "Image", label: "Image Depth", icon: <Icon name="image" size={18} /> },
-              { id: "Video", label: "Video Depth", icon: <Icon name="movie" size={18} /> },
-              { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
+              { id: "Image", label: "Image Depth" },
+              { id: "Video", label: "Video Depth" },
+              { id: "Live Camera", label: "Live Camera" }
             ]}
             activeTab={activeTab}
             setActiveTab={(tab) => {
@@ -224,8 +223,8 @@ export default function DepthEstimationPage() {
               if (webcamActive) toggleWebcam();
             }}
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="mt-8">
         {(activeTab === "Image" || activeTab === "Video") && (
@@ -240,7 +239,7 @@ export default function DepthEstimationPage() {
                   label={`Upload ${activeTab}`}
                   onUploadComplete={(info) => {
                     setMediaHash(info.hash_name);
-                    setMediaOriginalUrl(`http://127.0.0.1:8000/uploads/${info.hash_name}`);
+                    setMediaOriginalUrl(`/uploads/${info.hash_name}`);
                   }}
                   onClear={clearState}
                 />

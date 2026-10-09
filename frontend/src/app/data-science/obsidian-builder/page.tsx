@@ -47,7 +47,7 @@ export default function ObsidianBuilderPage() {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/vaults?token=${token}`);
+      const res = await fetch(`/api/files-documents/obsidian/vaults?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setVaults(data);
@@ -61,7 +61,7 @@ export default function ObsidianBuilderPage() {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/settings?token=${token}`);
+      const res = await fetch(`/api/files-documents/obsidian/settings?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setGraphSettings(data);
@@ -88,7 +88,7 @@ export default function ObsidianBuilderPage() {
     const timer = setTimeout(() => {
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      fetch(`http://${host}:8000/api/files-documents/obsidian/settings?token=${token}`, {
+      fetch(`/api/files-documents/obsidian/settings?token=${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(graphSettings)
@@ -102,7 +102,7 @@ export default function ObsidianBuilderPage() {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}?token=${token}`, {
+      const res = await fetch(`/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}?token=${token}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -120,7 +120,7 @@ export default function ObsidianBuilderPage() {
     try {
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}/topics/${encodeURIComponent(topic)}?token=${token}`, {
+      const res = await fetch(`/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}/topics/${encodeURIComponent(topic)}?token=${token}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -142,7 +142,7 @@ export default function ObsidianBuilderPage() {
       setStatusMsg(`Loading graph for ${vName}...`);
       const token = localStorage.getItem("auth_token") || "";
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}/graph?token=${token}`);
+      const res = await fetch(`/api/files-documents/obsidian/vaults/${encodeURIComponent(vName)}/graph?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setGraphData(data);
@@ -164,7 +164,7 @@ export default function ObsidianBuilderPage() {
     try {
         const token = localStorage.getItem("auth_token") || "";
         const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-        const res = await fetch(`http://${host}:8000/api/files-documents/obsidian/vaults/${encodeURIComponent(vaultName)}/node/${encodeURIComponent(nodeId)}?token=${token}`);
+        const res = await fetch(`/api/files-documents/obsidian/vaults/${encodeURIComponent(vaultName)}/node/${encodeURIComponent(nodeId)}?token=${token}`);
         if (res.ok) {
             const data = await res.json();
             setMarkdownContent(data.content);
@@ -197,10 +197,7 @@ export default function ObsidianBuilderPage() {
     const encodedTopic = encodeURIComponent(topic);
     const encodedVault = encodeURIComponent(vaultName);
     
-    // Bypass Next.js proxy for SSE because it buffers the stream in dev mode
-    const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-    const backendUrl = `http://${host}:8000`;
-    const sseUrl = `${backendUrl}/api/files-documents/obsidian/stream?topic=${encodedTopic}&vault=${encodedVault}&max_pages=${maxPages}&max_depth=${maxDepth}&token=${token}`;
+    const sseUrl = `/api/files-documents/obsidian/stream?topic=${encodedTopic}&vault=${encodedVault}&max_pages=${maxPages}&max_depth=${maxDepth}&token=${token}`;
     
     const es = new EventSource(sseUrl);
     eventSourceRef.current = es;
@@ -285,7 +282,7 @@ export default function ObsidianBuilderPage() {
   }, [graphData, graphSettings.displayDepth]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="AI Obsidian Builder" subtitle="Autonomous agent that researches topics and builds a connected Markdown vault." />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

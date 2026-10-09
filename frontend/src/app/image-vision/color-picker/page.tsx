@@ -14,7 +14,7 @@ type ColorResult = {
 } | null;
 
 export default function ColorPickerPage() {
-  const [file, setFile] = useState<File | null>(null);
+  const [fileHash, setFileHash] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState("");
   
@@ -30,7 +30,7 @@ export default function ColorPickerPage() {
   const imgRef = useRef<HTMLImageElement>(null);
 
   const clearState = () => {
-    setFile(null);
+    setFileHash(null);
     setPreviewUrl(null);
     setFilename("");
     setColorResult(null);
@@ -39,7 +39,7 @@ export default function ColorPickerPage() {
   };
 
   const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!file || !imgRef.current) return;
+    if (!fileHash || !imgRef.current) return;
     
     const rect = imgRef.current.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width;
@@ -58,11 +58,11 @@ export default function ColorPickerPage() {
     
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file_hash", fileHash);
       formData.append("x", x.toString());
       formData.append("y", y.toString());
       
-      const res = await fetch("http://127.0.0.1:8000/api/media-vision/color-picker", {
+      const res = await fetch("/api/media-vision/color-picker", {
         method: "POST",
         body: formData
       });
@@ -90,7 +90,7 @@ export default function ColorPickerPage() {
   };
 
   const generatePalette = async () => {
-    if (!file) return;
+    if (!fileHash) return;
     setIsPaletteLoading(true);
     setErrorMsg("");
     setPaletteResult(null);
@@ -98,10 +98,10 @@ export default function ColorPickerPage() {
     
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file_hash", fileHash);
       formData.append("num_colors", "5");
       
-      const res = await fetch("http://127.0.0.1:8000/api/media-vision/color-palette", {
+      const res = await fetch("/api/media-vision/color-palette", {
         method: "POST",
         body: formData
       });
@@ -130,14 +130,8 @@ export default function ColorPickerPage() {
     setTimeout(() => setCopiedText(""), 2000);
   };
 
-  const fetchBlob = async (url: string) => {
-    const r = await fetch(url);
-    const b = await r.blob();
-    return new File([b], "image.jpg", { type: b.type });
-  };
-
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Image Color Picker" subtitle="Upload an image and click anywhere on it to extract the exact HEX and RGB color codes." />
 
       <div className="flex flex-col gap-8 w-full">
@@ -152,9 +146,9 @@ export default function ColorPickerPage() {
                   label="Upload Image"
                   onUploadComplete={async (info) => {
                     setFilename(info.original_name);
-                    const url = `http://127.0.0.1:8000/uploads/${info.hash_name}`;
+                    const url = `/uploads/${info.hash_name}`;
                     setPreviewUrl(url);
-                    setFile(await fetchBlob(url));
+                    setFileHash(info.hash_name);
                     setColorResult(null);
                     setPaletteResult(null);
                   }}
@@ -171,7 +165,7 @@ export default function ColorPickerPage() {
                 <Button variant="primary"
                   className="w-full h-12 text-lg mt-2 border-none !shadow-none !ring-0 !outline-none transition-colors"
                   onClick={generatePalette}
-                  disabled={!file || isPaletteLoading}
+                  disabled={!fileHash || isPaletteLoading}
                   isLoading={isPaletteLoading}
                  style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}>
                   {isPaletteLoading ? "Generating Palette..." : "Generate Full Palette"}
@@ -234,13 +228,13 @@ export default function ColorPickerPage() {
                       <span className="text-[var(--theme-text)] font-mono text-sm">HEX</span>
                       <div className="flex items-center gap-3">
                         <span className="text-[var(--theme-heading)] font-mono font-medium">{colorResult.hex}</span>
-                        <button 
+                        <Button 
+                          size="sm"
                           onClick={() => handleCopy(colorResult.hex, "hex")}
-                          className="text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
                           title="Copy HEX"
                         >
-                          {copiedText === "hex" ? <Icon name="check" size={16} className="text-emerald-500" /> : <Icon name="content_copy" size={16} />}
-                        </button>
+                          {copiedText === "hex" ? "Copied!" : "Copy"}
+                        </Button>
                       </div>
                     </div>
 
@@ -248,13 +242,13 @@ export default function ColorPickerPage() {
                       <span className="text-[var(--theme-text)] font-mono text-sm">RGB</span>
                       <div className="flex items-center gap-3">
                         <span className="text-[var(--theme-heading)] font-mono font-medium">{colorResult.rgb}</span>
-                        <button 
+                        <Button 
+                          size="sm"
                           onClick={() => handleCopy(colorResult.rgb, "rgb")}
-                          className="text-[var(--theme-text)] hover:text-[var(--theme-heading)] transition-colors"
                           title="Copy RGB"
                         >
-                          {copiedText === "rgb" ? <Icon name="check" size={16} className="text-emerald-500" /> : <Icon name="content_copy" size={16} />}
-                        </button>
+                          {copiedText === "rgb" ? "Copied!" : "Copy"}
+                        </Button>
                       </div>
                     </div>
                   </div>

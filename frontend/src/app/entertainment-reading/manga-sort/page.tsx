@@ -22,6 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { Icon } from "@/lib/utils";
 
 type MangaData = {
@@ -158,14 +159,16 @@ export default function MangaSortPage() {
         title="Sort Library"
         subtitle="Drag and drop manga cards to reorder your library."
         actions={
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")} icon={<Icon name="arrow_back" size={16} />}>
-              Back to Library
-            </Button>
-            <Button variant="primary" onClick={handleSave} isLoading={isSaving} icon={<Icon name="save" size={16} />}>
-              Save Order
-            </Button>
-          </div>
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" onClick={() => router.push("/entertainment-reading/manga-library")}>
+                Back to Library
+              </Button>
+              <Button variant="primary" onClick={handleSave} isLoading={isSaving}>
+                Save Order
+              </Button>
+            </div>
+          } />
         }
       />
 

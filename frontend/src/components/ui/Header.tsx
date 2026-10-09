@@ -28,9 +28,10 @@ export function Header({ title, subtitle, className = "", actions }: HeaderProps
 }
 
 export function STTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <h2 className={`text-xl font-bold text-zinc-100 mb-4 ${className}`}>{children}</h2>;
+  return <h2 className={`text-xl font-bold text-[var(--theme-heading)] mb-4 ${className}`}>{children}</h2>;
 }
 
 export function STMarkdown({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`text-zinc-300 text-sm leading-relaxed mb-4 ${className}`}>{children}</div>;
+  return <div className={`text-[var(--theme-text)] text-sm leading-relaxed mb-4 ${className}`}>{children}</div>;
 }
+

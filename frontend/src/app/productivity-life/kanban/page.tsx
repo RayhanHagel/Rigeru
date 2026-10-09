@@ -4,6 +4,7 @@ import { Header } from "@/components/ui/Header";
 import React, { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { Icon } from "@/lib/utils";
 
 interface Task {
@@ -119,24 +120,22 @@ export default function KanbanPage() {
   ];
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <Header 
-          title="Kanban Board" 
-          subtitle="Organize your tasks and sync them with Google Calendar." 
-        />
-        
-        <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
-          <Button 
-            variant="secondary" 
-            onClick={handleSyncCalendar} 
-            disabled={syncing}
-            icon={syncing ? <Icon name="refresh" size={18} className="animate-spin text-[var(--theme-heading)]" /> : <Icon name="calendar_today" size={18} className="text-[var(--theme-heading)]" />}
-          >
-            {syncing ? "Syncing" : "Sync to Calendar"}
-          </Button>
-        </div>
-      </div>
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
+      <Header 
+        title="Kanban Board" 
+        subtitle="Organize your tasks and sync them with Google Calendar." 
+        actions={
+          <ModernTabs actionButton={
+            <button 
+              onClick={handleSyncCalendar} 
+              disabled={syncing}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 ${syncing ? 'text-[var(--theme-heading)] opacity-70' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
+            >
+              {syncing ? "Syncing..." : "Sync to Calendar"}
+            </button>
+          } />
+        }
+      />
 
       {syncMsg.text && (
         <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${syncMsg.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'}`}>
@@ -153,12 +152,14 @@ export default function KanbanPage() {
             <div key={col.id} className={`rounded-2xl border ${col.color} p-4 flex flex-col min-h-[300px] flex-1 bg-[var(--theme-ui-bg)] backdrop-blur-md shadow-sm`}>
               <div className="flex items-center justify-between mb-4 border-b border-[var(--theme-ui-border)] pb-2">
                 <h3 className={`text-lg font-bold ${col.textColor}`}>{col.title} <span className="text-[var(--theme-text)] text-sm ml-2">({tasks.filter(t => t.status === col.id).length})</span></h3>
-                <button 
-                  onClick={() => setIsAdding(col.id)}
-                  className="p-1.5 hover:bg-[var(--theme-bg)] rounded transition-colors text-[var(--theme-text)] hover:text-[var(--theme-heading)]"
-                >
-                  <Icon name="add" size={18} />
-                </button>
+                <ModernTabs actionButton={
+              <button 
+                onClick={() => handleCreateTask(col.id)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+              >
+                Add Task
+              </button>
+            } /> 
               </div>
               
               <div className="flex flex-col gap-3">
@@ -180,8 +181,8 @@ export default function KanbanPage() {
                         className="bg-[var(--theme-ui-bg)] text-xs text-[var(--theme-text)] p-1 rounded border border-[var(--theme-ui-border)] outline-none"
                       />
                       <div className="flex gap-2">
-                        <button onClick={() => setIsAdding(null)} className="text-xs text-[var(--theme-text)] hover:text-[var(--theme-heading)]">Cancel</button>
-                        <button onClick={() => handleCreateTask(col.id)} className={`text-xs font-bold ${col.textColor}`}>Add</button>
+                        <Button size="sm" onClick={() => setIsAdding(null)} className="!w-auto !h-auto !py-1 !px-2 !bg-transparent text-[var(--theme-text)] hover:!text-[var(--theme-heading)]">Cancel</Button>
+                        <Button size="sm" onClick={() => handleCreateTask(col.id)} className={`!w-auto !h-auto !py-1 !px-3 font-bold ${col.textColor}`}>Add</Button>
                       </div>
                     </div>
                   </div>
@@ -211,7 +212,7 @@ export default function KanbanPage() {
                         <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="in_progress">In Progress</option>
                         <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="done">Done</option>
                       </select>
-                      <button onClick={() => handleDeleteTask(task.id)} className="text-[var(--theme-text)] hover:text-red-400 px-2 py-1 transition-colors">✕</button>
+                      <Button size="sm" onClick={() => handleDeleteTask(task.id)} className="!w-auto !h-auto !p-0 px-2 py-1 !bg-transparent text-[var(--theme-text)] hover:!text-red-400 transition-colors">✕</Button>
                     </div>
                   </div>
                 ))}

@@ -202,7 +202,7 @@ export default function FileOrganizerPage() {
   const isFinished = currentIdx >= filesList.length && filesList.length > 0;
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Rapid File Organizer" subtitle="Browse your folders, scan, then Open, Move, Rename, Skip, Delete, or Undo." />
       <div className="flex flex-col gap-6 w-full">
 
@@ -220,7 +220,7 @@ export default function FileOrganizerPage() {
         )}
 
         {/* Config Area */}
-        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md space-y-5">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 shadow-sm backdrop-blur-md space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-2">
               <label className="text-sm font-medium text-[var(--theme-text)] ml-1">Source Directory (To Scan)</label>
@@ -232,7 +232,7 @@ export default function FileOrganizerPage() {
                   type="text"
                   value={sourcePath}
                   onChange={(e) => setSourcePath(e.target.value)}
-                  className="w-full rounded-xl pl-10 pr-12 py-3 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                  className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                   placeholder="e.g. C:\Users\Username\Downloads"
                   style={{ 
                     backgroundColor: "var(--theme-bg)",
@@ -261,7 +261,7 @@ export default function FileOrganizerPage() {
                   type="text"
                   value={destPath}
                   onChange={(e) => setDestPath(e.target.value)}
-                  className="w-full rounded-xl pl-10 pr-12 py-3 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                  className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                   placeholder="e.g. C:\Users\Username\Documents\Organized"
                   style={{ 
                     backgroundColor: "var(--theme-bg)",
@@ -293,7 +293,7 @@ export default function FileOrganizerPage() {
 
         {/* Interactive Sorting Area */}
         {filesList.length > 0 && !isFinished && (
-          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md animate-slide-up flex flex-col gap-8 w-full">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 shadow-sm backdrop-blur-md animate-slide-up flex flex-col gap-8 w-full">
 
             {/* Preview */}
             <div className="w-full flex flex-col items-center justify-center bg-[var(--theme-bg)]/40 rounded-xl p-4 border border-[var(--theme-ui-border)] min-h-[300px] overflow-hidden">
@@ -363,7 +363,7 @@ export default function FileOrganizerPage() {
                     type="text"
                     value={renameVal}
                     onChange={(e) => setRenameVal(e.target.value)}
-                    className="flex-1 rounded-xl px-4 py-2 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                    className="flex-1 rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                     placeholder="New name (blank to keep)"
                     style={{ 
                       backgroundColor: "var(--theme-bg)",
@@ -387,7 +387,7 @@ export default function FileOrganizerPage() {
         )}
 
         {isFinished && (
-          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-12 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center animate-slide-up">
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-12 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center animate-slide-up">
             <Icon name="check_circle" size={64} className="text-green-500 mb-6" />
             <h2 className="text-3xl font-bold text-[var(--theme-heading)] mb-4">All Caught Up!</h2>
             <p className="text-[var(--theme-text)] text-lg mb-8">You have successfully processed all files in this folder.</p>

@@ -49,7 +49,7 @@ export default function MathLatexPage() {
     setResult(null);
     setErrorMsg("");
     setCompletedCrop(null);
-    setPreviewUrl(`http://localhost:8000/uploads/${info.hash_name}`);
+    setPreviewUrl(`/uploads/${info.hash_name}`);
   };
 
   const handleClearFile = () => {
@@ -148,7 +148,7 @@ export default function MathLatexPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 shrink-0">
         <Header title="Math Screenshot to LaTeX" subtitle="Upload a screenshot of a mathematical equation, crop it, and convert it to copyable LaTeX code." className="mb-0 border-none pb-0" />
       

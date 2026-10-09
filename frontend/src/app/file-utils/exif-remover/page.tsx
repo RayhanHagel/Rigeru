@@ -94,7 +94,7 @@ export default function ExifRemoverPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="EXIF Metadata Stripper" subtitle="Upload a photo to view hidden metadata (like GPS coordinates or camera info) and strip it out for privacy." />
 
       <div className="flex flex-col gap-6 animate-slide-up w-full">
@@ -107,7 +107,7 @@ export default function ExifRemoverPage() {
               onUploadComplete={(info) => {
                 setFileHash(info.hash_name);
                 setFileName(info.original_name);
-                setPreviewUrl(`http://127.0.0.1:8000/uploads/${info.hash_name}`);
+                setPreviewUrl(`/uploads/${info.hash_name}`);
                 setExifData(null);
                 setAnalyzeError("");
                 setStripError("");

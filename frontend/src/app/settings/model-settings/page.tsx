@@ -21,20 +21,22 @@ interface OllamaModel {
 
 const PRESET_MODELS = {
   expense_tracker: [
-    "naver-clova-ix/donut-base-finetuned-cord-v2",
+    "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Qwen/Qwen2.5-VL-7B-Instruct",
     "Qwen/Qwen2-VL-2B-Instruct",
-    "Qwen/Qwen2-VL-7B-Instruct"
+    "naver-clova-ix/donut-base-finetuned-cord-v2"
   ],
   math_latex: [
+    "Qwen/Qwen2.5-VL-3B-Instruct",
     "stepfun-ai/GOT-OCR2_0",
+    "prithivMLmods/Qwen2-VL-OCR-2B-Instruct",
     "ATH-MaaS/OvisOCR2",
     "baidu/Unlimited-OCR",
-    "prithivMLmods/Qwen2-VL-OCR-2B-Instruct",
     "breezedeus/pix2text-mfr"
   ],
   audio_transcription: [
-    "whisper-tiny", "whisper-base", "whisper-small", "whisper-medium", "whisper-large-v1", "whisper-large-v2", "whisper-large-v3",
-    "Systran/faster-whisper-tiny", "Systran/faster-whisper-base", "Systran/faster-whisper-small", "Systran/faster-whisper-medium", "Systran/faster-whisper-large-v1", "Systran/faster-whisper-large-v2", "Systran/faster-whisper-large-v3",
+    "Systran/faster-whisper-small", "Systran/faster-whisper-medium", "Systran/faster-whisper-base",
+    "whisper-base", "whisper-small", "whisper-medium", "whisper-large-v3",
     "UsefulSensors/moonshine-tiny", "UsefulSensors/moonshine-base"
   ],
   speaker_diarization: [
@@ -45,7 +47,7 @@ const PRESET_MODELS = {
     "yolov8n.pt", "yolov8s.pt", "yolov8m.pt", "yolov8l.pt", "yolov8x.pt"
   ],
   face_blur: [
-    "buffalo_l", "buffalo_m", "buffalo_s", "antelopev2", "retinaface", "mediapipe"
+    "buffalo_l", "buffalo_m", "buffalo_s", "antelopev2"
   ],
   depth_estimation: [
     "onnx-community/depth-anything-v2-small",
@@ -55,11 +57,12 @@ const PRESET_MODELS = {
     "2", "4", "8"
   ],
   translation: [
-    "google-t5/t5-small",
+    "facebook/nllb-200-distilled-600M",
     "google-t5/t5-base",
-    "facebook/nllb-200-distilled-600M"
+    "google-t5/t5-small"
   ],
   voice_cloning_tts: [
+    "hexgrad/Kokoro-82M",
     "k2-fsa/OmniVoice"
   ]
 };
@@ -363,12 +366,12 @@ export default function ModelSettingsPage() {
     
     return (
       <div className="animate-slide-up flex flex-col gap-1.5">
-        <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">{label}</label>
+        <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">{label}</label>
         <div className="flex gap-2">
             <select
               value={currentValue}
               onChange={e => updateConfigVal(configKey, e.target.value)}
-              className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+              className="flex-1 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
             >
               {options.map(opt => (
                 <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={opt} value={opt}>{opt}</option>
@@ -399,13 +402,13 @@ export default function ModelSettingsPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
       <Header title="Model Settings" subtitle="Configure default AI models, manage your API token, and clean up your cache directory to free up disk space." />
 
       {/* Global Model Preferences */}
-      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
-        <div className="flex justify-between items-center border-b border-white/10 pb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">Global Model Preferences
+      <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
+        <div className="flex justify-between items-center border-b border-[var(--theme-ui-border)] pb-4">
+            <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">Global Model Preferences
             </h3>
             <Button 
                 variant="primary" 
@@ -425,13 +428,13 @@ export default function ModelSettingsPage() {
         )}
 
         {/* Global Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-2 pb-6 border-b border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-2 pb-6 border-b border-[var(--theme-ui-border)]/50">
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="Configures whether PyTorch models and HuggingFace pipelines should try to load into GPU VRAM or stay on CPU (System RAM). Applies to Whisper, Rembg, Transformers, etc.">Device Preference</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Configures whether PyTorch models and HuggingFace pipelines should try to load into GPU VRAM or stay on CPU (System RAM). Applies to Whisper, Rembg, Transformers, etc.">Device Preference</label>
                 <select
                     value={config.device_preference || "Auto-Detect"}
                     onChange={e => updateConfigVal("device_preference", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="Configures whether PyTorch models and HuggingFace pipelines should try to load into GPU VRAM or stay on CPU (System RAM). Applies to Whisper, Rembg, Transformers, etc."
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Auto-Detect">Auto-Detect</option>
@@ -440,11 +443,11 @@ export default function ModelSettingsPage() {
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="Use FP16 or INT8 precision for HuggingFace pipeline models to save VRAM and speed up inference. Applies to Whisper, Translation, and OCR.">Hardware Optimization</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Use FP16 or INT8 precision for HuggingFace pipeline models to save VRAM and speed up inference. Applies to Whisper, Translation, and OCR.">Hardware Optimization</label>
                 <select
                     value={config.hardware_optimization || "PyTorch (Standard)"}
                     onChange={e => updateConfigVal("hardware_optimization", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="Use FP16 or INT8 precision for HuggingFace pipeline models to save VRAM and speed up inference. Applies to Whisper, Translation, and OCR."
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="PyTorch (Standard)">PyTorch (Standard)</option>
@@ -453,11 +456,11 @@ export default function ModelSettingsPage() {
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="Converts YOLO object detection models into optimized ONNX or TensorRT engines dynamically for faster webcam tracking.">Global Compute Engine</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Converts YOLO object detection models into optimized ONNX or TensorRT engines dynamically for faster webcam tracking.">Global Compute Engine</label>
                 <select
                     value={config.global_compute_engine || "cpu"}
                     onChange={e => updateConfigVal("global_compute_engine", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="Converts YOLO object detection models into optimized ONNX or TensorRT engines dynamically for faster webcam tracking."
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="cpu">CPU / OpenVINO (cpu)</option>
@@ -467,11 +470,11 @@ export default function ModelSettingsPage() {
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="Base resolution used for YOLO vision tasks. Lower resolutions process significantly faster but with less accuracy.">Inference Resolution (Vision)</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Base resolution used for YOLO vision tasks. Lower resolutions process significantly faster but with less accuracy.">Inference Resolution (Vision)</label>
                 <select
                     value={config.inference_resolution || "640"}
                     onChange={e => updateConfigVal("inference_resolution", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="Base resolution used for YOLO vision tasks. Lower resolutions process significantly faster but with less accuracy."
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="160">160x160 (Fastest, High RAM savings)</option>
@@ -484,15 +487,15 @@ export default function ModelSettingsPage() {
 
         {/* Model Related */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            <h3 className="col-span-1 md:col-span-2 text-lg font-semibold text-white flex items-center gap-2 mt-2 mb-[-8px]">Model Related Settings
+            <h3 className="col-span-1 md:col-span-2 text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2 mt-2 mb-[-8px]">Model Related Settings
             </h3>
             
             <div className="flex flex-col gap-2">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Image Upscaler Scale</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Image Upscaler Scale</label>
                 <select
                     value={config.image_upscaler_scale || "4"}
                     onChange={e => updateConfigVal("image_upscaler_scale", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="2">2x Upscale</option>
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="4">4x Upscale</option>
@@ -501,11 +504,11 @@ export default function ModelSettingsPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Background Removal Model</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Background Removal Model</label>
                 <select
                     value={config.background_removal || "u2net"}
                     onChange={e => updateConfigVal("background_removal", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="u2net">rembg (u2net) - Lightweight & Fast</option>
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="briaai-rmbg-1.4">briaai (RMBG-1.4) - High Quality</option>
@@ -524,15 +527,15 @@ export default function ModelSettingsPage() {
         </div>
 
         {/* Obsidian Builder & LLM Chatbot */}
-        <div className="mt-8 border-t border-white/5 pt-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            <h3 className="col-span-1 md:col-span-2 text-lg font-semibold text-white flex items-center gap-2 mt-2 mb-[-8px]">Obsidian AI Generator & LLM Chatbot
+        <div className="mt-8 border-t border-[var(--theme-ui-border)]/50 pt-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            <h3 className="col-span-1 md:col-span-2 text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2 mt-2 mb-[-8px]">Obsidian AI Generator & LLM Chatbot
             </h3>
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Obsidian AI Provider</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Obsidian AI Provider</label>
                 <select
                     value={config.obsidian_provider || "Hugging Face API"}
                     onChange={e => updateConfigVal("obsidian_provider", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Hugging Face API">Hugging Face API (Cloud)</option>
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="Ollama">Ollama (Local CPU/GPU)</option>
@@ -540,11 +543,11 @@ export default function ModelSettingsPage() {
             </div>
             
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Obsidian Agent Model</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Obsidian Agent Model</label>
                 <select
                     value={config.obsidian_ollama_model || "llama3:8b-instruct-q4_K_M"}
                     onChange={e => updateConfigVal("obsidian_ollama_model", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     disabled={config.obsidian_provider !== "Ollama"}
                 >
                     {ollamaModels.map(m => (
@@ -557,11 +560,11 @@ export default function ModelSettingsPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Obsidian Generator Model</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Obsidian Generator Model</label>
                 <select
                     value={config.obsidian_ollama_generator_model || config.obsidian_ollama_model || "llama3:8b-instruct-q4_K_M"}
                     onChange={e => updateConfigVal("obsidian_ollama_generator_model", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     disabled={config.obsidian_provider !== "Ollama"}
                 >
                     {ollamaModels.map(m => (
@@ -573,11 +576,11 @@ export default function ModelSettingsPage() {
                 </select>
             </div>
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Ollama Vision Model (OCR)</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Ollama Vision Model (OCR)</label>
                 <select
                     value={config.obsidian_ollama_vision_model || "llava"}
                     onChange={e => updateConfigVal("obsidian_ollama_vision_model", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     {ollamaModels.map(m => (
                         <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
@@ -589,22 +592,45 @@ export default function ModelSettingsPage() {
             </div>
             
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Scraper Max URLs</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Scraper Max URLs</label>
                 <input
                     type="number"
                     min={1} max={10}
                     value={config.obsidian_scraper_max_urls || "2"}
                     onChange={e => updateConfigVal("obsidian_scraper_max_urls", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 />
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Model Context Length</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Whether to automatically start the local Docker container for SearXNG">Run Local SearXNG Docker</label>
+                <select
+                    value={config.searxng_use_local_docker || "true"}
+                    onChange={e => updateConfigVal("searxng_use_local_docker", e.target.value)}
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
+                >
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="true">Yes (Start Docker automatically)</option>
+                    <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="false">No (Use online or external instance)</option>
+                </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="The URL to the SearXNG search endpoint">SearXNG Endpoint URL</label>
+                <input
+                    type="text"
+                    value={config.searxng_url || "http://127.0.0.1:8080/search"}
+                    onChange={e => updateConfigVal("searxng_url", e.target.value)}
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
+                    placeholder="e.g. https://searx.be/search"
+                />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Model Context Length</label>
                 <select
                     value={config.obsidian_context_length || "8192"}
                     onChange={e => updateConfigVal("obsidian_context_length", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="4096">4096</option>
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="8192">8192 (Recommended)</option>
@@ -614,11 +640,11 @@ export default function ModelSettingsPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider">Embedding Model (RAG)</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider">Embedding Model (RAG)</label>
                 <select
                     value={config.obsidian_embedding_model || "nomic-embed-text"}
                     onChange={e => updateConfigVal("obsidian_embedding_model", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 >
                     {ollamaModels.map(m => (
                         <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" key={m.name} value={m.name}>{m.name}</option>
@@ -630,11 +656,11 @@ export default function ModelSettingsPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="Uses facebook/bart-large-cnn model to summarize search context locally before providing it to the main LLM.">Summarize Search (BART)</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="Uses facebook/bart-large-cnn model to summarize search context locally before providing it to the main LLM.">Summarize Search (BART)</label>
                 <select
                     value={config.obsidian_summarize_searches || "false"}
                     onChange={e => updateConfigVal("obsidian_summarize_searches", e.target.value)}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="Uses facebook/bart-large-cnn model to summarize search context locally before providing it to the main LLM."
                 >
                     <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="true">Yes (Enable Summarization)</option>
@@ -643,14 +669,14 @@ export default function ModelSettingsPage() {
             </div>
             
             <div className="flex flex-col gap-1.5">
-                <label className="text-xs uppercase text-zinc-500 font-semibold tracking-wider" title="The maximum amount of words allowed per summarized article when using the BART summarizer.">BART Summary Max Words</label>
+                <label className="text-xs uppercase text-[var(--theme-text)] opacity-60 font-semibold tracking-wider" title="The maximum amount of words allowed per summarized article when using the BART summarizer.">BART Summary Max Words</label>
                 <input
                     type="number"
                     min="10"
                     max="1024"
                     value={config.obsidian_bart_max_words || 150}
                     onChange={e => updateConfigVal("obsidian_bart_max_words", (parseInt(e.target.value) || 150).toString())}
-                    className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary"
+                    className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                     title="The maximum amount of words allowed per summarized article when using the BART summarizer."
                 />
             </div>
@@ -660,10 +686,10 @@ export default function ModelSettingsPage() {
       <div className="flex flex-col gap-6 animate-slide-up mt-8">
         {/* Token Card */}
         <div className="flex flex-col md:flex-row gap-6 w-full">
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 flex-1">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">API Access Token
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 flex-1">
+            <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">API Access Token
             </h3>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[var(--theme-text)] opacity-80">
               Your token is required to bypass rate limits or download private models (like Llama). It is stored securely in your local cache directory.
             </p>
             
@@ -674,12 +700,12 @@ export default function ModelSettingsPage() {
                   placeholder="hf_..."
                   value={token}
                   onChange={e => setToken(e.target.value)}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 pr-10 text-sm text-white focus:outline-none focus:border-yellow-500/50"
+                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 pr-10 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute inset-y-0 right-2 flex items-center text-zinc-500 hover:text-zinc-300"
+                  className="absolute inset-y-0 right-2 flex items-center text-[var(--theme-text)] opacity-60 hover:text-[var(--theme-text)]"
                 >
                   {showToken ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
                 </button>
@@ -706,10 +732,10 @@ export default function ModelSettingsPage() {
           </div>
 
           {/* Download Card */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 flex-1">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">Manual Download
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 flex-1">
+            <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">Manual Download
             </h3>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[var(--theme-text)] opacity-80">
               Pre-download any Hugging Face model manually by repository ID.
             </p>
             
@@ -720,7 +746,7 @@ export default function ModelSettingsPage() {
                   placeholder="e.g. Qwen/Qwen2-VL-2B-Instruct"
                   value={repoIdInput}
                   onChange={e => setRepoIdInput(e.target.value)}
-                  className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                  className="flex-1 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]"
                 />
                 <Button 
                   variant="primary" 
@@ -736,13 +762,13 @@ export default function ModelSettingsPage() {
         </div>
 
         {/* Cache Browser */}
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl flex flex-col backdrop-blur-sm overflow-hidden h-[500px] w-full">
-          <div className="p-4 border-b border-white/10 bg-zinc-900 flex justify-between items-center shrink-0">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl flex flex-col backdrop-blur-sm overflow-hidden h-[500px] w-full">
+          <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] flex justify-between items-center shrink-0">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">Local Cache
+              <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">Local Cache
               </h3>
-              <p className="text-xs text-zinc-400">
-                Total size: <span className="text-zinc-200 font-medium">{formatBytes(totalCacheSize)}</span>
+              <p className="text-xs text-[var(--theme-text)] opacity-80">
+                Total size: <span className="text-[var(--theme-text)] font-medium">{formatBytes(totalCacheSize)}</span>
               </p>
             </div>
             <Button variant="secondary" size="sm" onClick={fetchModels}>
@@ -750,27 +776,27 @@ export default function ModelSettingsPage() {
             </Button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
             {isLoadingModels ? (
-              <div className="flex justify-center items-center h-full text-zinc-500 text-sm">
+              <div className="flex justify-center items-center h-full text-[var(--theme-text)] opacity-60 text-sm">
                 Scanning cache
               </div>
             ) : models.length === 0 ? (
-              <div className="flex flex-col justify-center items-center h-full text-zinc-500 text-sm gap-2">
+              <div className="flex flex-col justify-center items-center h-full text-[var(--theme-text)] opacity-60 text-sm gap-2">
                 <Icon name="memory" size={32} className="opacity-20 mb-2" />
                 No models downloaded yet.
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {models.map(m => (
-                  <div key={m.id} className="bg-zinc-950/50 border border-white/5 rounded-lg p-3 flex justify-between items-center hover:bg-zinc-800/50 transition-colors">
+                  <div key={m.id} className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)]/50 rounded-lg p-3 flex justify-between items-center hover:bg-[var(--theme-ui-bg)]/80 transition-colors">
                     <div className="flex flex-col truncate mr-4">
-                      <span className="text-sm font-medium text-zinc-200 truncate" title={m.repo_id}>{m.repo_id}</span>
-                      <span className="text-xs text-zinc-500 mt-0.5">{formatBytes(m.size_bytes)}</span>
+                      <span className="text-sm font-medium text-[var(--theme-text)] truncate" title={m.repo_id}>{m.repo_id}</span>
+                      <span className="text-xs text-[var(--theme-text)] opacity-60 mt-0.5">{formatBytes(m.size_bytes)}</span>
                     </div>
                     <button 
                       onClick={() => handleDelete(m.id)}
-                      className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
+                      className="p-2 text-[var(--theme-text)] opacity-60 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
                       title="Delete model"
                     >
                       <Icon name="delete" size={16} />
@@ -781,12 +807,12 @@ export default function ModelSettingsPage() {
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-6 animate-slide-up mt-8 border-t border-white/5 pt-8">
+        <div className="flex flex-col gap-6 animate-slide-up mt-8 border-t border-[var(--theme-ui-border)]/50 pt-8">
           {/* Ollama Download Card */}
-          <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">Ollama Model Download
+          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4 w-full">
+          <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">Ollama Model Download
           </h3>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-[var(--theme-text)] opacity-80">
             Download a new local model directly from the Ollama registry. (Note: large models take time!)
           </p>
           
@@ -797,7 +823,7 @@ export default function ModelSettingsPage() {
                 placeholder="e.g. nomic-embed-text, llama3:8b"
                 value={ollamaRepoInput}
                 onChange={e => setOllamaRepoInput(e.target.value)}
-                className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-secondary/50"
+                className="flex-1 bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg px-3 py-2 text-sm text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)]/50"
               />
               <Button 
                 variant="primary" 
@@ -812,13 +838,13 @@ export default function ModelSettingsPage() {
         </div>
 
         {/* Ollama Models Browser */}
-        <div className="bg-zinc-900/50 border border-white/10 rounded-2xl flex flex-col backdrop-blur-sm overflow-hidden h-[500px] w-full">
-          <div className="p-4 border-b border-white/10 bg-zinc-900 flex justify-between items-center shrink-0">
+        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl flex flex-col backdrop-blur-sm overflow-hidden h-[500px] w-full">
+          <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-ui-bg)] flex justify-between items-center shrink-0">
             <div>
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">Ollama Models
+              <h3 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">Ollama Models
               </h3>
-              <p className="text-xs text-zinc-400">
-                Total size: <span className="text-zinc-200 font-medium">{formatBytes(ollamaModels.reduce((acc, m) => acc + m.size_bytes, 0))}</span>
+              <p className="text-xs text-[var(--theme-text)] opacity-80">
+                Total size: <span className="text-[var(--theme-text)] font-medium">{formatBytes(ollamaModels.reduce((acc, m) => acc + m.size_bytes, 0))}</span>
               </p>
             </div>
             <Button variant="secondary" size="sm" onClick={fetchOllamaModels}>
@@ -826,27 +852,27 @@ export default function ModelSettingsPage() {
             </Button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
             {isLoadingOllama ? (
-              <div className="flex justify-center items-center h-full text-zinc-500 text-sm">
+              <div className="flex justify-center items-center h-full text-[var(--theme-text)] opacity-60 text-sm">
                 Fetching models
               </div>
             ) : ollamaModels.length === 0 ? (
-              <div className="flex flex-col justify-center items-center h-full text-zinc-500 text-sm gap-2">
+              <div className="flex flex-col justify-center items-center h-full text-[var(--theme-text)] opacity-60 text-sm gap-2">
                 <Icon name="memory" size={32} className="opacity-20 mb-2" />
                 No Ollama models found.
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {ollamaModels.map(m => (
-                  <div key={m.name} className="bg-zinc-950/50 border border-white/5 rounded-lg p-3 flex justify-between items-center hover:bg-zinc-800/50 transition-colors">
+                  <div key={m.name} className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)]/50 rounded-lg p-3 flex justify-between items-center hover:bg-[var(--theme-ui-bg)]/80 transition-colors">
                     <div className="flex flex-col truncate mr-4">
-                      <span className="text-sm font-medium text-zinc-200 truncate" title={m.name}>{m.name}</span>
-                      <span className="text-xs text-zinc-500 mt-0.5">{formatBytes(m.size_bytes)}</span>
+                      <span className="text-sm font-medium text-[var(--theme-text)] truncate" title={m.name}>{m.name}</span>
+                      <span className="text-xs text-[var(--theme-text)] opacity-60 mt-0.5">{formatBytes(m.size_bytes)}</span>
                     </div>
                     <button 
                       onClick={() => handleDeleteOllama(m.name)}
-                      className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
+                      className="p-2 text-[var(--theme-text)] opacity-60 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors shrink-0"
                       title="Delete model"
                     >
                       <Icon name="delete" size={16} />

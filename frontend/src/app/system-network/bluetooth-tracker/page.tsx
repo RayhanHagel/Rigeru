@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 
 
 import { Header } from '@/components/ui/Header';
+import { ModernTabs } from '@/components/ui/ModernTabs';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { TextInput } from '@/components/ui/TextInput';
@@ -45,8 +46,8 @@ export default function BluetoothTrackerPage() {
   const fetchData = async () => {
     try {
       const [statusRes, devicesRes] = await Promise.all([
-        fetch('http://localhost:8000/api/system/bluetooth/status'),
-        fetch('http://localhost:8000/api/system/bluetooth/devices')
+        fetch('/api/system/bluetooth/status'),
+        fetch('/api/system/bluetooth/devices')
       ]);
       
       if (statusRes.ok) {
@@ -79,7 +80,7 @@ export default function BluetoothTrackerPage() {
 
   const startTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/bluetooth/start', { method: 'POST' });
+      const res = await fetch('/api/system/bluetooth/start', { method: 'POST' });
       if (res.ok) {
         setIsRunning(true);
         toast.success("Tracking Started");
@@ -91,7 +92,7 @@ export default function BluetoothTrackerPage() {
 
   const stopTracking = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/bluetooth/stop', { method: 'POST' });
+      const res = await fetch('/api/system/bluetooth/stop', { method: 'POST' });
       if (res.ok) {
         setIsRunning(false);
         toast.success("Tracking Stopped");
@@ -103,7 +104,7 @@ export default function BluetoothTrackerPage() {
 
   const clearHistory = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/bluetooth/clear', { method: 'POST' });
+      const res = await fetch('/api/system/bluetooth/clear', { method: 'POST' });
       if (res.ok) {
         setDevices([]);
         toast.success("History Cleared");
@@ -117,7 +118,7 @@ export default function BluetoothTrackerPage() {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/system/bluetooth/search-location?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`/api/system/bluetooth/search-location?q=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
       setSearchResults(data);
       if (data.length === 0) {
@@ -138,7 +139,7 @@ export default function BluetoothTrackerPage() {
     setExpandedDevice(mac);
     setDeviceHistory([]);
     try {
-      const res = await fetch(`http://localhost:8000/api/system/bluetooth/history/${mac}`);
+      const res = await fetch(`/api/system/bluetooth/history/${mac}`);
       if (res.ok) {
         const data = await res.json();
         setDeviceHistory(data.history || []);
@@ -150,7 +151,7 @@ export default function BluetoothTrackerPage() {
 
   const selectLocation = async (lat: number, lon: number) => {
     try {
-      const res = await fetch('http://localhost:8000/api/system/bluetooth/set-location', {
+      const res = await fetch('/api/system/bluetooth/set-location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lat, lon })
@@ -187,46 +188,40 @@ export default function BluetoothTrackerPage() {
     : [0, 0];
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Bluetooth Tracker"
         subtitle="Track nearby Bluetooth devices and map their locations."
         actions={
-          <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm">
-            {isRunning && (
-              <span className="text-sm font-medium px-3 text-green-400">
-                Bluetooth tracker is ON
-              </span>
-            )}
-            <Button 
-              variant="secondary" 
-              onClick={() => setShowLocationModal(true)}
-              icon={<Icon name="location_on" size={16} />}
-              className="text-sm"
-            >
-              Set Location
-            </Button>
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-            <Button 
-              variant="primary" 
-              onClick={startTracking}
-              disabled={isRunning}
-              className={isRunning ? "opacity-50 text-sm" : "text-sm"}
-              icon={<Icon name="power_settings_new" size={16} />}
-            >
-              Start
-            </Button>
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-            <Button 
-              variant="danger" 
-              onClick={stopTracking}
-              disabled={!isRunning}
-              className={!isRunning ? "opacity-50 text-sm" : "text-sm"}
-              icon={<Icon name="power_settings_new" size={16} />}
-            >
-              Stop
-            </Button>
-          </div>
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-1">
+              {isRunning && (
+                <span className="text-sm font-medium px-3 text-green-400">
+                  Bluetooth tracker is ON
+                </span>
+              )}
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={() => setShowLocationModal(true)}
+              >
+                Set Location
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                onClick={startTracking}
+                disabled={isRunning}
+              >
+                Start
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+                onClick={stopTracking}
+                disabled={!isRunning}
+              >
+                Stop
+              </button>
+            </div>
+          } />
         }
       />
 

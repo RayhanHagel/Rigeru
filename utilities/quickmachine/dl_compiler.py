@@ -1,6 +1,15 @@
 import traceback
 
-def topological_sort(nodes, edges):
+def topological_sort(nodes: list[dict], edges: list[dict]) -> list[str]:
+    """Performs topological sorting on a directed acyclic graph of nodes and edges.
+
+    Args:
+        nodes (list[dict]): List of node dictionaries containing node 'id' values.
+        edges (list[dict]): List of edge dictionaries containing 'source' and 'target' IDs.
+
+    Returns:
+        list[str]: Linearly ordered list of node IDs.
+    """
     in_degree = {n["id"]: 0 for n in nodes}
     for e in edges:
         if e["target"] in in_degree:
@@ -21,10 +30,16 @@ def topological_sort(nodes, edges):
                     
     return sorted_nodes
 
-def sample_tuned_params(layers, trial, sampled_keys):
-    """
-    Scans all layers for `mode == 'tune'`, queries Optuna for values,
-    and returns a resolved layers dictionary.
+def sample_tuned_params(layers: list[dict], trial: object, sampled_keys: dict) -> dict:
+    """Scans all layers for `mode == 'tune'`, queries Optuna for values, and returns resolved layers.
+
+    Args:
+        layers (list[dict]): List of raw layer node dictionaries.
+        trial (object): Optuna trial instance for hyperparameter sampling.
+        sampled_keys (dict): Dictionary mapping parameter keys to sampled values.
+
+    Returns:
+        dict: Resolved layers dictionary with instantiated or sampled parameter values.
     """
     resolved_layers = {}
     for node in layers:
@@ -53,7 +68,16 @@ def sample_tuned_params(layers, trial, sampled_keys):
                 
     return resolved_layers
 
-def compile_pytorch_model(resolved_layers, edges):
+def compile_pytorch_model(resolved_layers: dict, edges: list[dict]) -> object:
+    """Compiles a dynamic PyTorch neural network module according to layer topology.
+
+    Args:
+        resolved_layers (dict): Dictionary of configured layers and parameters.
+        edges (list[dict]): List of connection edges between layers.
+
+    Returns:
+        object: Instantiated PyTorch DynamicDAG module or mock fallback.
+    """
     try:
         import torch
         import torch.nn as nn
@@ -126,7 +150,17 @@ def compile_pytorch_model(resolved_layers, edges):
 
     return DynamicDAG(resolved_layers, edges)
 
-def compile_tf_model(resolved_layers, edges, input_shape=(10,)):
+def compile_tf_model(resolved_layers: dict, edges: list[dict], input_shape: tuple = (10,)) -> object:
+    """Compiles a dynamic TensorFlow Keras model according to layer topology.
+
+    Args:
+        resolved_layers (dict): Dictionary of resolved layers and their parameter settings.
+        edges (list[dict]): Graph edges connecting layer nodes.
+        input_shape (tuple): Expected tensor shape for model input. Defaults to (10,).
+
+    Returns:
+        object: Compiled TensorFlow Keras Functional Model or mock fallback.
+    """
     try:
         import tensorflow as tf
     except ImportError:
@@ -190,10 +224,23 @@ def compile_tf_model(resolved_layers, edges, input_shape=(10,)):
     model = tf.keras.Model(inputs=inputs, outputs=outs[final_node])
     return model
 
-def compile_dynamic_model(framework, layers, edges, trial=None, sampled_keys=None):
+def compile_dynamic_model(framework: str, layers: list[dict], edges: list[dict], trial: object = None, sampled_keys: dict | None = None) -> object:
+    """Compiles a deep learning model for PyTorch or TensorFlow from a visual DAG definition.
+
+    Args:
+        framework (str): Deep learning framework ('PyTorch' or 'TensorFlow').
+        layers (list[dict]): List of layer definitions from DAG graph.
+        edges (list[dict]): Directed graph connections between layers.
+        trial (object): Optional Optuna trial for tuning hyperparameter values. Defaults to None.
+        sampled_keys (dict | None): Existing key-value map of sampled hyperparameters. Defaults to None.
+
+    Returns:
+        object: Compiled model instance.
+    """
     if sampled_keys is None: sampled_keys = {}
     resolved = sample_tuned_params(layers, trial, sampled_keys)
     if framework == "PyTorch":
         return compile_pytorch_model(resolved, edges)
     else:
         return compile_tf_model(resolved, edges)
+

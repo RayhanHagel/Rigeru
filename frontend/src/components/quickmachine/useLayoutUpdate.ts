@@ -1,3 +1,4 @@
+"use client";
 import { useEffect } from 'react';
 import { useUpdateNodeInternals } from '@xyflow/react';
 import { useLayoutDir } from './LayoutContext';

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Rigeru is a comprehensive, locally-hosted developer & media toolbox. It provides 60+ utilities — from AI-powered media processing and computer vision to system administration and web scraping — all accessible through a unified, premium dark-mode web interface.
+Rigeru is a comprehensive, locally-hosted developer & media toolbox providing 60+ utilities — from AI-powered media processing and computer vision to system administration and web scraping — accessible through a unified, premium dark-mode web interface.
 
-It is designed as a **personal workstation dashboard** with JWT-based single-user authentication.
+It functions as a **personal workstation dashboard** secured with JWT single-user authentication.
 
 ---
 
@@ -20,141 +20,110 @@ It is designed as a **personal workstation dashboard** with JWT-based single-use
 │  Backend (FastAPI + Uvicorn)       :8000                │
 │  ├── Routers (backend/routers/*)  — API endpoints       │
 │  ├── Database (SQLite via backend/database.py)          │
-│  └── Utilities (utilities/*)      — core logic          │
+│  └── Utilities (utilities/*)      — core business logic │
 ├─────────────────────────────────────────────────────────┤
 │  External Dependencies                                  │
-│  ├── ffmpeg (system)    — media encoding                │
-│  ├── spotdl (pip)       — Spotify downloads             │
-│  ├── yt-dlp (pip)       — YouTube downloads             │
-│  ├── Docker (optional)  — container management          │
-│  ├── Ollama (optional)  — local LLM chat                │
-│  ├── SearxNG (Docker)   — image search                  │
-│  └── Playwright (Node)  — headless browser scraping     │
+│  ├── ffmpeg (system PATH) — media transcoding & streams │
+│  ├── spotdl (pip)         — Spotify track downloaders   │
+│  ├── yt-dlp (pip)         — YouTube media downloaders   │
+│  ├── Docker (optional)    — container management        │
+│  ├── Ollama (optional)    — local LLM chat              │
+│  ├── SearxNG (Docker)     — privacy-focused web search  │
+│  └── Playwright (Node)    — headless browser automation │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Communication Pattern
-- Frontend calls backend via **REST API** (prefixed `/api/`).
-- Long-running tasks use a **background task + polling** pattern: POST starts the task and returns a `task_id`, GET polls status until `completed` or `failed`.
-- Real-time features (sitemap crawl, image scraper) use **Server-Sent Events (SSE)** via `StreamingResponse`.
-- WebSocket is used for the virtual camera feature.
+### Communication Protocols
+- **REST API**: Frontend communicates via Next.js proxy rewrites (`/api/*` -> `http://127.0.0.1:8000/api/*`).
+- **Async Operations**: Long tasks use background task queues + polling (`POST` returns `task_id`, `GET` polls status).
+- **Server-Sent Events (SSE)**: Real-time streams (sitemap crawler, image scraper) use `StreamingResponse`.
+- **WebSocket**: Full-duplex video streaming for virtual camera capabilities.
 
 ### Authentication
-- JWT-based via `backend/routers/auth.py`.
+- JWT bearer tokens issued via `backend/routers/auth.py`.
+- Storage key in frontend: `localStorage.getItem("auth_token")`.
 - Default credentials: `admin` / `admin`.
-- All routers except `auth` are protected with `Depends(get_current_user)`.
+- All routes except `/api/auth/*` and WebSocket endpoints require `Depends(get_current_user)`.
 
 ---
 
 ## Key File & Directory Map
 
-### Root
-| Path | Description |
-|---|---|
-| `start.bat` | Startup script: kills stale processes, launches backend + frontend in separate terminal windows |
-| `backend/` | FastAPI application |
-| `frontend/` | Next.js application |
-| `utilities/` | ~90 Python utility modules (core business logic) |
-| `data/` | SQLite databases (bluetooth, configs, korean SRS, wifi mapper) |
-| `cache/` | AI model caches (HuggingFace, Torch, Ultralytics, InsightFace) |
-| `static/` | Cached static files (e.g., proxied images) |
+### Root Directories
+| Path | Purpose |
+| :--- | :--- |
+| `backend/` | FastAPI application, routers, database schema, and task worker |
+| `frontend/` | Next.js 15 App Router web client and components |
+| `utilities/` | Modular Python business logic grouped into `core/`, `audio_video/`, `vision/`, `documents/`, `file_tools/`, `system_network/`, `web/`, `entertainment/`, and `productivity_lifestyle/` |
+| `docs/` | Project backlog (`docs/backlog.md`) and technical specs |
+| `data/` | SQLite databases (bluetooth, configs, korean SRS, reading library, wifi mapper) |
+| `cache/` | AI model weights (HuggingFace, Torch, Ultralytics, InsightFace) |
+| `static/` | Cached static files and proxied media assets |
 | `uploads/` | User-uploaded files (served at `/uploads/`) |
-| `temp/` | Temporary processing artifacts (served at `/temp/`) |
+| `temp/` | Temporary processing files (served at `/temp/`) |
+| `start.bat` | Automated environment setup, dependency installer, and process launcher |
 
-### Backend (`backend/`)
-| File | Description |
-|---|---|
-| `main.py` | FastAPI app, CORS config, router registration, static file mounts |
-| `database.py` | SQLite connection, user auth tables, kanban tables, password hashing |
-| `worker.py` | Background task worker (arq + Redis) |
-| `requirements.txt` | Python dependency manifest |
-| `routers/auth.py` | JWT authentication (login, register, token validation) |
-| `routers/media_vision.py` | Image/video processing endpoints (face blur, upscale, object detect, etc.) |
-| `routers/media_entertainment.py` | MAL sync, manga, Spotify scrobbler, Twitch |
-| `routers/web_downloads.py` | YouTube/Spotify download, RSS, image scraper, web scraper |
-| `routers/files_documents.py` | PDF ops, CV builder, file organizer, excel, hash, etc. |
-| `routers/system_network.py` | Docker, env vars, package manager, services, ping, monitors |
-| `routers/subtitles_metadata.py` | Subtitle fetch/merge, EXIF, media tags, transcription |
-| `routers/lifestyle.py` | Expense tracker, Korean SRS, QR code |
-| `routers/settings.py` | App settings management |
+### Backend Routers (`backend/routers/`)
+| Router | Responsibilities |
+| :--- | :--- |
+| `auth.py` | JWT authentication (login, password change, token validation) |
+| `media_vision.py` | AI vision (face blur, upscale, object detect, depth, censor, code-to-image) |
+| `files_documents.py` | PDF Studio, CV builder, file organizer, hash check, excel cleaner |
+| `web_downloads.py` | YouTube & Spotify downloaders, RSS reader, image & web scrapers |
+| `system_network.py` | Docker manager, package manager, Bluetooth/WiFi/LAN scanners, tweaks |
+| `media_entertainment.py`| MAL sync, Manga reader/library, Spotify scrobbler, Twitch viewer |
+| `subtitles_metadata.py` | Subtitle fetch/merge, EXIF metadata remover, audio transcriber |
+| `lifestyle.py` | Expense tracker, Korean SRS flashcards, QR code generator |
+| `settings.py` | Application configuration & AI model settings |
 
-### Frontend (`frontend/src/`)
-| Path | Description |
-|---|---|
-| `app/layout.tsx` | Root layout (Geist font, Material Symbols, MainLayout shell, Toaster) |
-| `app/page.tsx` | Landing / dashboard page |
-| `app/login/` | Login page |
-| `app/settings/` | Settings page |
-| `components/layout/MainLayout.tsx` | App shell with sidebar |
-| `components/layout/Sidebar.tsx` | Navigation sidebar |
-| `components/layout/SettingsSidebar.tsx` | Settings panel |
-| `components/ui/` | Reusable UI primitives (Button, Card, Header, FileExplorerModal, DirectUploadBox, etc.) |
-
-### Frontend Feature Categories
-| Route Group | Pages |
-|---|---|
-| `audio-video/` | Audio editor, Dictation, Media compressor, Subtitle fetcher/merger, Transcriber, Video-to-GIF, Voice clone |
-| `image-vision/` | Background remover, Code-to-image, Color picker, Depth estimation, Face blur, Fisheye, Image upscaler, Object detect, Pinhole photography, RGB shutter, Vision censor |
-| `documents-text/` | Chart maker, Ebook reader, Excel cleaner, Math LaTeX, PDF studio |
-| `entertainment-reading/` | MAL sync, Manga library/reader/search/sort, Spotify scrobbler, Twitch watch |
-| `web-downloaders/` | Image scraper, RSS, Scraper, Sitemap, Spotify, YouTube, YouTube RSS |
-| `file-utils/` | Everything search, EXIF remover, File organizer, File timestamps, Hash integrity, Link cleaner, Media tags |
-| `system-network/` | Bluetooth tracker, Client details, Docker manager, Env vars, LAN radar, Package manager, Ping test, Port test, Services, System monitor, WiFi mapper, Windows tweaks |
-| `productivity-life/` | Currency view, CV builder, Expense tracker, Kanban, Korean study, Price monitor, QR code, Randomizer, Whiteboard |
-
-### Utilities (`utilities/`)
-All backend logic lives here as `util_*.py` modules. Each utility is a standalone module imported by routers. Key ones:
-- `util_ai_tools.py` — SearxNG integration, AI tool orchestration
-- `util_object_detect.py` — YOLO object detection
-- `util_face_blur.py` — InsightFace face detection + blur
-- `util_audio.py` — Audio editing / processing
-- `util_ffmpeg.py` — FFmpeg wrapper
-- `util_spotify_download.py` — spotDL CLI wrapper
-- `util_yt.py` — YouTube search/download via yt-dlp
-- `util_manga.py` — Manga library management
-- `util_llm_chat.py` — Ollama LLM integration
-- `util_huggingface.py` — HuggingFace model management
-- `util_network.py` — HTTP client with proxy support (Tor, better_get)
+### Frontend Category Pages (`frontend/src/app/`)
+| Route Group | Major Features |
+| :--- | :--- |
+| `audio-video/` | Audio editor, transcriber, video-to-gif, compressor, voice clone |
+| `image-vision/` | Face blur, background remover, upscale, censor, object detect |
+| `documents-text/` | PDF Studio (20+ tools), CV builder, chart maker, LaTeX renderer |
+| `entertainment-reading/`| Manga library & reader, MAL sync, Twitch watch, Spotify scrobbler |
+| `web-downloaders/` | YouTube/Spotify downloaders, image scraper, RSS reader, sitemap |
+| `file-utils/` | Everything search, file organizer, EXIF remover, hash integrity |
+| `system-network/` | Docker manager, package manager, Bluetooth tracker, WiFi mapper |
+| `productivity-life/` | Whiteboard, Kanban, Korean study, expense tracker, randomizer |
 
 ---
 
 ## Setup & Run Instructions
 
 ### Prerequisites
-- Python 3.11+ (managed via `uv`)
+- Python 3.11+ (managed via `uv` or standard virtual environment)
 - Node.js 18+
-- ffmpeg (system PATH)
-- Optional: Docker (for SearxNG, container management)
+- FFmpeg on system `PATH`
 
-### Quick Start
-```bash
-# Windows
+### Automated Run (Windows)
+```bat
 .\start.bat
 ```
-This handles: venv creation, pip install, npm install, Playwright setup, port cleanup, and launches both servers.
+Handles venv creation, pip install, npm install, Playwright browser binaries, and boots both servers.
 
-### Manual Start
+### Manual Commands
 ```bash
-# Backend (port 8000)
+# Backend (Port 8000)
 .venv\Scripts\python.exe -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir backend --reload-dir utilities
 
-# Frontend (port 3000)
+# Frontend (Port 3000)
 cd frontend && npm run dev -- -H 0.0.0.0
 ```
 
-### Access
-- Frontend: `http://localhost:3000`
-- Backend API: `http://127.0.0.1:8000`
-- Default login: `admin` / `admin`
+### Access Points
+- **Web App**: `http://localhost:3000`
+- **Backend API**: `http://127.0.0.1:8000`
+- **Default Auth**: `admin` / `admin`
 
 ---
 
-## Convention Deviations & Notes
+## Convention Deviations & Architecture Notes
 
-- **No ORM**: Raw SQLite via `sqlite3` module (not SQLAlchemy). Intentional for simplicity.
-- **Icon library**: Google Material Symbols Outlined (loaded via CDN in layout.tsx). All icons use the `Icon` component from `src/lib/utils.tsx`.
-- **Styling**: Vanilla CSS with CSS variables for theming. No Tailwind — uses utility classes defined in `globals.css`.
-- **Model caching**: All AI models (HuggingFace, Torch, Ultralytics, InsightFace) cached under `cache/models/` via environment variables set in `main.py`.
-- **Background tasks**: FastAPI `BackgroundTasks` for short-lived operations. `arq` + Redis for heavyweight work (`worker.py`).
-- **COM threading**: `sys.coinit_flags = 0` at top of `main.py` forces MTA mode to fix `bleak` (Bluetooth) issues on Windows.
-- **Package management**: `uv` is used for Python package management instead of raw `pip`.
+- **No ORM**: Raw SQLite via standard library `sqlite3` for minimal overhead and simple migration.
+- **Dynamic Theming**: Dark/Light mode strictly uses CSS variables (`--theme-bg`, `--theme-ui-bg`, `--theme-ui-border`, `--theme-heading`, `--theme-text`). Hardcoded color classes are forbidden.
+- **Icon Library**: Exclusively Google Material Symbols Outlined loaded via Google CDN, invoked through `<Icon name="..." size={...} />`.
+- **Model Caching**: AI model paths (`HF_HOME`, `TORCH_HOME`, `YOLO_CONFIG_DIR`, `INSIGHTFACE_HOME`) are explicitly routed to `cache/models/` in `backend/main.py`.
+- **Windows COM Policy**: MTA mode enforced at backend startup (`sys.coinit_flags = 0`) to prevent Bluetooth (`bleak`) threading locks on Windows.
+- **API Requests**: Frontend calls backend using relative `/api/*` routes proxied by Next.js `rewrites` to guarantee LAN compatibility.

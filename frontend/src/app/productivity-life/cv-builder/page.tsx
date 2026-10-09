@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useEffect } from "react";
 
@@ -52,6 +53,14 @@ export default function CVBuilderPage() {
     const newEdus = [...educations];
     newEdus[index] = { ...newEdus[index], [field]: value };
     setEducations(newEdus);
+  };
+
+  const handleDeleteExperience = (index: number) => {
+    setExperiences(experiences.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteEducation = (index: number) => {
+    setEducations(educations.filter((_, i) => i !== index));
   };
 
   const handleGeneratePDF = async (isPreview = false) => {
@@ -122,8 +131,8 @@ export default function CVBuilderPage() {
     <div className="flex flex-col gap-6 animate-slide-up w-full">
       <Header title="Resume & CV Builder" subtitle="Fill out your details to instantly generate a clean, ATS-friendly PDF resume." />
       
-      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Personal Information</h3>
+      <SectionHeader title="Personal Information" />
+      <div className="flex flex-col gap-4 w-full">
         <div className="flex flex-col md:flex-row gap-6 w-full">
           <div className="w-full">
             <TextInput label="Full Name" placeholder="Jane Doe" value={name} onChange={e => setName(e.target.value)} />
@@ -151,11 +160,30 @@ export default function CVBuilderPage() {
         </div>
       </div>
 
-      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Experience</h3>
+      <SectionHeader 
+        title="Experience" 
+        action={
+          <Button 
+            onClick={handleAddExperience} 
+          >
+            Add Role
+          </Button>
+        }
+      />
+      <div className="flex flex-col gap-4 w-full">
         {experiences.map((exp, idx) => (
           <div key={idx} className="mb-6 pb-6 border-b border-[var(--theme-ui-border)] last:border-0 last:mb-0 last:pb-0">
-            <h4 className="text-[var(--theme-heading)] font-bold mb-4">Role {idx + 1}</h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-[var(--theme-heading)] font-bold">Role {idx + 1}</h4>
+              {experiences.length > 1 && (
+                <Button 
+                  onClick={() => handleDeleteExperience(idx)}
+                  title="Delete Role"
+                >
+                  Delete Role
+                </Button>
+              )}
+            </div>
             <div className="flex flex-col md:flex-row gap-6 w-full mb-4">
               <div className="w-full">
                 <TextInput label="Job Title" placeholder="Software Engineer" value={exp.title} onChange={e => handleUpdateExperience(idx, "title", e.target.value)} />
@@ -178,14 +206,32 @@ export default function CVBuilderPage() {
             </div>
           </div>
         ))}
-        <Button variant="secondary" onClick={handleAddExperience} className="w-full md:w-auto self-start mt-2">+ Add Another Role</Button>
       </div>
 
-      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Education</h3>
+      <SectionHeader 
+        title="Education" 
+        action={
+          <Button 
+            onClick={handleAddEducation} 
+          >
+            Add Degree
+          </Button>
+        }
+      />
+      <div className="flex flex-col gap-4 w-full">
         {educations.map((edu, idx) => (
           <div key={idx} className="mb-6 pb-6 border-b border-[var(--theme-ui-border)] last:border-0 last:mb-0 last:pb-0">
-            <h4 className="text-[var(--theme-heading)] font-bold mb-4">Degree {idx + 1}</h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-[var(--theme-heading)] font-bold">Degree {idx + 1}</h4>
+              {educations.length > 1 && (
+                <Button 
+                  onClick={() => handleDeleteEducation(idx)}
+                  title="Delete Degree"
+                >
+                  Delete Degree
+                </Button>
+              )}
+            </div>
             <div className="flex flex-col md:flex-row gap-6 w-full mb-4">
               <div className="w-full">
                 <TextInput label="Degree / Certificate" placeholder="B.S. Computer Science" value={edu.degree} onChange={e => handleUpdateEducation(idx, "degree", e.target.value)} />
@@ -199,11 +245,10 @@ export default function CVBuilderPage() {
             </div>
           </div>
         ))}
-        <Button variant="secondary" onClick={handleAddEducation} className="w-full md:w-auto self-start mt-2">+ Add Another Degree</Button>
       </div>
 
-      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Skills</h3>
+      <SectionHeader title="Skills" />
+      <div className="flex flex-col gap-4 w-full">
         <textarea 
           className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg p-3 text-[var(--theme-heading)] focus:border-[var(--theme-heading)] outline-none transition-all h-24"
           placeholder="Python, Project Management, Agile, SQL, Communication"
@@ -212,8 +257,8 @@ export default function CVBuilderPage() {
         />
       </div>
 
-      <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-        <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Generation Settings</h3>
+      <SectionHeader title="Generation Settings" />
+      <div className="flex flex-col gap-4 w-full">
         <div className="w-full md:w-80">
           <Select 
             options={[
@@ -238,7 +283,8 @@ export default function CVBuilderPage() {
                 href="https://miktex.org/download" 
                 target="_blank" 
                 rel="noreferrer"
-                className="inline-block px-4 py-2 bg-secondary hover:bg-blue-700 text-white rounded-md text-sm font-medium w-fit transition-colors"
+                className="w-full h-12 text-lg relative inline-flex items-center justify-center gap-2 px-4 py-2 font-medium transition-colors duration-300 rounded-lg overflow-hidden group focus:outline-none !shadow-none !ring-0 !outline-none border-none"
+                style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
               >
                 Download MiKTeX
               </a>
@@ -250,18 +296,18 @@ export default function CVBuilderPage() {
       )}
 
       <div className="flex gap-4 mb-10">
-        <Button variant="secondary" isLoading={loading} onClick={() => handleGeneratePDF(true)} className="flex-1 py-3 text-lg font-bold">
-          👁️ Live Preview
+        <Button isLoading={loading} onClick={() => handleGeneratePDF(true)} className="flex-1">
+          Live Preview
         </Button>
-        <Button variant="primary" isLoading={loading} onClick={() => handleGeneratePDF(false)} className="flex-1 py-3 text-lg font-bold">
-          📥 Download PDF
+        <Button isLoading={loading} onClick={() => handleGeneratePDF(false)} className="flex-1">
+          Download PDF
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       {renderBuilder()}
       
       <PopupModal isOpen={!!previewUrl} onClose={closePreview} title={`Live Preview - ${template}`}>

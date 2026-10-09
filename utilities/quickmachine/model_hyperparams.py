@@ -1,4 +1,9 @@
-def get_json():
+def get_json() -> dict:
+    """Returns supported machine learning algorithms and their tunable hyperparameter spaces.
+
+    Returns:
+        dict: Mapping of target categories to libraries, models, and hyperparameter spaces.
+    """
     model_options = {
         "Regression": {
             "scikit-learn": {
