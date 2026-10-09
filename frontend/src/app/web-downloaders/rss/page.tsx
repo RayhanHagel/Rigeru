@@ -110,7 +110,7 @@ export default function RssManager() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="RSS Feed Manager" 
         subtitle="Read and manage your RSS subscriptions." 
@@ -119,9 +119,19 @@ export default function RssManager() {
             activeTab={activeTab}
             setActiveTab={setActiveTab as (id: string) => void}
             tabs={[
-              { id: "feed", label: "Feed Reader", icon: <Icon name="description" size={16} /> },
-              { id: "subs", label: "Manage Subscriptions", icon: <Icon name="tune" size={16} /> }
+              { id: "feed", label: "Feed Reader" },
+              { id: "subs", label: "Manage Subscriptions" }
             ]}
+            actionButton={
+              <button 
+                onClick={() => fetchFeeds(true)}
+                disabled={loadingFeeds}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5 disabled:opacity-50"
+              >
+                {loadingFeeds ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon name="refresh" size={16} />}
+                Refresh
+              </button>
+            }
           />
         }
       />
@@ -131,9 +141,6 @@ export default function RssManager() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-bold text-[var(--theme-heading)]">Latest Articles</h2>
-                      <Button variant="secondary" icon={<Icon name="refresh" size={16} />} onClick={() => fetchFeeds(true)} isLoading={loadingFeeds}>
-                        Refresh
-                      </Button>
                     </div>
                     
                     {feedError && <div className="p-4 bg-red-500/20 text-red-400 rounded-lg border border-red-500/30">{feedError}</div>}
@@ -208,13 +215,14 @@ export default function RssManager() {
                               <h4 className="font-bold text-[var(--theme-text)] group-hover:text-[var(--theme-heading)] truncate transition-colors">{title}</h4>
                               <p className="text-xs text-[var(--theme-text)] truncate">{url}</p>
                             </div>
-                            <button 
+                            <Button
+                              size="sm"
                               onClick={() => handleRemoveSub(title, url)}
-                              className="p-2 text-[var(--theme-text)] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
+                              className="!w-auto !h-auto !p-0 !bg-transparent !text-[var(--theme-text)] group-hover:!text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                               title="Remove Subscription"
                             >
-                              <Icon name="delete" size={18} />
-                            </button>
+                              <Icon name="delete" size={14} />
+                            </Button>
                           </div>
                         ))}
                       </div>

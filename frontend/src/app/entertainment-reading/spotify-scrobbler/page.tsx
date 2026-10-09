@@ -119,28 +119,25 @@ export default function SpotifyScrobbler() {
         title="Spotify Scrobbler"
         subtitle="Live, auto-refreshing feed of your Last.fm"
         actions={
-          <div className="flex items-center gap-3">
-            {activeTab === "feed" && spotifyConfig.username && (
-              <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm h-full">
+          <ModernTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab as (id: string) => void}
+            tabs={[
+              { id: "feed", label: "Live Feed" },
+              { id: "settings", label: "Settings" }
+            ]}
+            actionButton={
+              activeTab === "feed" && spotifyConfig.username ? (
                 <button 
                   onClick={fetchFeed} 
                   disabled={isFetching}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${isFetching ? 'text-[var(--theme-heading)] opacity-70' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
                 >
-                  <Icon name="refresh" size={16} className={isFetching ? "animate-spin" : ""} />
-                  <span className="hidden sm:inline">Force Sync</span>
+                  <span className="hidden sm:inline">{isFetching ? "Syncing..." : "Force Sync"}</span>
                 </button>
-              </div>
-            )}
-            <ModernTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab as (id: string) => void}
-              tabs={[
-                { id: "feed", label: "Live Feed" },
-                { id: "settings", label: "Settings" }
-              ]}
-            />
-          </div>
+              ) : undefined
+            }
+          />
         }
       />
 

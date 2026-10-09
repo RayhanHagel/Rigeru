@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useRef, useEffect } from "react";
 
@@ -36,7 +37,7 @@ export default function ObjectDetectPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token") || "";
-    fetch("http://127.0.0.1:8000/api/media-vision/object-detect/cameras", {
+    fetch("/api/media-vision/object-detect/cameras", {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -70,7 +71,7 @@ export default function ObjectDetectPage() {
       setStreamUrl("");
       const fd = new FormData();
       fd.append("camera_index", selectedCamera.toString());
-      fetch("http://127.0.0.1:8000/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
+      fetch("/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
     } else {
       setWebcamActive(true);
       
@@ -81,7 +82,7 @@ export default function ObjectDetectPage() {
       fd.append("selected_classes", "");
       
       try {
-        await fetch("http://127.0.0.1:8000/api/media-vision/object-detect/webcam-config", {
+        await fetch("/api/media-vision/object-detect/webcam-config", {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: fd
@@ -97,7 +98,7 @@ export default function ObjectDetectPage() {
         token: token,
         _t: Date.now().toString()
       });
-      setStreamUrl(`http://127.0.0.1:8000/api/media-vision/object-detect/webcam-stream?${qs.toString()}`);
+      setStreamUrl(`/api/media-vision/object-detect/webcam-stream?${qs.toString()}`);
     }
   };
 
@@ -109,7 +110,7 @@ export default function ObjectDetectPage() {
       fd.append("ai_fps", aiFps.toString());
       fd.append("selected_classes", "");
       
-      fetch("http://127.0.0.1:8000/api/media-vision/object-detect/webcam-config", {
+      fetch("/api/media-vision/object-detect/webcam-config", {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
         body: fd
@@ -122,7 +123,7 @@ export default function ObjectDetectPage() {
         token: token,
         _t: Date.now().toString()
       });
-      setStreamUrl(`http://127.0.0.1:8000/api/media-vision/object-detect/webcam-stream?${qs.toString()}`);
+      setStreamUrl(`/api/media-vision/object-detect/webcam-stream?${qs.toString()}`);
     }
   }, [confThresh, selectedCamera, useExtrapolation, aiFps]);
 
@@ -136,9 +137,9 @@ export default function ObjectDetectPage() {
     formData.append("hash_name", selectedFileHash);
     formData.append("conf_thresh", confThresh.toString());
     
-    let ep = "http://127.0.0.1:8000/api/media-vision/object-detect/image";
+    let ep = "/api/media-vision/object-detect/image";
     if (!isImage) {
-      ep = "http://127.0.0.1:8000/api/media-vision/object-detect/video";
+      ep = "/api/media-vision/object-detect/video";
       const meth = outMethod.includes("Subtitle") ? "ass" : "hard";
       formData.append("output_method", meth);
       let enc = chosenEncoder;
@@ -183,20 +184,16 @@ export default function ObjectDetectPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight flex items-center gap-3">
-             Local Object Detection
-          </h1>
-          <p className="text-[var(--theme-text)] text-sm font-medium">Run fast, highly optimized object detection using YOLO on Images, Videos, or Live Webcams.</p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="Local Object Detection"
+        subtitle="Run fast, highly optimized object detection using YOLO on Images, Videos, or Live Webcams."
+        actions={
           <ModernTabs 
             tabs={[
-              { id: "Image", label: "Image Detect", icon: <Icon name="image" size={18} /> },
-              { id: "Video", label: "Video Detect", icon: <Icon name="movie" size={18} /> },
-              { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
+              { id: "Image", label: "Image Detect" },
+              { id: "Video", label: "Video Detect" },
+              { id: "Live Camera", label: "Live Camera" }
             ]} 
             activeTab={activeTab} 
             setActiveTab={(tab) => {
@@ -205,8 +202,8 @@ export default function ObjectDetectPage() {
               if (webcamActive) toggleWebcam();
             }} 
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="mt-8 animate-slide-up">
         {(activeTab === "Image" || activeTab === "Video") && (
@@ -221,7 +218,7 @@ export default function ObjectDetectPage() {
                 onUploadComplete={(info) => {
                   setSelectedFileHash(info.hash_name);
                   setSelectedFileName(info.original_name);
-                  setOriginalUrl(`http://127.0.0.1:8000/uploads/${info.hash_name}`);
+                  setOriginalUrl(`/uploads/${info.hash_name}`);
                 }}
                 onClear={clearState}
                 defaultFileName={selectedFileName || ""}

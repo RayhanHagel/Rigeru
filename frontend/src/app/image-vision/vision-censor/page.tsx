@@ -1,4 +1,5 @@
 "use client";
+import { Header } from "@/components/ui/Header";
 
 import React, { useState, useEffect } from "react";
 
@@ -68,7 +69,7 @@ export default function VisionCensorPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/media-vision/ffmpeg-encoders")
+    fetch("/api/media-vision/ffmpeg-encoders")
       .then(res => res.json())
       .then(data => {
         if (data.encoders && data.encoders.length > 0) {
@@ -131,7 +132,7 @@ export default function VisionCensorPage() {
         formData.append("blur_type", blurStyle);
         formData.append("encoder", enc);
 
-        const res = await fetch("http://127.0.0.1:8000/api/media-vision/vision-censor", {
+        const res = await fetch("/api/media-vision/vision-censor", {
           method: "POST",
           body: formData
         });
@@ -168,9 +169,8 @@ export default function VisionCensorPage() {
         formData.append("encoder", enc);
 
         const token = localStorage.getItem("auth_token") || "";
-        const baseUrl = window.location.protocol + "//" + window.location.hostname + ":8000";
 
-        const res = await fetch(`${baseUrl}/api/media-vision/vision-censor/batch`, {
+        const res = await fetch(`/api/media-vision/vision-censor/batch`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData
@@ -208,26 +208,22 @@ export default function VisionCensorPage() {
     } else {
       if (!resultZipUrl) return;
       const a = document.createElement("a");
-      a.href = `http://127.0.0.1:8000${resultZipUrl}`;
+      a.href = `${resultZipUrl}`;
       a.download = resultZipUrl.split('/').pop() || "censored_batch.zip";
       a.click();
     }
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight flex items-center gap-3">
-            AI Media De-Nudifier
-          </h1>
-          <p className="text-[var(--theme-text)] text-sm font-medium">Upload an image or video. The AI will scan and block NSFW content automatically.</p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="Vision Censor"
+        subtitle="Automatically detect and blur sensitive content in images and videos."
+        actions={
           <ModernTabs
             tabs={[
-              { id: "single", label: "Single File", icon: <Icon name="insert_drive_file" size={16} /> },
-              { id: "batch", label: "Batch Folder", icon: <Icon name="folder" size={16} /> }
+              { id: "single", label: "Single File" },
+              { id: "batch", label: "Batch Folder" }
             ]}
             activeTab={inputMode}
             setActiveTab={(tab) => {
@@ -235,8 +231,8 @@ export default function VisionCensorPage() {
               clearState();
             }}
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col gap-8 w-full">
         {/* SECTION 1: INPUT */}
@@ -307,20 +303,21 @@ export default function VisionCensorPage() {
                     {ALL_LABELS.map(lbl => {
                       const isSel = selectedLabels.includes(lbl);
                       return (
-                        <button
+                        <Button
                           key={lbl}
+                          size="sm"
                           onClick={() => toggleLabel(lbl)}
-                          className={`text-xs px-2.5 py-1.5 rounded-full border transition-all ${
-                            isSel ? "" : "bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
-                          }`}
+                          className="!w-auto !rounded-full"
                           style={isSel ? { 
-                            backgroundColor: "color-mix(in srgb, var(--theme-heading) 15%, transparent)", 
-                            borderColor: "var(--theme-heading)", 
-                            color: "var(--theme-heading)" 
-                          } : undefined}
+                            backgroundColor: "var(--theme-heading)", 
+                            color: "var(--theme-bg)" 
+                          } : {
+                            backgroundColor: "var(--theme-ui-bg)",
+                            color: "var(--theme-text)"
+                          }}
                         >
                           {lbl}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -486,7 +483,7 @@ export default function VisionCensorPage() {
                 ) : isImage && originalUrl ? (
                   <div className="w-full h-full flex flex-col gap-4">
                     <ImageCompareSlider 
-                      originalImage={`http://127.0.0.1:8000${originalUrl}`}
+                      originalImage={`${originalUrl}`}
                       processedImage={resultUrl}
                       processedLabel="Censored"
                     />
@@ -527,7 +524,7 @@ export default function VisionCensorPage() {
                       </span>
                     </div>
                     {processedUrls[selectedBatchIndex].match(/\.(mp4|webm)$/i) ? (
-                      <video controls src={`http://127.0.0.1:8000${processedUrls[selectedBatchIndex]}`} className="w-full flex-1 object-contain" />
+                      <video controls src={`${processedUrls[selectedBatchIndex]}`} className="w-full flex-1 object-contain" />
                     ) : processedUrls[selectedBatchIndex].match(/\.(ass)$/i) ? (
                       <div className="p-4 bg-blue-900/20 text-blue-400 border border-blue-500/20 rounded-lg text-sm text-center space-y-2 m-auto">
                         <p>💡 <strong>Success!</strong> No video re-encoding was necessary.</p>
@@ -536,15 +533,15 @@ export default function VisionCensorPage() {
                     ) : (
                       <div className="w-full h-full flex flex-col gap-4">
                         <ImageCompareSlider
-                          originalImage={`http://127.0.0.1:8000${originalUrls[selectedBatchIndex]}`}
-                          processedImage={`http://127.0.0.1:8000${processedUrls[selectedBatchIndex]}`}
+                          originalImage={`${originalUrls[selectedBatchIndex]}`}
+                          processedImage={`${processedUrls[selectedBatchIndex]}`}
                           processedLabel="Censored"
                         />
                         <Button
                           variant="ghost"
                           size="sm"
                           className="self-center text-[var(--theme-heading)]"
-                          onClick={() => setPreviewImage(`http://127.0.0.1:8000${processedUrls[selectedBatchIndex]}`)}
+                          onClick={() => setPreviewImage(`${processedUrls[selectedBatchIndex]}`)}
                         >
                           View Fullscreen
                         </Button>
@@ -553,7 +550,7 @@ export default function VisionCensorPage() {
                   </div>
                 ) : (
                   <div className="w-full h-full flex flex-col gap-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-max overflow-y-auto max-h-[500px] p-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-max overflow-y-auto max-h-[500px] p-2 custom-scrollbar">
                       {processedUrls.map((url, i) => {
                         const isVid = url.match(/\.(mp4|webm)$/i);
                         const isSub = url.match(/\.(ass)$/i);
@@ -572,7 +569,7 @@ export default function VisionCensorPage() {
                                 <Icon name="subtitles" size={32} className="text-zinc-600 group-hover:text-[var(--theme-heading)] transition-colors" />
                               </div>
                             ) : (
-                              <img src={`http://127.0.0.1:8000${url}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <img src={`${url}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             )}
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Icon name="visibility" size={24} className="text-white drop-shadow-md" />

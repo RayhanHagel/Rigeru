@@ -75,7 +75,7 @@ export default function FaceBlurPage() {
   const streamImageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/media-vision/ffmpeg-encoders")
+    fetch("/api/media-vision/ffmpeg-encoders")
       .then(res => res.json())
       .then(data => {
         if (data.encoders && data.encoders.length > 0) {
@@ -85,7 +85,7 @@ export default function FaceBlurPage() {
       })
       .catch(console.error);
 
-    fetch("http://127.0.0.1:8000/api/media-vision/object-detect/cameras")
+    fetch("/api/media-vision/object-detect/cameras")
       .then(res => res.json())
       .then(data => {
         if (data.cameras) setCameras(data.cameras);
@@ -119,7 +119,7 @@ export default function FaceBlurPage() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/media-vision/face-blur/scan", {
+      const res = await fetch("/api/media-vision/face-blur/scan", {
         method: "POST",
         body: formData
       });
@@ -170,7 +170,7 @@ export default function FaceBlurPage() {
     formData.append("output_method", methodStr);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/media-vision/face-blur/process", {
+      const res = await fetch("/api/media-vision/face-blur/process", {
         method: "POST",
         body: formData
       });
@@ -215,10 +215,10 @@ export default function FaceBlurPage() {
       setStreamUrl(null);
       const fd = new FormData();
       fd.append("camera_index", cameraIndex.toString());
-      fetch("http://127.0.0.1:8000/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
+      fetch("/api/media-vision/webcam/stop", { method: "POST", body: fd }).catch(console.error);
     } else {
       setWebcamActive(true);
-      const url = new URL("http://127.0.0.1:8000/api/media-vision/face-blur/webcam-stream");
+      const url = new URL("/api/media-vision/face-blur/webcam-stream");
       url.searchParams.append("camera_index", cameraIndex.toString());
       url.searchParams.append("conf_thresh", "0.5"); // default
       url.searchParams.append("blur_intensity", blurIntensity.toString());
@@ -232,7 +232,7 @@ export default function FaceBlurPage() {
 
   useEffect(() => {
     if (webcamActive) {
-      const url = new URL("http://127.0.0.1:8000/api/media-vision/face-blur/webcam-stream");
+      const url = new URL("/api/media-vision/face-blur/webcam-stream");
       url.searchParams.append("camera_index", cameraIndex.toString());
       url.searchParams.append("conf_thresh", "0.5"); // default
       url.searchParams.append("blur_intensity", blurIntensity.toString());
@@ -245,16 +245,16 @@ export default function FaceBlurPage() {
   }, [cameraIndex, blurIntensity, blurStyle, fpsScan, useExtrapolation]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header
         title="AI Face Blurring"
         subtitle="Automatically detect and selectively blur faces in images and videos using InsightFace ONNX models."
         actions={
           <ModernTabs
             tabs={[
-              { id: "Image", label: "Image", icon: <Icon name="image" size={18} /> },
-              { id: "Video", label: "Video", icon: <Icon name="movie" size={18} /> },
-              { id: "Live Camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> }
+              { id: "Image", label: "Image" },
+              { id: "Video", label: "Video" },
+              { id: "Live Camera", label: "Live Camera" }
             ]}
             activeTab={activeTab}
             setActiveTab={(tab) => {

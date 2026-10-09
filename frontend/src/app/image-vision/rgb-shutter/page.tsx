@@ -220,17 +220,15 @@ export default function RgbShutterPage() {
   };
 
   return (
-    <div className="w-full h-full p-4 lg:p-6 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">RGB Shutter Lag</h1>
-          <p className="text-[var(--theme-text)] text-sm font-medium">Real-time color channel separation and temporal delay effects.</p>
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+    <div className="w-full h-full p-4 lg:p-6 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="RGB Shutter Effect"
+        subtitle="Create chromatic aberration and RGB split optical illusions."
+        actions={
           <ModernTabs 
             tabs={[
-              { id: "camera", label: "Live Camera", icon: <Icon name="videocam" size={18} /> },
-              { id: "video", label: "Video File", icon: <Icon name="movie" size={18} /> }
+              { id: "camera", label: "Live Camera" },
+              { id: "video", label: "Video File" }
             ]} 
             activeTab={sourceType} 
             setActiveTab={(tab) => {
@@ -238,8 +236,8 @@ export default function RgbShutterPage() {
               setSourceType(tab as "camera" | "video");
             }} 
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col gap-8 w-full mt-4">
         {/* SECTION 1: INPUT & CONTROLS */}

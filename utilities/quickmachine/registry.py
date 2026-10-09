@@ -112,7 +112,15 @@ if _HAS_CAT:
 # 4. Helper Method
 # ─────────────────────────────────────────────────────────────────────────────
 def get_model_class(model_name: str, is_regression: bool) -> type | None:
-    """Returns the correct sklearn-compatible uninstantiated class."""
+    """Returns the correct sklearn-compatible uninstantiated class.
+
+    Args:
+        model_name (str): The name or alias of the model.
+        is_regression (bool): True if regression task, False for classification.
+
+    Returns:
+        type | None: Uninstantiated model class or None if not found in registry.
+    """
     model_map = _REGRESSION_MAP if is_regression else _CLASSIFICATION_MAP
     
     # 1. Exact Match

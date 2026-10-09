@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { createPortal } from 'react-dom';
@@ -5,7 +6,18 @@ import { createPortal } from 'react-dom';
 import { useLayoutUpdate } from '../useLayoutUpdate';
 import { Icon } from "@/lib/utils";
 
-export function VisualizeNode({ id, data, selected }: any) {
+interface VisualizeNodeData {
+  label?: string;
+  plotType?: string;
+}
+
+interface VisualizeNodeProps {
+  id: string;
+  data: VisualizeNodeData;
+  selected?: boolean;
+}
+
+export function VisualizeNode({ id, data, selected }: VisualizeNodeProps) {
   const { deleteElements, getNodes, getEdges } = useReactFlow();
   const layoutDir = useLayoutUpdate(id);
   const targetPos = layoutDir === 'vertical' ? Position.Top : Position.Left;
@@ -26,11 +38,11 @@ export function VisualizeNode({ id, data, selected }: any) {
       const nodes = getNodes();
       const edges = getEdges();
       
-      const response = await fetch('http://localhost:8000/api/quickmachine/visualize', {
+      const response = await fetch('/api/quickmachine/visualize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
         },
         body: JSON.stringify({
           nodes,
@@ -43,8 +55,8 @@ export function VisualizeNode({ id, data, selected }: any) {
       if (!response.ok) throw new Error(resData.detail || 'Failed to generate plot');
       
       setImageB64(resData.image);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }
@@ -138,6 +150,7 @@ export function VisualizeNode({ id, data, selected }: any) {
             ) : error ? (
               <div className="text-red-400 text-sm max-w-md text-center bg-red-500/10 p-4 rounded border border-red-500/20">{error}</div>
             ) : imageB64 ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img src={imageB64} alt="Visualization" className="max-w-full max-h-full object-contain" />
             ) : null}
           </div>

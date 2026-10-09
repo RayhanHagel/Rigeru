@@ -62,7 +62,7 @@ export default function SpotifyDownloader() {
   }, [taskId]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Spotify Downloader" subtitle="Download Spotify tracks and playlists locally." />
       
       <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 md:p-8 shadow-sm backdrop-blur-md">
@@ -90,7 +90,7 @@ export default function SpotifyDownloader() {
               <select 
                 value={audioFormat}
                 onChange={(e) => setAudioFormat(e.target.value)}
-                className="w-full rounded-xl p-4 text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
+                className="w-full rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -112,7 +112,7 @@ export default function SpotifyDownloader() {
               <select 
                 value={bitrate}
                 onChange={(e) => setBitrate(e.target.value)}
-                className="w-full rounded-xl p-4 text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
+                className="w-full rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none appearance-none transition-colors"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -129,12 +129,15 @@ export default function SpotifyDownloader() {
             <div className="md:col-span-1">
               <label className="block text-sm font-medium text-[var(--theme-text)] mb-2">Output Directory</label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+                  <Icon name="folder" size={18} />
+                </div>
                 <input 
                   type="text" 
                   placeholder="Default: ~/Music" 
                   value={outputDir}
                   onChange={(e) => setOutputDir(e.target.value)}
-                  className="w-full rounded-xl p-4 pr-12 text-[var(--theme-text)] border focus:outline-none transition-colors"
+                  className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                   style={{ 
                     backgroundColor: "var(--theme-bg)",
                     borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -145,7 +148,7 @@ export default function SpotifyDownloader() {
                 <button
                   type="button"
                   onClick={() => setIsExplorerOpen(true)}
-                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/10 rounded-lg transition-colors"
+                  className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Browse folder"
                 >
                   <Icon name="folder_open" size={18} />
@@ -157,7 +160,6 @@ export default function SpotifyDownloader() {
           <div className="pt-4">
             <Button 
               variant="primary" 
-              icon={<Icon name="download" size={20} />} 
               fullWidth 
               onClick={startDownload}
               isLoading={taskId !== null}

@@ -145,7 +145,7 @@ export default function WebScraperPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Visual Web Scraper" subtitle="Use a local headless browser to extract specific elements from a list of websites." />
 
       <div className="flex flex-col gap-6 mb-8 animate-slide-up w-full">

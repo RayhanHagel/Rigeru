@@ -33,7 +33,7 @@ export default function ChartMakerPage() {
       const formData = new FormData();
       formData.append("file_hash", fileInfo.hash_name);
       
-      const res = await fetch("http://localhost:8000/api/files-documents/chart/parse", {
+      const res = await fetch("/api/files-documents/chart/parse", {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` },
         body: formData
@@ -146,7 +146,7 @@ export default function ChartMakerPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Chart Maker" subtitle="Upload a CSV or Excel file to instantly generate beautiful, interactive charts." />
 
       {!data.length ? (

@@ -56,7 +56,7 @@ export default function TranslationPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Local AI Translation" subtitle="Offline, privacy-preserving text translation powered by Hugging Face T5 models." />
 
       <div className="flex-1 bg-zinc-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-6">

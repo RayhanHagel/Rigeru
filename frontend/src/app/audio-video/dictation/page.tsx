@@ -25,7 +25,7 @@ export default function DictationPage() {
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState("");
   const [copied, setCopied] = useState(false);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
@@ -148,7 +148,7 @@ export default function DictationPage() {
   const handleBatchTranscribe = async () => {
     const pending = dictations.filter(d => !d.is_transcribed);
     if (pending.length === 0) return;
-    
+
     setBatchTranscribing(true);
     for (const item of pending) {
       // update state to show this item is currently being transcribed
@@ -160,7 +160,7 @@ export default function DictationPage() {
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Delete this dictation?")) return;
-    
+
     try {
       const res = await fetch(`/api/subtitles/dictations/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -209,9 +209,9 @@ export default function DictationPage() {
               ...(token ? { "Authorization": `Bearer ${token}` } : {})
             }
           });
-          
+
           if (!res.ok) throw new Error("Failed to fetch audio");
-          
+
           const blob = await res.blob();
           const url = URL.createObjectURL(blob);
           audioPlayerRef.current.src = url;
@@ -230,7 +230,7 @@ export default function DictationPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filteredDictations = dictations.filter(d => 
+  const filteredDictations = dictations.filter(d =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (d.transcript && d.transcript.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -238,175 +238,172 @@ export default function DictationPage() {
   const selectedItem = dictations.find(d => d.id === selectedId);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <audio 
-        ref={audioPlayerRef} 
-        onEnded={() => setPlayingId(null)} 
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
+      <audio
+        ref={audioPlayerRef}
+        onEnded={() => setPlayingId(null)}
         onError={() => setPlayingId(null)}
-        className="hidden" 
+        className="hidden"
       />
 
       <Header title="Audio Dictation" subtitle="Record, manage, and batch transcribe your voice notes." />
 
       <div className="flex flex-col gap-6 animate-slide-up">
-        
+
         {/* Recorder */}
         <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 flex flex-col items-center justify-center shadow-xl backdrop-blur-sm shrink-0">
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isUploading}
-              className={`relative group w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
-                isRecording 
-                  ? "bg-red-500 hover:bg-red-600 shadow-red-500/30" 
-                  : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:scale-105"
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isUploading}
+            className={`relative group w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${isRecording
+                ? "bg-red-500 hover:bg-red-600 shadow-red-500/30"
+                : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:scale-105"
               } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {isRecording ? (
-                <>
-                  <div className="absolute inset-0 rounded-full animate-ping bg-red-500/50"></div>
-                  <Icon name="stop" className="text-[var(--theme-heading)] fill-[var(--theme-heading)] z-10" size={32} />
-                </>
-              ) : isUploading ? (
-                <Icon name="progress_activity" className="text-[var(--theme-text)] animate-spin" size={32} />
-              ) : (
-                <Icon name="mic" className="text-[var(--theme-text)]" size={36} />
-              )}
-            </button>
-            <p className="mt-4 text-center text-sm text-[var(--theme-text)] font-medium">
-              {isRecording 
-                ? "Recording... Click to stop & save" 
-                : isUploading 
-                  ? "Saving audio" 
-                  : "Click to start recording"}
-            </p>
-          </div>
+          >
+            {isRecording ? (
+              <>
+                <div className="absolute inset-0 rounded-full animate-ping bg-red-500/50"></div>
+                <Icon name="stop" className="text-[var(--theme-heading)] fill-[var(--theme-heading)] z-10" size={32} />
+              </>
+            ) : isUploading ? (
+              <Icon name="progress_activity" className="text-[var(--theme-text)] animate-spin" size={32} />
+            ) : (
+              <Icon name="mic" className="text-[var(--theme-text)]" size={36} />
+            )}
+          </button>
+          <p className="mt-4 text-center text-sm text-[var(--theme-text)] font-medium">
+            {isRecording
+              ? "Recording... Click to stop & save"
+              : isUploading
+                ? "Saving audio"
+                : "Click to start recording"}
+          </p>
+        </div>
 
         {/* Dictation List */}
         <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl flex flex-col shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-bg)] space-y-3 shrink-0">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[var(--theme-heading)]">Saved Dictations</h3>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  onClick={handleBatchTranscribe}
-                  disabled={batchTranscribing || dictations.filter(d => !d.is_transcribed).length === 0}
-                  icon={batchTranscribing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="description" size={16} />}
-                  className="!text-[var(--theme-bg)] font-bold shadow-md"
-                >
-                  {batchTranscribing ? "Transcribing" : "Batch Transcribe"}
-                </Button>
-              </div>
-              <div className="relative">
-                <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
-                <input 
-                  type="text" 
-                  placeholder="Search dictations..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg pl-9 pr-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-amber-500/50"
-                />
-              </div>
+          <div className="p-4 border-b border-[var(--theme-ui-border)] bg-[var(--theme-bg)] space-y-3 shrink-0">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[var(--theme-heading)]">Saved Dictations</h3>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBatchTranscribe}
+                disabled={batchTranscribing || dictations.filter(d => !d.is_transcribed).length === 0}
+                icon={batchTranscribing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="description" size={16} />}
+                className="!text-[var(--theme-bg)] font-bold shadow-md"
+              >
+                {batchTranscribing ? "Transcribing" : "Batch Transcribe"}
+              </Button>
             </div>
-
-            <div className="max-h-[400px] min-h-[250px] flex flex-col overflow-y-auto p-2 space-y-2 custom-scrollbar">
-              {filteredDictations.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center text-center text-[var(--theme-text)] text-sm">No dictations found.</div>
-              ) : (
-                filteredDictations.map(item => (
-                  <div 
-                    key={item.id}
-                    onClick={() => setSelectedId(item.id)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer group ${
-                      selectedId === item.id 
-                        ? "bg-amber-500/10 border-amber-500/30" 
-                        : "bg-[var(--theme-bg)] border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-sm"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0 mr-3">
-                        {editingNameId === item.id ? (
-                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                            <input 
-                              type="text"
-                              value={editNameValue}
-                              onChange={e => setEditNameValue(e.target.value)}
-                              onKeyDown={e => e.key === 'Enter' && handleRename(item.id)}
-                              className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded px-2 py-1 text-sm text-[var(--theme-heading)] w-full"
-                              autoFocus
-                            />
-                            <button onClick={() => handleRename(item.id)} className="p-1 text-emerald-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
-                              <Icon name="check" size={14} />
-                            </button>
-                            <button onClick={() => setEditingNameId(null)} className="p-1 text-red-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
-                              <Icon name="close" size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          <h4 className="font-bold text-[var(--theme-heading)] text-sm truncate flex items-center gap-2">
-                            {item.name}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditNameValue(item.name);
-                                setEditingNameId(item.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-opacity"
-                            >
-                              <Icon name="edit" size={12} />
-                            </button>
-                          </h4>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-[var(--theme-text)]">
-                            {new Date(item.date * 1000).toLocaleString()}
-                          </span>
-                          {item.is_transcribed ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Transcribed</span>
-                          ) : (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button 
-                          onClick={(e) => togglePlay(item.id, e)}
-                          className={`p-1.5 rounded-md transition-colors ${
-                            playingId === item.id ? "bg-amber-500 text-amber-950" : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)]"
-                          }`}
-                        >
-                          {playingId === item.id ? <Icon name="pause" size={14} className="fill-current" /> : <Icon name="play_arrow" size={14} className="fill-current" />}
-                        </button>
-                        {!item.is_transcribed && (
-                          <button 
-                            onClick={async (e) => { e.stopPropagation(); await transcribeItem(item.id); }}
-                            className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-amber-400 hover:text-amber-400 transition-colors"
-                            title="Transcribe now"
-                          >
-                            <Icon name="description" size={14} />
-                          </button>
-                        )}
-                        <button 
-                          onClick={(e) => handleClean(item.id, e)}
-                          className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)] transition-colors opacity-0 group-hover:opacity-100"
-                          title="Clean Background Noise"
-                        >
-                          {cleaningId === item.id ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="auto_fix_high" size={14} />}
-                        </button>
-                        <button 
-                          onClick={(e) => handleDelete(item.id, e)}
-                          className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-red-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <Icon name="delete" size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className="relative">
+              <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
+              <input
+                type="text"
+                placeholder="Search dictations..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg pl-9 pr-3 py-2 text-sm text-[var(--theme-text)] focus:outline-none focus:border-amber-500/50"
+              />
             </div>
           </div>
+
+          <div className="max-h-[400px] min-h-[250px] flex flex-col overflow-y-auto p-2 space-y-2 custom-scrollbar">
+            {filteredDictations.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-center text-[var(--theme-text)] text-sm">No dictations found.</div>
+            ) : (
+              filteredDictations.map(item => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedId(item.id)}
+                  className={`p-3 rounded-lg border transition-all cursor-pointer group ${selectedId === item.id
+                      ? "bg-amber-500/10 border-amber-500/30"
+                      : "bg-[var(--theme-bg)] border-[var(--theme-ui-border)] hover:border-[var(--theme-heading)] hover:shadow-sm"
+                    }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0 mr-3">
+                      {editingNameId === item.id ? (
+                        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                          <input
+                            type="text"
+                            value={editNameValue}
+                            onChange={e => setEditNameValue(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleRename(item.id)}
+                            className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded px-2 py-1 text-sm text-[var(--theme-heading)] w-full"
+                            autoFocus
+                          />
+                          <button onClick={() => handleRename(item.id)} className="p-1 text-emerald-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
+                            <Icon name="check" size={14} />
+                          </button>
+                          <button onClick={() => setEditingNameId(null)} className="p-1 text-red-400 hover:bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded">
+                            <Icon name="close" size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <h4 className="font-bold text-[var(--theme-heading)] text-sm truncate flex items-center gap-2">
+                          {item.name}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditNameValue(item.name);
+                              setEditingNameId(item.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 text-[var(--theme-text)] hover:text-[var(--theme-text)] transition-opacity"
+                          >
+                            <Icon name="edit" size={12} />
+                          </button>
+                        </h4>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-[var(--theme-text)]">
+                          {new Date(item.date * 1000).toLocaleString()}
+                        </span>
+                        {item.is_transcribed ? (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Transcribed</span>
+                        ) : (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={(e) => togglePlay(item.id, e)}
+                        className={`p-1.5 rounded-md transition-colors ${playingId === item.id ? "bg-amber-500 text-amber-950" : "bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)]"
+                          }`}
+                      >
+                        {playingId === item.id ? <Icon name="pause" size={14} className="fill-current" /> : <Icon name="play_arrow" size={14} className="fill-current" />}
+                      </button>
+                      {!item.is_transcribed && (
+                        <button
+                          onClick={async (e) => { e.stopPropagation(); await transcribeItem(item.id); }}
+                          className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-amber-400 hover:text-amber-400 transition-colors"
+                          title="Transcribe now"
+                        >
+                          <Icon name="description" size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => handleClean(item.id, e)}
+                        className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-[var(--theme-heading)] hover:text-[var(--theme-heading)] transition-colors opacity-0 group-hover:opacity-100"
+                        title="Clean Background Noise"
+                      >
+                        {cleaningId === item.id ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="auto_fix_high" size={14} />}
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(item.id, e)}
+                        className="p-1.5 rounded-md bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] text-[var(--theme-text)] hover:border-red-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Icon name="delete" size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* Viewer */}
         <div className="w-full">
@@ -418,8 +415,8 @@ export default function DictationPage() {
                     <h3 className="font-bold text-[var(--theme-heading)]">{selectedItem.name}</h3>
                     <p className="text-xs text-[var(--theme-text)] mt-0.5 font-bold">Transcript Viewer</p>
                   </div>
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => copyToClipboard(selectedItem.transcript || "")}
                     disabled={!selectedItem.transcript}
@@ -428,7 +425,7 @@ export default function DictationPage() {
                     {copied ? "Copied!" : "Copy Text"}
                   </Button>
                 </div>
-                
+
                 <div className="flex-1 p-6 overflow-y-auto bg-[var(--theme-bg)] custom-scrollbar">
                   {!selectedItem.is_transcribed ? (
                     <div className="flex flex-col items-center justify-center h-full text-[var(--theme-text)]">
@@ -441,9 +438,9 @@ export default function DictationPage() {
                         <>
                           <Icon name="description" size={48} className="mb-4 text-[var(--theme-text)]" />
                           <p>This dictation hasn't been transcribed yet.</p>
-                          <Button 
-                            variant="primary" 
-                            className="mt-4" 
+                          <Button
+                            variant="primary"
+                            className="mt-4"
                             onClick={() => transcribeItem(selectedItem.id)}
                           >
                             Transcribe Now

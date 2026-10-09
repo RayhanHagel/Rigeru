@@ -52,7 +52,7 @@ export default function PortTestPage() {
   }, [searchQuery, ports]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Port Test & Scanner"
         subtitle="Discover open ports and the applications using them."

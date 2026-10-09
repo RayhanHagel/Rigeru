@@ -19,16 +19,16 @@ export default function AudioEditorPage() {
   const [currentTime, setCurrentTime] = useState("0:00");
   const [totalTime, setTotalTime] = useState("0:00");
   const [volume, setVolume] = useState(1);
-  
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
-  
+
   const [resultAudioUrl, setResultAudioUrl] = useState<string | null>(null);
   const [resultFilename, setResultFilename] = useState("");
-  
+
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const regionsRef = useRef<any>(null);
@@ -53,11 +53,11 @@ export default function AudioEditorPage() {
 
       const wsRegions = ws.registerPlugin(RegionsPlugin.create());
       regionsRef.current = wsRegions;
-      
+
       wsRegions.enableDragSelection({
         color: "rgba(255, 255, 255, 0.2)",
       });
-      
+
       wsRegions.on("region-created", (region: any) => {
         const regions = wsRegions.getRegions();
         regions.forEach((r: any) => {
@@ -70,7 +70,7 @@ export default function AudioEditorPage() {
       ws.on("ready", () => {
         const duration = ws.getDuration();
         setTotalTime(formatTime(duration));
-        
+
         // Add an initial region covering the first 10 seconds or whole file if shorter
         wsRegions.addRegion({
           start: 0,
@@ -88,7 +88,7 @@ export default function AudioEditorPage() {
       ws.on("play", () => setIsPlaying(true));
       ws.on("pause", () => setIsPlaying(false));
 
-      const objectUrl = `http://127.0.0.1:8000/uploads/${fileHash}`;
+      const objectUrl = `/uploads/${fileHash}`;
       ws.load(objectUrl);
       wavesurferRef.current = ws;
 
@@ -118,56 +118,56 @@ export default function AudioEditorPage() {
 
   const handleTrim = async () => {
     if (!fileHash || !regionsRef.current) return;
-    
+
     const regions = regionsRef.current.getRegions();
     if (regions.length === 0) {
       setErrorMsg("Please select a region to trim");
       return;
     }
-    
+
     const region = regions[0];
     const start = region.start;
     const end = region.end;
-    
+
     setIsProcessing(true);
     setErrorMsg("");
-    
+
     const formData = new FormData();
     formData.append("file_hash", fileHash);
     formData.append("start", start.toString());
     formData.append("end", end.toString());
-    
+
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/media-vision/audio-trim", {
+      const res = await fetch("/api/media-vision/audio-trim", {
         method: "POST",
         body: formData,
         credentials: "include",
       });
-      
+
       if (!res.ok) {
         let errStr = "";
         try {
           const raw = await res.text();
           try {
-             const data = JSON.parse(raw);
-             errStr = data.detail || raw;
+            const data = JSON.parse(raw);
+            errStr = data.detail || raw;
           } catch (e) {
-             errStr = raw;
+            errStr = raw;
           }
-        } catch(e) {
+        } catch (e) {
           errStr = res.statusText;
         }
         throw new Error(`[HTTP ${res.status}] ${errStr || "Trimming failed"}`);
       }
-      
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       setResultAudioUrl(url);
-      
+
       const originalName = fileName.split('.')[0];
       const ext = fileName.split('.').pop() || "mp3";
       setResultFilename(`${originalName}_trimmed.${ext}`);
-      
+
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to trim audio");
@@ -177,7 +177,7 @@ export default function AudioEditorPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Audio Editor" subtitle="Visually trim and cut audio files directly in your browser." />
 
       {errorMsg && (
@@ -191,7 +191,7 @@ export default function AudioEditorPage() {
         {!resultAudioUrl && (
           <div className="flex flex-col gap-2">
             <SectionHeader title="Upload Audio" />
-            <DirectUploadBox 
+            <DirectUploadBox
               accept="audio/*"
               label="Upload Audio"
               onUploadComplete={(info) => {
@@ -209,7 +209,7 @@ export default function AudioEditorPage() {
         )}
 
         <SectionHeader title="Audio Editor" />
-        
+
         {!fileHash ? (
           <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-10 flex flex-col items-center justify-center opacity-50 min-h-[250px]">
             <Icon name="graphic_eq" size={48} className="mb-4 opacity-50" />
@@ -220,15 +220,15 @@ export default function AudioEditorPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-[var(--theme-heading)] truncate">{fileName}</h3>
             </div>
-            
+
             <div className="bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4">
               <div ref={waveformRef} className="w-full" />
             </div>
-            
+
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-4">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={togglePlay}
                   icon={isPlaying ? <Icon name="pause" size={16} /> : <Icon name="play_arrow" size={16} />}
                 >
@@ -256,9 +256,9 @@ export default function AudioEditorPage() {
                   />
                 </div>
               </div>
-              
-              <Button 
-                variant="primary" 
+
+              <Button
+                variant="primary"
                 onClick={handleTrim}
                 disabled={isProcessing}
                 icon={isProcessing ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="content_cut" size={16} />}
@@ -276,17 +276,17 @@ export default function AudioEditorPage() {
               <div className="inline-flex p-4 bg-emerald-500/10 text-emerald-400 rounded-full mb-2">
                 <Icon name="content_cut" size={32} />
               </div>
-              
+
               <div>
                 <h4 className="text-lg font-semibold text-[var(--theme-heading)]">Audio Trimmed Successfully</h4>
                 <p className="text-sm text-[var(--theme-text)]">{resultFilename}</p>
               </div>
-              
+
               <audio src={resultAudioUrl} controls className="w-full h-12 mt-4" />
-              
+
               <div className="flex gap-4 pt-4">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   className="flex-1"
                   onClick={() => {
                     setResultAudioUrl(null);
@@ -296,9 +296,9 @@ export default function AudioEditorPage() {
                 >
                   Start Over
                 </Button>
-                
-                <a 
-                  href={resultAudioUrl} 
+
+                <a
+                  href={resultAudioUrl}
                   download={resultFilename}
                   className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-[var(--theme-heading)] hover:opacity-90 text-[var(--theme-bg)] rounded-lg text-sm font-bold transition-colors"
                 >

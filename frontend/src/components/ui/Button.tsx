@@ -13,7 +13,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export function Button({ 
   children, 
-  variant = "secondary", 
+  variant = "secondary", // Ignored now, kept for backward compatibility with props
   icon, 
   isLoading, 
   fullWidth, 
@@ -24,46 +24,40 @@ export function Button({
   ...props 
 }: ButtonProps) {
   
-  const baseStyles = "relative inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-offset-2";
-  
-  const variants: Record<string, string> = {
-    primary: "text-white border",
-    secondary: "bg-zinc-800/50 text-zinc-200 hover:bg-zinc-700/80 hover:text-white border border-white/10 hover:border-white/20 focus:ring-zinc-500 backdrop-blur-sm",
-    tertiary: "bg-transparent text-zinc-400 hover:bg-white/5",
-    danger: "bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/20 hover:border-red-500/30 focus:ring-red-500",
-    ghost: "bg-transparent text-zinc-400 hover:bg-zinc-800/50 hover:text-white border border-transparent focus:ring-zinc-500",
+  const sizeMap: Record<string, string> = {
+    sm: "h-8 text-xs px-3",
+    md: "h-10 text-sm px-4",
+    lg: "h-12 text-lg px-6",
+    icon: "h-10 w-10 p-0 flex items-center justify-center text-sm"
   };
 
-  const widthStyle = fullWidth ? "w-full" : "";
+  const currentSizeClass = sizeMap[size] || sizeMap.md;
+
+  // Enforce the 'Process Images' style (borderless, primary colors) but dynamic size
+  const baseStyles = `w-full relative inline-flex items-center justify-center gap-2 font-medium transition-colors duration-300 rounded-lg overflow-hidden group focus:outline-none !shadow-none !ring-0 !outline-none border-none ${currentSizeClass}`;
+  
   const disabledStyle = disabled || isLoading ? "opacity-50 cursor-not-allowed saturate-50" : "cursor-pointer";
 
-  // Dynamic accent styles for primary and tertiary variants
-  const accentStyle: React.CSSProperties = {};
-  if (variant === "primary") {
-    Object.assign(accentStyle, {
-      backgroundColor: "var(--theme-heading)",
-      borderColor: "var(--theme-heading)",
-      boxShadow: `0 0 15px color-mix(in srgb, var(--theme-heading) 30%, transparent)`,
-    });
-  } else if (variant === "tertiary") {
-    Object.assign(accentStyle, {
-      "--tw-ring-color": "var(--theme-heading)",
-    });
-  }
+  const accentStyle: React.CSSProperties = {
+    backgroundColor: "var(--theme-heading)",
+    color: "var(--theme-bg)",
+    boxShadow: "none",
+    ...style // Allow passing custom styles like mt-2, but override base colors if necessary, though style is spread last
+  };
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${widthStyle} ${disabledStyle} ${className}`}
+      className={`${baseStyles} ${disabledStyle} ${className}`}
       disabled={disabled || isLoading}
-      style={{ ...accentStyle, ...style }}
+      style={accentStyle}
       {...props}
     >
-      {/* Shine effect for primary button */}
-      {variant === "primary" && !disabled && (
+      {!disabled && (
         <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
       )}
       
-      {isLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : icon}
+      {/* Only show loading spinner, explicitly ignoring the `icon` prop otherwise as requested */}
+      {isLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : null}
       <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">{children}</span>
     </button>
   );

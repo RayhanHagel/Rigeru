@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 import React, { useState, useRef, useEffect } from "react";
 
@@ -35,7 +36,7 @@ export default function ExpenseTrackerPage() {
     setFileInfo(info);
     setResult(null);
     setErrorMsg("");
-    setPreviewUrl(`http://localhost:8000/uploads/${info.hash_name}`);
+    setPreviewUrl(`/uploads/${info.hash_name}`);
   };
 
   const handleClearFile = () => {
@@ -77,16 +78,15 @@ export default function ExpenseTrackerPage() {
 
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="AI Expense Tracker" subtitle="Upload a receipt or invoice image. The Qwen2-VL model will scan and parse the document locally into structured JSON." />
       
       <div className="flex flex-col gap-6 animate-slide-up w-full">
           
           {/* Upload Card */}
-          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 w-full shadow-sm">
-            <h3 className="text-lg font-bold text-[var(--theme-heading)] flex items-center gap-2">Upload Receipt
-            </h3>
-            
+          <SectionHeader title="Upload Receipt" />
+          
+          <div className="flex flex-col gap-4 w-full">
             <DirectUploadBox
               accept=".png,.jpg,.jpeg,.webp"
               label="Upload Receipt Image"
@@ -134,6 +134,7 @@ export default function ExpenseTrackerPage() {
           </div>
         
         {/* Results */}
+        <SectionHeader title="Extracted Data" />
         <div className="flex flex-col gap-6 w-full">
           {result ? (
             <div className="flex flex-col gap-6 animate-slide-up w-full">
@@ -184,7 +185,7 @@ export default function ExpenseTrackerPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full min-h-[400px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-2xl border-dashed flex flex-col items-center justify-center p-8 text-center gap-4">
+            <div className="w-full min-h-[400px] bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-2xl flex flex-col items-center justify-center p-8 text-center gap-4">
               <div className="p-4 bg-[var(--theme-ui-bg)] rounded-full text-[var(--theme-text)] border border-[var(--theme-ui-border)] shadow-sm">
                 <Icon name="receipt" size={48} />
               </div>

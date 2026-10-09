@@ -8,6 +8,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def generate_plot(df: pd.DataFrame, plot_type: str) -> str:
+    """Renders a Seaborn/Matplotlib plot based on the specified plot type and dataframe.
+
+    Args:
+        df (pd.DataFrame): Dataset dataframe to visualize.
+        plot_type (str): Type of visualization ('Box Plot', 'Distribution Plot', etc.).
+
+    Returns:
+        str: Base64-encoded data URI string containing the PNG image.
+    """
     plt.figure(figsize=(10, 6))
     
     # Simple heuristic to pick columns if not specified
@@ -48,7 +57,17 @@ def generate_plot(df: pd.DataFrame, plot_type: str) -> str:
     img_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
     return f"data:image/png;base64,{img_b64}"
 
-def run_visualization(nodes: list, edges: list, target_node_id: str) -> str:
+def run_visualization(nodes: list[dict], edges: list[dict], target_node_id: str) -> str:
+    """Executes data visualization flow for a designated visualize node in the graph.
+
+    Args:
+        nodes (list[dict]): Visual pipeline graph nodes.
+        edges (list[dict]): Visual pipeline graph edges.
+        target_node_id (str): Identifier of the visualize node to compute.
+
+    Returns:
+        str: Base64 data URI of the generated plot image.
+    """
     # 1. Find the Visualize node
     vis_node = next((n for n in nodes if n["id"] == target_node_id), None)
     if not vis_node:

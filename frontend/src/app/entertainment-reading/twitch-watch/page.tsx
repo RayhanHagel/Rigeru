@@ -40,7 +40,7 @@ export default function TwitchWatch() {
   const fetchConfig = async () => {
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch`);
+      const res = await fetch(`/api/media-entertainment/twitch-watch`);
       if (res.ok) {
         const data = await res.json();
         setChannels(data.channels || []);
@@ -54,7 +54,7 @@ export default function TwitchWatch() {
     setIsSaving(true);
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch/config`, {
+      await fetch(`/api/media-entertainment/twitch-watch/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channels: newChannels })
@@ -71,7 +71,7 @@ export default function TwitchWatch() {
     setIsSyncing(true);
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch/live-status`, {
+      const res = await fetch(`/api/media-entertainment/twitch-watch/live-status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channels })
@@ -99,7 +99,7 @@ export default function TwitchWatch() {
   const checkStreamlinkStatus = async () => {
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      const res = await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch/streamlink/status`);
+      const res = await fetch(`/api/media-entertainment/twitch-watch/streamlink/status`);
       if (res.ok) {
         const data = await res.json();
         setStreamlinkStatus(data);
@@ -113,7 +113,7 @@ export default function TwitchWatch() {
     setIsInstallingStreamlink(true);
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch/streamlink/install`, { method: "POST" });
+      await fetch(`/api/media-entertainment/twitch-watch/streamlink/install`, { method: "POST" });
       await checkStreamlinkStatus();
     } catch (e) {
       console.error("Failed to install streamlink", e);
@@ -127,7 +127,7 @@ export default function TwitchWatch() {
     setIsLaunchingStreamlink(true);
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-      await fetch(`http://${host}:8000/api/media-entertainment/twitch-watch/streamlink/launch`, {
+      await fetch(`/api/media-entertainment/twitch-watch/streamlink/launch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channel: selectedChannel })
@@ -195,15 +195,15 @@ export default function TwitchWatch() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Twitch Watch" 
         subtitle="Monitor streamers and watch live" 
         actions={
           <ModernTabs 
             tabs={[
-              { id: "config", label: "Configuration", icon: <Icon name="settings" size={18} /> },
-              { id: "watch", label: "Watch Stream", icon: <Icon name="tv" size={18} /> }
+              { id: "config", label: "Configuration" },
+              { id: "watch", label: "Watch Stream" }
             ]}
             activeTab={mode}
             setActiveTab={(id) => {

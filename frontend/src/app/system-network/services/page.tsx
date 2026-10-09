@@ -145,26 +145,33 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <Header title="Services & Startup" subtitle="View background Windows services and applications that start with your PC." />
-        <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm shrink-0 mb-6">
-          <Button variant="secondary" onClick={handleRefresh} disabled={isLoading} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
-            Refresh Lists
-          </Button>
-          <div className="w-px h-6 bg-[var(--theme-ui-border)] mx-2" />
+      <Header 
+        title="Services & Startup" 
+        subtitle="View background Windows services and applications that start with your PC." 
+        actions={
           <ModernTabs 
             activeTab={activeTab}
             setActiveTab={setActiveTab as (id: string) => void}
+            actionButton={
+              <button 
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center gap-2 text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+                onClick={handleRefresh} 
+                disabled={isLoading}
+              >
+                <Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />
+                Refresh Lists
+              </button>
+            }
             tabs={[
               { id: "startup", label: "Startup Apps" },
               { id: "non-ms", label: "3rd Party Services" },
               { id: "ms", label: "Windows Services" }
             ]}
           />
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-col gap-6 animate-slide-up w-full flex-1">
         <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-2xl p-6 flex flex-col gap-4 shadow-sm flex-1">

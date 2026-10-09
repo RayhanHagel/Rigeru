@@ -111,7 +111,7 @@ export default function SubtitleFetcherPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Local Subtitle Fetcher" subtitle="Find the exact subtitle for your video using digital fingerprints." />
 
       <SectionHeader title="OpenSubtitles Configuration" />
@@ -133,7 +133,7 @@ export default function SubtitleFetcherPage() {
                 className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg py-3 pl-10 pr-4 text-[var(--theme-heading)] focus:outline-none focus:border-[var(--theme-heading)] transition-colors"
               />
             </div>
-            <Button variant="secondary" onClick={saveApiKey} className="shrink-0 h-[46px]">
+            <Button variant="secondary" onClick={saveApiKey} className="!w-auto px-6 shrink-0 h-[46px]">
               Save Key
             </Button>
           </div>

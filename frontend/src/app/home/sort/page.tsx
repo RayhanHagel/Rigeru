@@ -21,6 +21,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "@/components/ui/Button";
+import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { Icon } from "@/lib/utils";
 
 type WidgetItem = {
@@ -254,38 +256,38 @@ export default function HomeSortPage() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-6 lg:p-10 animate-slide-up overflow-y-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight">Sort Quick Navigation</h1>
-            <p className="text-[var(--theme-text)] text-sm">Drag and drop to reorder dashboard cards, or delete them.</p>
+    <div className="w-full h-full flex flex-col p-6 lg:p-10 animate-slide-up overflow-y-auto custom-scrollbar">
+      <Header
+        title="Sort Quick Navigation"
+        subtitle="Drag and drop to reorder dashboard cards, or delete them."
+        actions={
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => router.push("/")} 
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+            >
+              Back to Dashboard
+            </button>
+            <button 
+              onClick={() => {
+                setEditingCardId(null);
+                setStagedWidgets([]);
+                setShowAddPanel(!showAddPanel);
+              }} 
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+            >
+              Add Card
+            </button>
+            <button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center ${isSaving ? 'text-[var(--theme-text)] opacity-70' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
+            >
+              {isSaving ? "Saving..." : "Save Order"}
+            </button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => router.push("/")} icon={<Icon name="arrow_back" size={16} />}>
-            Back to Dashboard
-          </Button>
-          <Button variant="secondary" onClick={() => {
-            setEditingCardId(null);
-            setStagedWidgets([]);
-            setShowAddPanel(!showAddPanel);
-          }} icon={<Icon name="add" size={16} />}>
-            Add Card
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleSave} 
-            isLoading={isSaving} 
-            icon={<Icon name="save" size={16} />}
-            className="border-none !shadow-none !ring-0 !outline-none transition-colors"
-            style={{ backgroundColor: "var(--theme-heading)", color: "var(--theme-bg)", boxShadow: "none" }}
-          >
-            Save Order
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {showAddPanel && (
         <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] backdrop-blur-md rounded-xl p-6 mb-8 animate-slide-up shadow-sm w-full h-full">

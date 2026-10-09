@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 
 import React, { useState, useEffect, useMemo } from "react";
 
@@ -293,16 +294,20 @@ export default function DockerManagerPage() {
   }, [groupedContainers, searchQuery]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header 
         title="Docker Manager"
         subtitle="Control local Docker containers and view images."
         actions={
-          <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm">
-            <Button variant="secondary" onClick={fetchStatusAndContainers} disabled={isLoading || isProcessing} icon={<Icon name="refresh" size={16} className={isLoading ? 'animate-spin' : ''} />}>
+          <ModernTabs actionButton={
+            <button 
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+              onClick={fetchStatusAndContainers} 
+              disabled={isLoading || isProcessing}
+            >
               Refresh
-            </Button>
-          </div>
+            </button>
+          } />
         }
       />
 

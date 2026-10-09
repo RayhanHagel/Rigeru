@@ -60,7 +60,7 @@ export default function SubtitleMergerPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="ASS Subtitle Merger" subtitle="Combine two .ass subtitle files together. Automatically handles coordinate scaling." />
 
       <SectionHeader title="Upload Subtitles" />
@@ -73,7 +73,7 @@ export default function SubtitleMergerPage() {
                 <p className="text-xs text-[var(--theme-text)] mb-2">Your main text subtitle. Its resolution will be kept.</p>
                 {!baseFileHash ? (
                   <>
-                    <DirectUploadBox 
+                    <DirectUploadBox
                       accept=".ass"
                       label="Upload Base Subtitle"
                       onUploadComplete={(info) => {
@@ -114,7 +114,7 @@ export default function SubtitleMergerPage() {
                 <p className="text-xs text-[var(--theme-text)] mb-2">The subtitle you want to paste on top (e.g. Censor Boxes).</p>
                 {!overlayFileHash ? (
                   <>
-                    <DirectUploadBox 
+                    <DirectUploadBox
                       accept=".ass"
                       label="Upload Overlay"
                       onUploadComplete={(info) => {
@@ -156,9 +156,9 @@ export default function SubtitleMergerPage() {
             </div>
           )}
 
-          <Button 
-            variant="primary" 
-            onClick={runMerge} 
+          <Button
+            variant="primary"
+            onClick={runMerge}
             disabled={!baseFileHash || !overlayFileHash || isMerging}
             className="w-full py-4 text-base font-medium transition-shadow"
           >

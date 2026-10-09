@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Header } from "@/components/ui/Header";
 import { Icon } from "@/lib/utils";
 
 type HardwareStats = {
@@ -89,26 +90,21 @@ export default function SystemMonitorPage() {
   );
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-[var(--theme-ui-border)] pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--theme-heading)] tracking-tight flex items-center gap-3">
-              System & Network Monitor
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mt-1">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Live</span>
-              </div>
-            </h1>
-            <p className="text-[var(--theme-text)] text-sm font-medium">Real-time telemetry and network diagnostics.</p>
-            {error && <p className="text-red-400 text-xs">Error: {error}</p>}
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
+      <Header
+        title="System & Network Monitor"
+        subtitle="Real-time telemetry and network diagnostics."
+        actions={
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Live Telemetry</span>
           </div>
-        </div>
-      </div>
+        }
+      />
+      {error && <p className="text-red-400 text-xs mb-4">Error: {error}</p>}
 
       {stats.hardware && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

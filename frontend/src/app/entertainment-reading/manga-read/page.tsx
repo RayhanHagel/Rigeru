@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense, useRef } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/lib/utils";
 
@@ -261,7 +262,7 @@ function MangaReadContent() {
 
   if (errorMsg) {
     return (
-      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
         <Button variant="secondary" onClick={() => router.push('/entertainment-reading/manga-library')} className="mb-4">
           <Icon name="arrow_back" size={16} /> Back to Library
         </Button>
@@ -519,28 +520,27 @@ function MangaReadContent() {
         title={mangaId || "Unknown"}
         subtitle="Manga Details"
         actions={
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="danger" 
-              onClick={handleDelete}
-              title="Delete from Library"
-              className="h-[46px]"
-            >
-              <Icon name="delete" size={16} />
-            </Button>
-            <Button 
-              variant="secondary" 
-              onClick={handleRefresh}
-              isLoading={refreshing}
-              className="h-[46px]"
-              icon={refreshing ? undefined : <Icon name="refresh" size={16} />}
-            >
-              Refresh
-            </Button>
-            <Button variant="secondary" icon={<Icon name="arrow_back" size={16} />} onClick={() => router.push('/entertainment-reading/manga-library')} className="h-[46px]">
-              Back to Library
-            </Button>
-          </div>
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="danger" 
+                onClick={handleDelete}
+                title="Delete from Library"
+              >
+                Delete
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={handleRefresh}
+                isLoading={refreshing}
+              >
+                Refresh
+              </Button>
+              <Button variant="secondary" onClick={() => router.push('/entertainment-reading/manga-library')}>
+                Back to Library
+              </Button>
+            </div>
+          } />
         }
       />
 

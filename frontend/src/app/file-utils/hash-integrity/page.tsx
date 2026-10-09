@@ -194,7 +194,7 @@ export default function HashIntegrityPage() {
         title="Select Folder"
       />
       
-      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+      <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
         <Header 
           title="File Integrity Checker" 
           subtitle="Take a digital fingerprint of your folders and verify them later to detect corruption or tampering." 
@@ -220,13 +220,16 @@ export default function HashIntegrityPage() {
                     <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
                       Folder to Fingerprint (Absolute Path)
                     </label>
-                    <div className="flex gap-2">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+                        <Icon name="folder" size={18} />
+                      </div>
                       <input
                         type="text"
                         value={snapTargetDir}
                         onChange={(e) => setSnapTargetDir(e.target.value)}
                         placeholder="e.g. C:\Users\Username\Documents"
-                        className="flex-1 border rounded-lg px-4 py-3 text-sm text-[var(--theme-text)] focus:outline-none transition-colors"
+                        className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                         style={{ 
                           backgroundColor: "var(--theme-bg)",
                           borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -234,9 +237,14 @@ export default function HashIntegrityPage() {
                         onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                         onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                       />
-                      <Button variant="secondary" onClick={() => openExplorer("snap")} className="px-4 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => openExplorer("snap")}
+                        className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        title="Browse folder"
+                      >
                         <Icon name="folder_open" size={18} />
-                      </Button>
+                      </button>
                     </div>
                     <p className="text-xs text-[var(--theme-text)]">
                       This will scan every file in the selected directory and generate a JSON file of SHA-256 hashes.
@@ -313,13 +321,16 @@ export default function HashIntegrityPage() {
                   <label className="text-xs uppercase text-[var(--theme-text)] font-semibold tracking-wider">
                     Target Folder (To Verify)
                   </label>
-                  <div className="flex gap-2">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+                      <Icon name="folder" size={18} />
+                    </div>
                     <input
                       type="text"
                       value={verifyTargetDir}
                       onChange={(e) => setVerifyTargetDir(e.target.value)}
                       placeholder="e.g. C:\Users\Username\Documents"
-                      className="flex-1 border rounded-lg px-4 py-3 text-sm text-[var(--theme-text)] focus:outline-none transition-colors"
+                      className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
                       style={{ 
                         backgroundColor: "var(--theme-bg)",
                         borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -327,9 +338,14 @@ export default function HashIntegrityPage() {
                       onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
                       onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
                     />
-                    <Button variant="secondary" onClick={() => openExplorer("verify")} className="px-4 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openExplorer("verify")}
+                      className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                      title="Browse folder"
+                    >
                       <Icon name="folder_open" size={18} />
-                    </Button>
+                    </button>
                   </div>
                 </div>
 

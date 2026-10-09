@@ -7,7 +7,7 @@ import { Icon } from "@/lib/utils";
 
 export default function QuickMachinePage() {
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <div className="px-6 py-4 flex-shrink-0 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-secondary/20 text-secondary">

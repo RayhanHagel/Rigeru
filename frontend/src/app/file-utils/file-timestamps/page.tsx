@@ -110,37 +110,47 @@ export default function FileTimestampsPage() {
   };
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Timestamp Modifier" subtitle="Forcefully rewrite OS-level file creation, modification, and access timestamps for any file." />
 
       <div className="flex flex-col gap-6 animate-slide-up w-full">
-        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <SectionHeader title="Select File" />
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[var(--theme-text)]">📁 Local File Path</label>
+              <label className="text-sm font-medium text-[var(--theme-text)]">Local File Path</label>
               <div className="flex gap-3">
-                <Button variant="secondary" onClick={() => setShowFilePicker(true)} icon={<Icon name="search" size={16} />}>
-                  Browse File
-                </Button>
-                <input 
-                  type="text"
-                  value={filePath}
-                  onChange={e => setFilePath(e.target.value)}
-                  placeholder="e.g., C:\Docs\SecretFile.pdf"
-                  className="flex-1 rounded-lg p-3 text-white border focus:outline-none transition-colors"
-                  style={{ 
-                    backgroundColor: "var(--theme-bg)",
-                    borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
-                />
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--theme-text)]">
+                    <Icon name="insert_drive_file" size={18} />
+                  </div>
+                  <input 
+                    type="text"
+                    value={filePath}
+                    onChange={e => setFilePath(e.target.value)}
+                    placeholder="e.g., C:\Docs\SecretFile.pdf"
+                    className="w-full rounded-lg pl-10 pr-12 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors"
+                    style={{ 
+                      backgroundColor: "var(--theme-bg)",
+                      borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = "var(--theme-heading)"}
+                    onBlur={(e) => e.currentTarget.style.borderColor = "color-mix(in srgb, var(--theme-heading) 20%, transparent)"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowFilePicker(true)}
+                    className="absolute inset-y-0 right-2 flex items-center p-1.5 my-auto h-fit text-[var(--theme-text)] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    title="Browse File"
+                  >
+                    <Icon name="folder_open" size={18} />
+                  </button>
+                </div>
                 <Button 
                   variant="primary" 
                   onClick={handleReadTimestamps}
                   disabled={isLoading || !filePath}
-                  className="px-6"
+                  className="!w-auto px-4"
                 >
                   {isLoading ? "Reading" : "Read Timestamps"}
                 </Button>
@@ -164,7 +174,7 @@ export default function FileTimestampsPage() {
           </div>
         </div>
 
-        <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-2xl p-6 shadow-sm backdrop-blur-md flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <SectionHeader title="Edit File Timestamps" />
           <div className="space-y-6">
             <div className="space-y-1.5">
@@ -174,7 +184,7 @@ export default function FileTimestampsPage() {
                 step="1"
                 value={created}
                 onChange={e => setCreated(e.target.value)}
-                className="w-full rounded-lg p-3 text-white border focus:outline-none transition-colors [color-scheme:dark]"
+                className="w-full rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors [color-scheme:dark]"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -191,7 +201,7 @@ export default function FileTimestampsPage() {
                 step="1"
                 value={modified}
                 onChange={e => setModified(e.target.value)}
-                className="w-full rounded-lg p-3 text-white border focus:outline-none transition-colors [color-scheme:dark]"
+                className="w-full rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors [color-scheme:dark]"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -208,7 +218,7 @@ export default function FileTimestampsPage() {
                 step="1"
                 value={accessed}
                 onChange={e => setAccessed(e.target.value)}
-                className="w-full rounded-lg p-3 text-white border focus:outline-none transition-colors [color-scheme:dark]"
+                className="w-full rounded-lg px-4 py-2.5 text-sm text-[var(--theme-text)] border focus:outline-none transition-colors [color-scheme:dark]"
                 style={{ 
                   backgroundColor: "var(--theme-bg)",
                   borderColor: "color-mix(in srgb, var(--theme-heading) 20%, transparent)"
@@ -237,8 +247,7 @@ export default function FileTimestampsPage() {
               disabled={isSaving || !filePath}
               className="w-full py-4 text-base font-medium transition-shadow"
             >
-              <Icon name="save" size={18} className="mr-2" />
-              {isSaving ? "Injecting timestamps via Win32 API..." : "⏱️ Override OS Timestamps"}
+              {isSaving ? "Injecting timestamps via Win32 API..." : "Override OS Timestamps"}
             </Button>
           </div>
         </div>

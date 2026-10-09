@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow } from '@xyflow/react';
 import { Icon } from "@/lib/utils";

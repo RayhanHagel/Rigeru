@@ -30,7 +30,7 @@ export default function BatchFolderSelector({
         variant="secondary"
         size="sm"
         onClick={onSelectFolderClick}
-        className="bg-[var(--theme-bg)] text-[var(--theme-heading)] hover:text-white transition-colors border border-[var(--theme-ui-border)] shadow-sm"
+        className="!w-auto px-4 bg-[var(--theme-bg)] text-[var(--theme-heading)] hover:text-white transition-colors border border-[var(--theme-ui-border)] shadow-sm"
       >
         Select Folder
       </Button>

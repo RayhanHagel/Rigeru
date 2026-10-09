@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     try:
-        from utilities.bluetooth_tracker import stop_tracking
+        from utilities.system_network.bluetooth_tracker import stop_tracking
         stop_tracking()
     except:
         pass
@@ -116,7 +116,7 @@ def debug_uploads():
 def get_dashboard_data():
     """Returns the quick navigation cache data for the dashboard."""
     try:
-        from utilities.util_home import get_quick_cache_data
+        from utilities.productivity_lifestyle.util_home import get_quick_cache_data
         return get_quick_cache_data()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

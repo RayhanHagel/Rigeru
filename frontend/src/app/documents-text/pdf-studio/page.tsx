@@ -1,5 +1,6 @@
 "use client";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
@@ -84,7 +85,7 @@ export default function PDFStudioPage() {
   const handleDownloadFinal = async () => {
     if (!currentHash) return;
     try {
-      const res = await fetch(`http://localhost:8000/uploads/${currentHash}`);
+      const res = await fetch(`/uploads/${currentHash}`);
       const blob = await res.blob();
       downloadBlob(blob, `edited_${fileName}`);
     } catch (e) {
@@ -103,19 +104,21 @@ export default function PDFStudioPage() {
           subtitle="Advanced tools for managing, editing, and modifying PDF documents."
           className="!mb-0"
           actions={
-            <div className="flex items-center gap-4">
-              {errorMsg && <span className="text-red-400 text-sm">{errorMsg}</span>}
-              {currentHash && (
-                <>
-                  <Button variant="secondary" onClick={() => { setCurrentHash(null); setActiveTool(null); setFileName("document.pdf"); }} icon={<Icon name="close" size={18} />}>
-                    Close
-                  </Button>
-                  <Button variant="primary" onClick={handleDownloadFinal} icon={<Icon name="download" size={18} />}>
-                    Download Final
-                  </Button>
-                </>
-              )}
-            </div>
+            <ModernTabs actionButton={
+              <div className="flex items-center gap-2">
+                {errorMsg && <span className="text-red-400 text-sm">{errorMsg}</span>}
+                {currentHash && (
+                  <>
+                    <Button variant="secondary" onClick={() => { setCurrentHash(null); setActiveTool(null); setFileName("document.pdf"); }}>
+                      Close
+                    </Button>
+                    <Button variant="primary" onClick={handleDownloadFinal}>
+                      Download Final
+                    </Button>
+                  </>
+                )}
+              </div>
+            } />
           }
         />
       </div>
@@ -151,7 +154,7 @@ export default function PDFStudioPage() {
             centerOverride ? (
               <div className="w-full h-full animate-fade-in">{centerOverride}</div>
             ) : (
-              <PDFViewer url={`http://localhost:8000/uploads/${currentHash}`} />
+              <PDFViewer url={`/uploads/${currentHash}`} />
             )
           ) : (
             <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto animate-slide-up">
@@ -450,7 +453,7 @@ function SplitPDFTab({ currentHash, onExport, setCenterOverride }: any) {
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex h-full w-full gap-4 relative">
           <div className="flex-1 min-w-0">
-             <PDFThumbnailGrid url={`http://localhost:8000/uploads/${currentHash}`} mode="draggable" />
+             <PDFThumbnailGrid url={`/uploads/${currentHash}`} mode="draggable" />
           </div>
           <div className="w-64 shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
              <h3 className="text-sm font-semibold text-[var(--theme-heading)]">Split PDFs (Buckets)</h3>
@@ -906,7 +909,7 @@ function OrganizePDFTab({ currentHash, onUpdateDocument, setCenterOverride }: an
   useEffect(() => {
     setCenterOverride(
       <PDFThumbnailGrid 
-        url={`http://localhost:8000/uploads/${currentHash}`} 
+        url={`/uploads/${currentHash}`} 
         mode="sort" 
         onOrderChange={setOrder} 
       />
@@ -948,7 +951,7 @@ function RemovePagesTab({ currentHash, onUpdateDocument, setCenterOverride }: an
     setCenterOverride(
       <PDFThumbnailGrid 
         key={`remove-${selectedPages.join(",")}`}
-        url={`http://localhost:8000/uploads/${currentHash}`} 
+        url={`/uploads/${currentHash}`} 
         mode="select" 
         selectedPages={selectedPages}
         onSelectionChange={setSelectedPages} 
@@ -993,7 +996,7 @@ function ExtractImagesTab({ currentHash, onExport, setCenterOverride }: any) {
     setCenterOverride(
       <PDFThumbnailGrid 
         key={`extract-${selectedPages.join(",")}`}
-        url={`http://localhost:8000/uploads/${currentHash}`} 
+        url={`/uploads/${currentHash}`} 
         mode="select" 
         selectedPages={selectedPages}
         onSelectionChange={setSelectedPages} 
@@ -1041,7 +1044,7 @@ function PDFToImageTab({ currentHash, onExport, setCenterOverride }: any) {
     setCenterOverride(
       <PDFThumbnailGrid 
         key={`pdf2img-${selectedPages.join(",")}`}
-        url={`http://localhost:8000/uploads/${currentHash}`} 
+        url={`/uploads/${currentHash}`} 
         mode="select" 
         selectedPages={selectedPages}
         onSelectionChange={setSelectedPages} 

@@ -1,12 +1,12 @@
 import base64
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 
-from utilities.util_code_image import generate_carbon_image
-from utilities.util_bg_remove import remove_image_background
-from utilities.util_ffmpeg import process_video
-from utilities.util_image_compress import batch_compress_images
-from utilities.util_tts import (
+
+from utilities.audio_video.util_ffmpeg import process_video
+from utilities.vision.util_image_compress import batch_compress_images
+from utilities.audio_video.util_tts import (
     generate_cloned_speech,
     generate_cloned_speech_from_saved,
     generate_voice_design,
@@ -15,11 +15,12 @@ from utilities.util_tts import (
     delete_voice,
 )
 from fastapi import UploadFile, File, Form, Response, Request
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 import os
 import tempfile
-from utilities.util_config import load_all_config
-from utilities.util_nlp import translate_text
+from utilities.core.util_config import load_all_config
+from utilities.productivity_lifestyle.util_nlp import translate_text
 import subprocess
 import uuid
 import shutil
@@ -30,7 +31,16 @@ import threading
 WEBCAM_STOP_EVENTS = {}
 
 @router.post("/webcam/stop")
-def api_stop_webcam(camera_index: int = Form(...)):
+def api_stop_webcam(camera_index: int = Form(...)) -> Dict[str, str]:
+    """
+        Signal a running webcam video capture loop to cease execution.
+    
+        Args:
+            camera_index (int): Index of the physical webcam device.
+    
+        Returns:
+            Dict[str, str]: Status confirming camera was stopped or not found.
+        """
     if camera_index in WEBCAM_STOP_EVENTS:
         WEBCAM_STOP_EVENTS[camera_index].set()
         return {"status": "stopped"}
@@ -43,7 +53,19 @@ class TranslationRequest(BaseModel):
     model_id: str | None = None
 
 @router.post("/translation")
-def api_translation(req: TranslationRequest):
+def api_translation(req: TranslationRequest) -> Dict[str, str]:
+    """
+        Translate text across supported languages using HuggingFace Helsinki-NLP models.
+    
+        Args:
+            req (TranslationRequest): Text payload, source, target language, and optional model ID.
+    
+        Returns:
+            Dict[str, str]: Translated text result (`{"translated_text": str}`).
+    
+        Raises:
+            HTTPException: 400 if text is empty, 500 on model inference failure.
+        """
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     try:
@@ -58,7 +80,22 @@ async def api_tts_clone(
     file_hash: str = Form(...),
     ref_text: str = Form(""),
     save_as: str = Form(""),  # optional: display name to save this voice under
-):
+) -> Response:
+    """
+        Synthesize cloned speech from reference audio using neural voice cloning.
+    
+        Args:
+            text (str): Script to synthesize.
+            file_hash (str): Hash identifier of the reference voice audio.
+            ref_text (str, optional): Transcription of the reference audio. Defaults to "".
+            save_as (str, optional): Name to persist this voice model profile. Defaults to "".
+    
+        Returns:
+            Response: Audio WAV binary stream.
+    
+        Raises:
+            HTTPException: 400 if text or audio is missing, 500 on synthesis error.
+        """
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     if not file_hash:
@@ -68,7 +105,7 @@ async def api_tts_clone(
     os.makedirs(temp_dir, exist_ok=True)
 
     file_id = str(uuid.uuid4())
-    ref_ext = os.path.splitext(file.filename)[1] or ".wav"
+    ref_ext = os.path.splitext(file_hash)[1] or ".wav"
     ref_path = os.path.join(temp_dir, f"{file_id}_ref{ref_ext}")
     output_path = os.path.join(temp_dir, f"{file_id}_tts.wav")
 
@@ -79,7 +116,7 @@ async def api_tts_clone(
             raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
 
         # Convert incoming audio to a clean 24kHz mono WAV (OmniVoice native rate)
-        from utilities.util_tts import format_audio_for_tts
+        from utilities.audio_video.util_tts import format_audio_for_tts
         format_audio_for_tts(ref_path, ref_path)
 
         # Optionally save this voice for session reuse
@@ -104,8 +141,20 @@ async def api_tts_clone(
 
 
 @router.post("/tts/clone/from-saved")
-async def api_tts_clone_from_saved(voice_id: str = Form(...), text: str = Form(...)):
-    """Generate speech using a previously saved voice."""
+async def api_tts_clone_from_saved(voice_id: str = Form(...), text: str = Form(...)) -> Response:
+    """
+        Synthesize speech using a previously saved neural voice clone profile.
+    
+        Args:
+            voice_id (str): Saved voice profile identifier.
+            text (str): Speech script to vocalize.
+    
+        Returns:
+            Response: Audio WAV binary stream.
+    
+        Raises:
+            HTTPException: 400 if text is empty, 404 if voice not found.
+        """
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
@@ -129,14 +178,30 @@ async def api_tts_clone_from_saved(voice_id: str = Form(...), text: str = Form(.
 
 
 @router.get("/tts/voices")
-def api_list_voices():
-    """List all saved voices."""
+def api_list_voices() -> Dict[str, List[Dict[str, Any]]]:
+    """
+        List all saved neural voice cloning profiles.
+    
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: Array of saved voice profile objects.
+        """
     return {"voices": list_saved_voices()}
 
 
 @router.delete("/tts/voices/{voice_id}")
-def api_delete_voice(voice_id: str):
-    """Delete a saved voice by ID."""
+def api_delete_voice(voice_id: str) -> Dict[str, bool]:
+    """
+        Delete a saved neural voice profile from disk.
+    
+        Args:
+            voice_id (str): Voice profile ID to remove.
+    
+        Returns:
+            Dict[str, bool]: Confirmation flag (`{"ok": True}`).
+    
+        Raises:
+            HTTPException: 404 if voice profile not found.
+        """
     try:
         delete_voice(voice_id)
         return {"ok": True}
@@ -147,8 +212,20 @@ def api_delete_voice(voice_id: str):
 
 
 @router.post("/tts/design")
-async def api_tts_design(text: str = Form(...), speaker_attributes: str = Form(...)):
-    """Generate speech using Voice Design (no reference audio needed)."""
+async def api_tts_design(text: str = Form(...), speaker_attributes: str = Form(...)) -> Response:
+    """
+        Generate custom voice audio purely from descriptive natural language attributes.
+    
+        Args:
+            text (str): Dialogue script to synthesize.
+            speaker_attributes (str): Voice characteristics (e.g. gender, age, tone).
+    
+        Returns:
+            Response: Audio WAV binary stream.
+    
+        Raises:
+            HTTPException: 400 if inputs are empty, 500 on synthesis error.
+        """
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     if not speaker_attributes.strip():
@@ -171,7 +248,21 @@ async def api_tts_design(text: str = Form(...), speaker_attributes: str = Form(.
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/video-to-gif")
-async def api_video_to_gif(file_hash: str = Form(...), fps: int = Form(15), scale: int = Form(480)):
+async def api_video_to_gif(file_hash: str = Form(...), fps: int = Form(15), scale: int = Form(480)) -> FileResponse:
+    """
+        Transcode a video segment into an optimized animated GIF.
+    
+        Args:
+            file_hash (str): Hash identifier of the source video in cache.
+            fps (int, optional): Output framerate. Defaults to 15.
+            scale (int, optional): Horizontal pixel scale. Defaults to 480.
+    
+        Returns:
+            FileResponse: Converted GIF binary file stream.
+    
+        Raises:
+            HTTPException: 400 if file is missing, 500 on transcoding error.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file selected")
         
@@ -185,7 +276,7 @@ async def api_video_to_gif(file_hash: str = Form(...), fps: int = Form(15), scal
         if not os.path.exists(input_path):
             raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
             
-        from utilities.util_ffmpeg import convert_video_to_gif
+        from utilities.audio_video.util_ffmpeg import convert_video_to_gif
         success, result_msg = convert_video_to_gif(input_path, output_path, fps=fps, scale=scale)
         if not success:
             raise Exception(result_msg)
@@ -203,7 +294,21 @@ async def api_video_to_gif(file_hash: str = Form(...), fps: int = Form(15), scal
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/audio-trim")
-async def api_audio_trim(file_hash: str = Form(...), start: float = Form(...), end: float = Form(...)):
+async def api_audio_trim(file_hash: str = Form(...), start: float = Form(...), end: float = Form(...)) -> FileResponse:
+    """
+        Trim an audio track between specified start and end timestamps.
+    
+        Args:
+            file_hash (str): Audio file hash in uploads cache.
+            start (float): Start time offset in seconds.
+            end (float): End time offset in seconds.
+    
+        Returns:
+            FileResponse: Trimmed MP3 audio file stream.
+    
+        Raises:
+            HTTPException: 400 if file is missing, 500 on trim error.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file selected")
         
@@ -221,7 +326,7 @@ async def api_audio_trim(file_hash: str = Form(...), start: float = Form(...), e
         if not os.path.exists(input_path):
             raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
             
-        from utilities.util_ffmpeg import trim_audio
+        from utilities.audio_video.util_ffmpeg import trim_audio
         success, result_msg = trim_audio(input_path, output_path, start, end)
         if not success:
             raise HTTPException(status_code=500, detail=result_msg)
@@ -241,48 +346,8 @@ async def api_audio_trim(file_hash: str = Form(...), start: float = Form(...), e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class CodeToImageRequest(BaseModel):
-    code: str
-    language: str = "Auto"
-    theme: str = "monokai"
-    bg_color: str = "#ABB8C3"
 
-@router.post("/code-to-image")
-def api_code_to_image(req: CodeToImageRequest):
-    if not req.code.strip():
-        raise HTTPException(status_code=400, detail="Code cannot be empty")
-        
-    try:
-        img_bytes = generate_carbon_image(
-            code=req.code,
-            language=req.language.lower(),
-            theme=req.theme,
-            bg_color=req.bg_color
-        )
-        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-        return {"image_base64": img_b64}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/remove-background")
-async def api_remove_background(file_hash: str = Form(...)):
-    if not file_hash:
-        raise HTTPException(status_code=400, detail="No file selected")
-    
-    try:
-        tmp_path = os.path.join(".", "uploads", file_hash)
-        if not os.path.exists(tmp_path):
-            raise HTTPException(status_code=400, detail="Uploaded file not found in cache.")
-        with open(tmp_path, "rb") as f:
-            content = f.read()
-        success, result = remove_image_background(content)
-        if not success:
-            raise HTTPException(status_code=500, detail=result)
-            
-        img_b64 = base64.b64encode(result).decode('utf-8')
-        return {"image_base64": img_b64}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/compress-video")
 async def api_compress_video(
@@ -295,7 +360,27 @@ async def api_compress_video(
     preset: str = Form(...),
     keep_audio: bool = Form(...),
     audio_codec: str = Form(...)
-):
+) -> Dict[str, Any]:
+    """
+        Compress and re-encode a video file with custom CRF, preset, and resolution.
+    
+        Args:
+            file_hash (str): Video file hash in uploads cache.
+            output_dir (str): Target directory for output file.
+            start_time (float): Video clip start offset in seconds.
+            end_time (float): Video clip end offset in seconds.
+            target_res (str): Target resolution string (e.g. 1080p, 720p).
+            crf (int): Constant Rate Factor compression value (0-51).
+            preset (str): FFmpeg speed preset (e.g. fast, medium, slow).
+            keep_audio (bool): Retain all original audio channels.
+            audio_codec (str): Output audio codec (aac, mp3, copy).
+    
+        Returns:
+            Dict[str, Any]: Status message and output file path.
+    
+        Raises:
+            HTTPException: 400 if file missing, 500 on compression failure.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
@@ -332,7 +417,19 @@ class CompressImagesRequest(BaseModel):
     fit_mode: str
 
 @router.post("/compress-images")
-def api_compress_images(req: CompressImagesRequest):
+def api_compress_images(req: CompressImagesRequest) -> Dict[str, str]:
+    """
+        Batch compress and resize images within a directory using Pillow and mozjpeg.
+    
+        Args:
+            req (CompressImagesRequest): Input directory, output directory, quality, and dimensions.
+    
+        Returns:
+            Dict[str, str]: Operation outcome message.
+    
+        Raises:
+            HTTPException: 500 if image compression fails.
+        """
     try:
         success, msg = batch_compress_images(
             input_dir=req.input_dir,
@@ -348,13 +445,19 @@ def api_compress_images(req: CompressImagesRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_upscale import upscale_image, get_compute_device
+from utilities.vision.util_upscale import upscale_image, get_compute_device
 import io
 import asyncio
 from fastapi.responses import Response
 
 @router.get("/upscaler-config")
-def api_get_upscaler_config():
+def api_get_upscaler_config() -> Dict[str, List[str]]:
+    """
+        Query available hardware acceleration compute devices for Real-ESRGAN upscaling.
+    
+        Returns:
+            Dict[str, List[str]]: Supported compute devices (e.g. cuda, cpu).
+        """
     try:
         devices = get_compute_device()
         return {"devices": devices}
@@ -364,7 +467,23 @@ def api_get_upscaler_config():
 @router.post("/upscale-image")
 async def api_upscale_image(
     file_hash: str = Form(...)
-):
+) -> Response:
+    """
+        Super-resolve and upscale an image using Real-ESRGAN neural network.
+    
+        Args:
+            file_hash (str): Image hash identifier in uploads cache.
+            model (str, optional): Model architecture. Defaults to "RealESRGAN_x4plus".
+            scale (int, optional): Upscaling multiplier. Defaults to 4.
+            tile (int, optional): Tiling dimension for VRAM management. Defaults to 0.
+            device (str, optional): Target compute device. Defaults to "Auto".
+    
+        Returns:
+            Response: Upscaled PNG image binary stream.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on upscale failure.
+        """
     config = load_all_config()
     scale = int(config.get("image_upscaler_scale", 4))
     device_pref = config.get("device_preference", "Auto-Detect")
@@ -393,8 +512,23 @@ async def api_upscale_image(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upscale-image/batch")
-async def api_upscale_image_batch(hashes: str = Form(...)):
-    """Batch process multiple files for image upscaler."""
+async def api_upscale_image_batch(hashes: str = Form(...)) -> Dict[str, Any]:
+    """
+        Batch upscale multiple uploaded images and bundle results into a ZIP archive.
+    
+        Args:
+            hashes (str): JSON list of image hashes in uploads cache.
+            model (str, optional): Upscaler model. Defaults to "RealESRGAN_x4plus".
+            scale (int, optional): Upscale factor. Defaults to 4.
+            tile (int, optional): Tile size. Defaults to 0.
+            device (str, optional): Hardware device. Defaults to "Auto".
+    
+        Returns:
+            Dict[str, Any]: Archive URL and lists of processed image URLs.
+    
+        Raises:
+            HTTPException: 400 if hashes invalid, 500 on batch failure.
+        """
     import json, zipfile, uuid, shutil
     
     config = load_all_config()
@@ -454,11 +588,23 @@ async def api_upscale_image_batch(hashes: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-from utilities.util_bg_remove import remove_image_background
 import base64
 
 @router.post("/remove-background")
-async def api_remove_background(file_hash: str = Form(...)):
+async def api_remove_background(file_hash: str = Form(...)) -> Dict[str, str]:
+    """
+        Remove background from an image using Rembg neural segmentation.
+    
+        Args:
+            file_hash (str): Image hash identifier in uploads cache.
+    
+        Returns:
+            Dict[str, str]: Base64-encoded PNG image with transparent alpha background.
+    
+        Raises:
+            HTTPException: 400 if file missing, 500 on segmentation failure.
+        """
+    from utilities.vision.util_bg_remove import remove_image_background
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
@@ -483,8 +629,19 @@ import tempfile
 import json
 
 @router.post("/remove-background/batch")
-async def api_remove_background_batch(hashes: str = Form(...)):
-    """Batch process multiple files. `hashes` is a JSON string of a list of hash strings."""
+async def api_remove_background_batch(hashes: str = Form(...)) -> Dict[str, Any]:
+    """
+        Batch remove backgrounds from multiple images and return a ZIP package.
+    
+        Args:
+            hashes (str): JSON-encoded list of image file hashes.
+    
+        Returns:
+            Dict[str, Any]: Downloadable ZIP archive URL and processed image URLs.
+    
+        Raises:
+            HTTPException: 400 if invalid JSON, 500 on processing failure.
+        """
     try:
         hash_list = json.loads(hashes)
     except Exception:
@@ -538,7 +695,6 @@ async def api_remove_background_batch(hashes: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-from utilities.util_fisheye import apply_fisheye
 from fastapi.background import BackgroundTasks
 
 @router.post("/fisheye")
@@ -546,7 +702,22 @@ async def api_fisheye(
     background_tasks: BackgroundTasks,
     file_hash: str = Form(...),
     strength: float = Form(0.5)
-):
+) -> Dict[str, str]:
+    """
+        Apply optical fisheye lens distortion or barrel de-warping to an image.
+    
+        Args:
+            file_hash (str): Image file hash in cache.
+            distortion (float, optional): Distortion coefficient. Defaults to 0.5.
+            zoom (float, optional): Digital focal zoom factor. Defaults to 1.0.
+    
+        Returns:
+            Dict[str, str]: Base64-encoded distorted output image.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on transform failure.
+        """
+    from utilities.vision.util_fisheye import apply_fisheye
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
@@ -567,8 +738,21 @@ async def api_fisheye(
 async def api_fisheye_batch(
     hashes: str = Form(...),
     strength: float = Form(0.5)
-):
-    """Batch process multiple files for fisheye. `hashes` is a JSON string of a list of hash strings."""
+) -> Dict[str, Any]:
+    """
+        Apply batch fisheye lens distortion across multiple images and package as ZIP.
+    
+        Args:
+            hashes (str): JSON array of image file hashes.
+            distortion (float, optional): Distortion strength. Defaults to 0.5.
+            zoom (float, optional): Zoom factor. Defaults to 1.0.
+    
+        Returns:
+            Dict[str, Any]: Output ZIP archive URL and image URL lists.
+    
+        Raises:
+            HTTPException: 400 on invalid input, 500 on failure.
+        """
     import json, zipfile, uuid, shutil
     try:
         hash_list = json.loads(hashes)
@@ -618,14 +802,28 @@ async def api_fisheye_batch(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_color_picker import get_color_from_coords
+from utilities.vision.util_color_picker import get_color_from_coords
 
 @router.post("/color-picker")
 async def api_color_picker(
     file_hash: str = Form(...),
     x: int = Form(...),
     y: int = Form(...)
-):
+) -> Dict[str, Any]:
+    """
+        Sample the exact RGB and Hex color values at specific pixel coordinates in an image.
+    
+        Args:
+            file_hash (str): Image hash in uploads cache.
+            x (int): Horizontal pixel coordinate.
+            y (int): Vertical pixel coordinate.
+    
+        Returns:
+            Dict[str, Any]: Sampled RGB and Hex color values.
+    
+        Raises:
+            HTTPException: 400 if coordinates out of bounds or image missing.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
@@ -641,13 +839,26 @@ async def api_color_picker(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_color_picker import get_color_palette
+from utilities.vision.util_color_picker import get_color_palette
 
 @router.post("/color-palette")
 async def api_color_palette(
     file_hash: str = Form(...),
     num_colors: int = Form(5)
-):
+) -> Dict[str, Any]:
+    """
+        Extract dominant color palette from an image using k-means clustering.
+    
+        Args:
+            file_hash (str): Image hash in uploads cache.
+            num_colors (int, optional): Number of palette clusters. Defaults to 5.
+    
+        Returns:
+            Dict[str, Any]: Array of dominant colors with hex codes and percentages.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on clustering failure.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
     try:
@@ -663,7 +874,7 @@ async def api_color_palette(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_code_image import generate_carbon_image
+from utilities.vision.util_code_image import generate_carbon_image
 from pydantic import BaseModel
 
 class CodeToImageRequest(BaseModel):
@@ -673,7 +884,19 @@ class CodeToImageRequest(BaseModel):
     bg_color: str
 
 @router.post("/code-to-image")
-def api_code_to_image(req: CodeToImageRequest):
+def api_code_to_image(req: CodeToImageRequest) -> Response:
+    """
+        Render styled syntax-highlighted code snippet image using Carbon/Pygments.
+    
+        Args:
+            req (CodeToImageRequest): Source code, programming language, theme, and background.
+    
+        Returns:
+            Response: PNG image binary stream.
+    
+        Raises:
+            HTTPException: 400 if code is empty, 500 on rendering failure.
+        """
     if not req.code.strip():
         raise HTTPException(status_code=400, detail="Code cannot be empty")
         
@@ -689,11 +912,20 @@ def api_code_to_image(req: CodeToImageRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_depth_estimation import process_image_depth, process_video_depth
+from utilities.vision.util_depth_estimation import process_image_depth, process_video_depth
 from fastapi.responses import FileResponse
 from fastapi.background import BackgroundTasks
 
-def cleanup_files(*paths):
+def cleanup_files(*paths) -> None:
+    """
+        Safely delete temporary files from disk without raising exceptions.
+    
+        Args:
+            *paths: Variable list of file paths to remove.
+    
+        Returns:
+            None
+        """
     for p in paths:
         if p and os.path.exists(p):
             try:
@@ -707,7 +939,22 @@ async def api_depth_image(
     file_hash: str = Form(...),
     colormap: str = Form(...),
     invert: bool = Form(...)
-):
+) -> FileResponse:
+    """
+        Estimate depth map for a single image using Depth Anything neural network.
+    
+        Args:
+            background_tasks (BackgroundTasks): Task worker for post-response cleanup.
+            file_hash (str): Image file hash in uploads cache.
+            colormap (str): OpenCV colormap name (e.g. INFERNO, PLASMA, MAGMA).
+            invert (bool): Invert depth gradients.
+    
+        Returns:
+            FileResponse: Depth map JPEG image response.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on depth inference error.
+        """
     config = load_all_config()
     model_size = config.get("depth_estimation", "Base")
     engine = config.get("global_compute_engine", "cpu")
@@ -742,7 +989,7 @@ async def api_depth_image(
         pass # do not delete cached upload
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_webcam_fx import generate_depth_webcam_frames
+from utilities.vision.util_webcam_fx import generate_depth_webcam_frames
 
 @router.get("/depth-estimation/webcam-stream")
 async def api_depth_webcam(
@@ -751,7 +998,20 @@ async def api_depth_webcam(
     colormap: str = "INFERNO",
     invert: bool = False,
     ai_fps: float = 5.0
-):
+) -> StreamingResponse:
+    """
+        Stream real-time webcam video with live neural depth estimation overlay.
+    
+        Args:
+            request (Request): Client HTTP connection.
+            camera_index (int): Hardware webcam device index.
+            colormap (str, optional): Colormap palette. Defaults to "INFERNO".
+            invert (bool, optional): Invert depth values. Defaults to False.
+            ai_fps (float, optional): Inference rate limit. Defaults to 5.0.
+    
+        Returns:
+            StreamingResponse: Multipart JPEG video frame stream.
+        """
     import threading
     from fastapi.concurrency import run_in_threadpool
     stop_event = threading.Event()
@@ -797,7 +1057,24 @@ async def api_depth_video(
     invert: bool = Form(...),
     encoder: str = Form(...),
     ai_fps: float = Form(5.0)
-):
+) -> FileResponse:
+    """
+        Generate a neural depth map video stream from an uploaded video file.
+    
+        Args:
+            background_tasks (BackgroundTasks): Task worker for file cleanup.
+            file_hash (str): Video file hash in uploads cache.
+            colormap (str): Depth colormap name.
+            invert (bool): Invert depth polarity.
+            encoder (str): Video hardware encoder (e.g. libx264, h264_nvenc).
+            ai_fps (float, optional): Neural processing framerate. Defaults to 5.0.
+    
+        Returns:
+            FileResponse: Rendered MP4 depth video file.
+    
+        Raises:
+            HTTPException: 400 if video missing, 500 on processing failure.
+        """
     config = load_all_config()
     model_size = config.get("depth_estimation", "Base")
     engine = config.get("global_compute_engine", "cpu")
@@ -834,17 +1111,23 @@ async def api_depth_video(
         pass # do not delete cached upload
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_ffmpeg import get_available_encoders
+from utilities.audio_video.util_ffmpeg import get_available_encoders
 
 @router.get("/ffmpeg-encoders")
-def api_get_ffmpeg_encoders():
+def api_get_ffmpeg_encoders() -> Dict[str, List[str]]:
+    """
+        Detect available hardware and software video encoders supported by the local FFmpeg build.
+    
+        Returns:
+            Dict[str, List[str]]: Supported encoders list (`{"encoders": [...]}`).
+        """
     try:
         return {"encoders": get_available_encoders()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-from utilities.util_object_detect import (
+from utilities.vision.util_object_detect import (
     load_yolo_model,
     analyze_image,
     render_image_boxes,
@@ -858,7 +1141,20 @@ from fastapi.responses import StreamingResponse
 async def api_od_analyze(
     file_hash: str = Form(...),
     conf_thresh: float = Form(...)
-):
+) -> Dict[str, List[Dict[str, Any]]]:
+    """
+        Detect objects in an image and return individual cropped entity bounding boxes.
+    
+        Args:
+            file_hash (str): Image file hash in uploads cache.
+            conf_thresh (float): Minimum confidence detection threshold (0.0 - 1.0).
+    
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: Detected objects with labels, boxes, and crops.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on YOLO detection error.
+        """
     config = load_all_config()
     resolution = int(config.get("inference_resolution", 640))
     optimization = config.get("global_compute_engine", "cpu")
@@ -905,7 +1201,21 @@ async def api_od_image(
     file_hash: str = Form(...),
     conf_thresh: float = Form(...),
     selected_ids: str = Form(...) # JSON string of IDs
-):
+) -> Response:
+    """
+        Render annotated bounding boxes for detected objects onto an image.
+    
+        Args:
+            file_hash (str): Image file hash in uploads cache.
+            conf_thresh (float): Detection confidence threshold.
+            selected_ids (str): JSON list of object IDs to render.
+    
+        Returns:
+            Response: Rendered JPEG image with bounding boxes.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on detection failure.
+        """
     config = load_all_config()
     model = config.get("object_detection", "yolov8n.pt")
     resolution = int(config.get("inference_resolution", 640))
@@ -951,7 +1261,26 @@ async def api_od_video(
     selected_classes: str = Form("[]"),
     ai_fps: float = Form(5.0),
     use_extrapolation: bool = Form(True)
-):
+) -> FileResponse:
+    """
+        Process video with YOLO object tracking and render bounding boxes onto output video.
+    
+        Args:
+            background_tasks (BackgroundTasks): Task worker for cleanup.
+            file_hash (str): Video file hash in uploads cache.
+            conf_thresh (float): Minimum confidence threshold.
+            output_method (str): Output format choice.
+            encoder (str): FFmpeg video encoder.
+            selected_classes (str, optional): JSON list of target classes. Defaults to "[]".
+            ai_fps (float, optional): Inference sampling rate. Defaults to 5.0.
+            use_extrapolation (bool, optional): Smooth trajectories between AI frames. Defaults to True.
+    
+        Returns:
+            FileResponse: Annotated MP4 video file stream.
+    
+        Raises:
+            HTTPException: 400 if video missing, 500 on inference failure.
+        """
     config = load_all_config()
     model = config.get("object_detection", "yolov8n.pt")
     resolution = int(config.get("inference_resolution", 640))
@@ -996,12 +1325,27 @@ async def api_od_video(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/object-detect/cameras")
-def api_od_cameras():
+def api_od_cameras() -> Dict[str, List[Dict[str, Any]]]:
+    """
+        Enumerate all connected webcam capture devices available on the system.
+    
+        Returns:
+            Dict[str, List[Dict[str, Any]]]: Discovered camera devices list.
+        """
     return {"cameras": get_available_cameras()}
 
 @router.post("/object-detect/webcam-config")
-def api_od_webcam_config(camera_index: int = Form(...), ai_fps: float = Form(...), selected_classes: str = Form("")):
-    from utilities.util_object_detect import update_webcam_config
+def api_od_webcam_config(camera_index: int = Form(...), ai_fps: float = Form(...), selected_classes: str = Form("")) -> Dict[str, str]:
+    """
+        Update dynamic runtime detection parameters for an active webcam stream.
+    
+        Args:
+            req (Dict[str, Any]): Dictionary of updated parameters.
+    
+        Returns:
+            Dict[str, str]: Confirmation message (`{"status": "ok"}`).
+        """
+    from utilities.vision.util_object_detect import update_webcam_config
     update_webcam_config(camera_index, ai_fps, selected_classes)
     return {"status": "ok"}
 
@@ -1011,7 +1355,19 @@ async def api_od_webcam_stream(
     conf_thresh: float,
     camera_index: int,
     use_extrapolation: bool = False
-):
+) -> StreamingResponse:
+    """
+        Stream real-time webcam video with live YOLO object detection bounding boxes.
+    
+        Args:
+            request (Request): Client HTTP connection.
+            camera_index (int): Webcam hardware device index.
+            conf_thresh (float, optional): Detection threshold. Defaults to 0.5.
+            ai_fps (float, optional): Inference frame rate. Defaults to 5.0.
+    
+        Returns:
+            StreamingResponse: Multipart JPEG video frame stream.
+        """
     config = load_all_config()
     model = config.get("object_detection", "yolov8n.pt")
     resolution = int(config.get("inference_resolution", 640))
@@ -1065,7 +1421,7 @@ async def api_od_webcam_stream(
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
 
-from utilities.util_face_blur import scan_faces, process_media_blur, save_frame_cache
+from utilities.vision.util_face_blur import scan_faces, process_media_blur, save_frame_cache
 import json
 
 @router.post("/face-blur/scan")
@@ -1074,7 +1430,19 @@ async def api_fb_scan(
     fps_scan: float = Form(5.0),
     clustering_method: str = Form("None"),
     cluster_threshold: float = Form(0.50)
-):
+) -> Dict[str, Any]:
+    """
+        Detect and locate all human faces in an image using InsightFace/Haar Cascades.
+    
+        Args:
+            file_hash (str): Image file hash in uploads cache.
+    
+        Returns:
+            Dict[str, Any]: Detected face bounding boxes, crops, and metadata.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on face scan failure.
+        """
     config = load_all_config()
     det_model = config.get("face_blur", "buffalo_l")
     rec_model = config.get("face_blur", "buffalo_l")
@@ -1111,7 +1479,7 @@ async def api_fb_scan(
         # We need to base64 encode the crops in face_data so JSON can send them
         for face in face_data:
             if 'crop' in face:
-                from utilities.util_image_fx import encode_cv2_image_to_base64
+                from utilities.vision.util_image_fx import encode_cv2_image_to_base64
                 b64 = encode_cv2_image_to_base64(face['crop'], format=".jpg")
                 if b64:
                     face['crop_b64'] = b64.split(",")[-1] if "," in b64 else b64
@@ -1136,7 +1504,19 @@ async def api_fb_scan_folder(
     folder_path: str = Form(...),
     fps_scan: float = Form(5.0),
     cluster_threshold: float = Form(0.50)
-):
+) -> Dict[str, Any]:
+    """
+        Scan an entire directory of images for human faces and cluster unique identities.
+    
+        Args:
+            folder_path (str): Local filesystem folder path.
+    
+        Returns:
+            Dict[str, Any]: Scanned images, detected face clusters, and thumbnails.
+    
+        Raises:
+            HTTPException: 400 if folder does not exist, 500 on scan failure.
+        """
     config = load_all_config()
     rec_model = config.get("face_blur", "buffalo_l")
     det_size = int(config.get("inference_resolution", 640))
@@ -1147,7 +1527,7 @@ async def api_fb_scan_folder(
         raise HTTPException(status_code=400, detail="Invalid folder path")
         
     try:
-        from utilities.util_face_blur_folder import scan_folder_faces
+        from utilities.vision.util_face_blur_folder import scan_folder_faces
         success, face_data, msg = scan_folder_faces(
             folder_path=folder_path,
             rec_model=rec_model if rec_model else None,
@@ -1161,7 +1541,7 @@ async def api_fb_scan_folder(
         if not success:
             raise HTTPException(status_code=500, detail=msg)
             
-        from utilities.util_image_fx import encode_cv2_image_to_base64
+        from utilities.vision.util_image_fx import encode_cv2_image_to_base64
         
         for face in face_data:
             if 'crop' in face:
@@ -1181,7 +1561,19 @@ async def api_fb_scan_folder(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/face-blur/serve-image")
-def api_fb_serve_image(path: str):
+def api_fb_serve_image(path: str) -> FileResponse:
+    """
+        Serve an image file directly from a local scanned directory.
+    
+        Args:
+            path (str): Local file path.
+    
+        Returns:
+            FileResponse: Binary image stream.
+    
+        Raises:
+            HTTPException: 404 if file does not exist.
+        """
     import os
     from fastapi.responses import FileResponse
     if not os.path.exists(path):
@@ -1199,13 +1591,25 @@ async def api_fb_process_folder(
     match_threshold: float = Form(0.50),
     encoder: str = Form("libx264"),
     output_method: str = Form("reencode")
-):
+) -> Dict[str, Any]:
+    """
+        Apply face blurring or masking across all images in a target folder.
+    
+        Args:
+            req (FolderProcessRequest): Folder path, blur style, and selected face IDs.
+    
+        Returns:
+            Dict[str, Any]: Processing summary and output paths.
+    
+        Raises:
+            HTTPException: 400 if folder invalid, 500 on processing failure.
+        """
     try:
         sel_faces = json.loads(selected_faces)
         if not sel_faces:
             raise HTTPException(status_code=400, detail="No faces selected.")
             
-        from utilities.util_face_blur_folder import process_folder_blur
+        from utilities.vision.util_face_blur_folder import process_folder_blur
         success, out_dir = process_folder_blur(
             folder_path=folder_path,
             selected_faces=sel_faces,
@@ -1224,7 +1628,7 @@ async def api_fb_process_folder(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_webcam_fx import generate_face_blur_webcam_frames
+from utilities.vision.util_webcam_fx import generate_face_blur_webcam_frames
 from fastapi.responses import StreamingResponse
 
 @router.get("/face-blur/webcam-stream")
@@ -1236,7 +1640,8 @@ async def api_face_blur_webcam(
     blur_type: str = "Gaussian",
     ai_fps: float = 5.0,
     use_extrapolation: bool = True
-):
+) -> StreamingResponse:
+    """\n    Stream webcam video with real-time facial anonymization / face blurring.\n\n    Args:\n        request (Request): Active connection.\n        camera_index (int): Hardware camera index.\n        blur_type (str, optional): Anonymization style ("gaussian", "pixelate", "solid"). Defaults to "gaussian".\n        blur_strength (int, optional): Blur kernel radius. Defaults to 25.\n\n    Returns:\n        StreamingResponse: Multipart JPEG video frame stream.\n    """
     import threading
     from fastapi.concurrency import run_in_threadpool
     stop_event = threading.Event()
@@ -1290,7 +1695,26 @@ async def api_fb_process(
     encoder: str = Form("libx264"),
     output_method: str = Form("reencode"),
     use_extrapolation: bool = Form(True)
-):
+) -> FileResponse:
+    """
+        Anonymize selected faces in an image or video using Gaussian blur or pixelation.
+    
+        Args:
+            background_tasks (BackgroundTasks): Task worker for file cleanup.
+            file_hash (str): Media file hash in cache.
+            blur_type (str): Anonymization effect (gaussian, pixelate, blackout).
+            blur_strength (int): Kernel intensity.
+            selected_faces (str): JSON list of target face IDs.
+            target_res (str, optional): Video output resolution. Defaults to "Original".
+            encoder (str, optional): FFmpeg video encoder. Defaults to "libx264".
+            ai_fps (float, optional): Tracking framerate. Defaults to 5.0.
+    
+        Returns:
+            FileResponse: Processed media file stream.
+    
+        Raises:
+            HTTPException: 400 if media missing, 500 on processing failure.
+        """
     try:
         sel_faces = json.loads(selected_faces)
         if not sel_faces:
@@ -1332,7 +1756,7 @@ async def api_fb_process(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from utilities.util_censor import process_media_censor
+from utilities.vision.util_censor import process_media_censor
 import json
 
 @router.post("/vision-censor")
@@ -1348,7 +1772,21 @@ async def api_vision_censor(
     blur_intensity: int = Form(50),
     blur_type: str = Form("Gaussian"),
     encoder: str = Form("libx264")
-):
+) -> Dict[str, str]:
+    """
+        Detect and redact NSFW content or nudity in an image using neural classification.
+    
+        Args:
+            file_hash (str): Image hash in uploads cache.
+            redact_type (str, optional): Censor style (blackout, blur, pixelate). Defaults to blackout.
+            blur_strength (int, optional): Blur strength. Defaults to 30.
+    
+        Returns:
+            Dict[str, str]: Base64-encoded sanitized image.
+    
+        Raises:
+            HTTPException: 400 if image missing, 500 on censor failure.
+        """
     if not file_hash:
         raise HTTPException(status_code=400, detail="No file uploaded")
         
@@ -1408,7 +1846,21 @@ async def api_vision_censor_batch(
     blur_intensity: int = Form(50),
     blur_type: str = Form("Gaussian"),
     encoder: str = Form("libx264")
-):
+) -> Dict[str, Any]:
+    """
+        Batch censor NSFW regions across multiple images and package into a ZIP archive.
+    
+        Args:
+            hashes (str): JSON list of image file hashes.
+            redact_type (str, optional): Redaction visual style. Defaults to blackout.
+            blur_strength (int, optional): Blur kernel radius. Defaults to 30.
+    
+        Returns:
+            Dict[str, Any]: Downloadable ZIP archive URL and processed image URLs.
+    
+        Raises:
+            HTTPException: 400 if invalid JSON, 500 on processing failure.
+        """
     import json, zipfile, uuid, shutil, asyncio
     
     try:

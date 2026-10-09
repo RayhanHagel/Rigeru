@@ -5,6 +5,8 @@ import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import { Select } from "@/components/ui/Select";
+import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Icon } from "@/lib/utils";
 
@@ -195,270 +197,274 @@ export default function PriceMonitor() {
   }, [items, searchQuery, filterOption, sortOption]);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto custom-scrollbar animate-slide-up flex flex-col font-sans">
       {toastMsg && (
-        <div className="fixed top-4 right-4 z-50 bg-zinc-800 text-white px-4 py-2 rounded-lg shadow-lg animate-slide-up flex items-center gap-2">
-          <Icon name="check_circle" size={18} className="text-green-400" />
+        <div className="fixed top-4 right-4 z-50 bg-[var(--theme-heading)] text-[var(--theme-bg)] px-4 py-2 rounded-lg shadow-lg animate-slide-up flex items-center gap-2 font-medium">
+          <Icon name="info" size={18} />
           {toastMsg}
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-primary/30 pb-4 shrink-0">
-        <div className="flex items-center gap-0">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Price Drop Monitor</h1>
-            <p className="text-zinc-400 text-sm font-medium">Track product prices locally from Amazon, eBay, Shopee, Tokopedia, and Steam.</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
-          <Button 
-            variant="primary" 
-            onClick={handleRefreshAll}
-            disabled={isRefreshing}
-            icon={<Icon name="refresh" size={18} className={isRefreshing ? "animate-spin" : ""} />}
-          >
-            {isRefreshing ? "Refreshing" : "Refresh All Prices"}
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowAdd(!showAdd)}
-            icon={<Icon name="add" size={18} />}
-          >
-            Add Product
-          </Button>
-        </div>
-      </div>
-
-      {showAdd && (
-        <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-6 mb-8 animate-slide-up">
-          <h3 className="text-lg font-semibold mb-4 text-[var(--theme-heading)] flex items-center gap-2">Add New Product to Track
-          </h3>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label className="text-sm text-zinc-400 mb-1 block">Product Name</label>
-              <TextInput value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g., Sony WH-1000XM5" />
+      <Header 
+        title="Price Drop Monitor" 
+        subtitle="Track product prices locally from Amazon, eBay, Shopee, Tokopedia, and Steam."
+        actions={
+          <ModernTabs actionButton={
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleRefreshAll}
+                disabled={isRefreshing}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center ${isRefreshing ? 'text-[var(--theme-heading)] opacity-70' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
+              >
+                {isRefreshing ? "Refreshing" : "Refresh All Prices"}
+              </button>
+              <button 
+                onClick={() => setShowAdd(!showAdd)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+              >
+                Add Product
+              </button>
             </div>
-            <div className="flex-[2]">
-              <label className="text-sm text-zinc-400 mb-1 block">Product URL</label>
-              <TextInput value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://www.amazon.com/dp/..." />
+          } />
+        }
+      />
+
+      <div className="p-6 lg:p-10 w-full">
+        {showAdd && (
+          <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] shadow-sm rounded-xl p-6 mb-8 animate-slide-up">
+            <h3 className="text-lg font-semibold mb-4 text-[var(--theme-heading)] flex items-center gap-2">Add New Product to Track
+            </h3>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="text-sm text-[var(--theme-text)] mb-1 block">Product Name</label>
+                <TextInput value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g., Sony WH-1000XM5" />
+              </div>
+              <div className="flex-[2]">
+                <label className="text-sm text-[var(--theme-text)] mb-1 block">Product URL</label>
+                <TextInput value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://www.amazon.com/dp/..." />
+              </div>
+              <div className="flex items-end">
+                <Button variant="primary" onClick={handleAdd} className="w-full md:w-auto">Start Tracking</Button>
+              </div>
             </div>
-            <div className="flex items-end">
-              <Button variant="primary" onClick={handleAdd} className="w-full md:w-auto">Start Tracking</Button>
+          </div>
+        )}
+
+        <div className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] shadow-sm rounded-xl p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 mb-2">
+            <div className="flex-1 relative">
+              <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--theme-text)]" />
+              <input 
+                type="text"
+                className="w-full bg-[var(--theme-bg)] border border-[var(--theme-ui-border)] rounded-lg py-2 pl-10 pr-4 text-[var(--theme-text)] focus:border-[var(--theme-heading)] outline-none transition-colors"
+                placeholder="Search Tracked Products..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="w-full md:w-64">
+              <Select 
+                value={filterOption}
+                onChange={e => setFilterOption(e.target.value)}
+                options={[
+                  { value: "All Items", label: "All Items" },
+                  { value: "Best Value Items", label: "Best Value Items" },
+                  { value: "No Price Change", label: "No Price Change" },
+                  { value: "Other Items", label: "Other Items" }
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-64">
+              <Select 
+                value={sortOption}
+                onChange={e => setSortOption(e.target.value)}
+                options={[
+                  { value: "Date Added (Default)", label: "Date Added (Default)" },
+                  { value: "Current Price (Low to High)", label: "Current Price (Low to High)" },
+                  { value: "Current Price (High to Low)", label: "Current Price (High to Low)" }
+                ]}
+              />
             </div>
           </div>
         </div>
-      )}
 
-      <div className="bg-zinc-900/30 border border-white/5 rounded-xl p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4 mb-2">
-          <div className="flex-1 relative">
-            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input 
-              type="text"
-              className="w-full bg-zinc-950 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-[var(--theme-heading)] outline-none"
-              placeholder="Search Tracked Products..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
+        {loading ? (
+          <div className="flex justify-center p-12">
+            <Icon name="refresh" className="animate-spin text-[var(--theme-text)]" size={32} />
           </div>
-          <div className="w-full md:w-64">
-            <Select 
-              value={filterOption}
-              onChange={e => setFilterOption(e.target.value)}
-              options={[
-                { value: "All Items", label: "All Items" },
-                { value: "Best Value Items", label: "Best Value Items" },
-                { value: "No Price Change", label: "No Price Change" },
-                { value: "Other Items", label: "Other Items" }
-              ]}
-            />
+        ) : filteredAndSortedItems.length === 0 ? (
+          <div className="text-center p-12 text-[var(--theme-text)] bg-[var(--theme-ui-bg)] backdrop-blur-md rounded-xl border border-[var(--theme-ui-border)] shadow-sm">
+            <Icon name="monitoring" size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="text-lg">No items match your criteria.</p>
           </div>
-          <div className="w-full md:w-64">
-            <Select 
-              value={sortOption}
-              onChange={e => setSortOption(e.target.value)}
-              options={[
-                { value: "Date Added (Default)", label: "Date Added (Default)" },
-                { value: "Current Price (Low to High)", label: "Current Price (Low to High)" },
-                { value: "Current Price (High to Low)", label: "Current Price (High to Low)" }
-              ]}
-            />
-          </div>
-        </div>
-      </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {filteredAndSortedItems.map(item => {
+              const history = item.history || [];
+              const hasHistory = history.length > 0;
+              const currentPrice = item._current_price;
+              const cheapestVal = item._cheapest_val;
+              const isCheapest = item._is_cheapest;
+              const priceNeverChanged = item._price_never_changed;
 
-      {loading ? (
-        <div className="flex justify-center p-12">
-          <Icon name="refresh" className="animate-spin text-zinc-500" size={32} />
-        </div>
-      ) : filteredAndSortedItems.length === 0 ? (
-        <div className="text-center p-12 text-zinc-500 bg-zinc-900/20 rounded-xl border border-white/5">
-          <Icon name="monitoring" size={48} className="mx-auto mb-4 opacity-50" />
-          <p className="text-lg">No items match your criteria.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {filteredAndSortedItems.map(item => {
-            const history = item.history || [];
-            const hasHistory = history.length > 0;
-            const currentPrice = item._current_price;
-            const cheapestVal = item._cheapest_val;
-            const isCheapest = item._is_cheapest;
-            const priceNeverChanged = item._price_never_changed;
-
-            const domain = item.url.split('/')[2] || "Unknown Platform";
-            let previousPrice = null;
-            let delta = null;
-            if (history.length > 1) {
-              previousPrice = history[history.length - 2].price;
-              if (currentPrice !== null) {
-                delta = currentPrice - previousPrice;
+              const domain = item.url.split('/')[2] || "Unknown Platform";
+              let previousPrice = null;
+              let delta = null;
+              if (history.length > 1) {
+                previousPrice = history[history.length - 2].price;
+                if (currentPrice !== null) {
+                  delta = currentPrice - previousPrice;
+                }
               }
-            }
-            
-            const showGraph = showGraphMap[item.id] || false;
-            
-            // Format data for Recharts
-            const chartData = history.map(h => ({
-              date: h.date.split(' ')[0],
-              fullDate: h.date,
-              price: h.price
-            }));
+              
+              const showGraph = showGraphMap[item.id] || false;
+              
+              // Format data for Recharts
+              const chartData = history.map(h => ({
+                date: h.date.split(' ')[0],
+                fullDate: h.date,
+                price: h.price
+              }));
 
-            return (
-              <div key={item.id} className="bg-zinc-900/40 border border-white/10 rounded-xl overflow-hidden">
-                {isCheapest && (
-                  <div className="bg-green-500/20 text-green-400 text-sm py-1.5 px-4 font-medium flex items-center gap-2 border-b border-green-500/20">
-                    <Icon name="local_fire_department" size={16} /> Great News! This item is currently at its lowest tracked price!
-                  </div>
-                )}
-                
-                <div className="p-5 flex flex-col md:flex-row items-center gap-6">
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-[var(--theme-heading)] hover:text-white hover:underline flex items-center gap-2 break-words">
-                      {isCheapest ? <Icon name="local_fire_department" size={18} className="text-orange-500 shrink-0" /> : null}
-                      {priceNeverChanged && history.length > 1 ? <Icon name="remove" size={18} className="text-zinc-500 shrink-0" /> : null}
-                      {item.name}
-                    </a>
-                    <div className="text-sm text-zinc-500 mt-1">Platform: {domain}</div>
-                  </div>
+              return (
+                <div key={item.id} className="bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] shadow-sm hover:border-[var(--theme-heading)] hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden">
+                  {isCheapest && (
+                    <div className="bg-green-500/10 text-green-500 text-sm py-1.5 px-4 font-medium flex items-center gap-2 border-b border-green-500/20">
+                      <Icon name="local_fire_department" size={16} /> Great News! This item is currently at its lowest tracked price!
+                    </div>
+                  )}
                   
-                  {/* Latest Price */}
-                  <div className="w-48 shrink-0">
-                    <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-1">Latest Price</div>
-                    {hasHistory && currentPrice !== null ? (
-                      <div>
-                        <div className="text-2xl font-bold flex items-baseline gap-2">
-                          {currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          {delta !== null && delta !== 0 && (
-                            <span className={`text-sm ${delta < 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {delta > 0 ? '+' : ''}{delta.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        {history[history.length - 1].original_price && (
-                          <div className="text-xs text-zinc-500 mt-1 flex items-center gap-2">
-                            <span className="line-through">{history[history.length - 1].original_price?.toLocaleString()}</span>
-                            {history[history.length - 1].discount && (
-                              <span className="text-[var(--theme-heading)] bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] px-1.5 rounded">{history[history.length - 1].discount} OFF</span>
+                  <div className="p-5 flex flex-col md:flex-row items-center gap-6">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-[var(--theme-heading)] hover:opacity-80 hover:underline flex items-center gap-2 break-words">
+                        {isCheapest ? <Icon name="local_fire_department" size={18} className="text-orange-500 shrink-0" /> : null}
+                        {priceNeverChanged && history.length > 1 ? <Icon name="remove" size={18} className="text-[var(--theme-text)] shrink-0" /> : null}
+                        {item.name}
+                      </a>
+                      <div className="text-sm text-[var(--theme-text)] mt-1">Platform: {domain}</div>
+                    </div>
+                    
+                    {/* Latest Price */}
+                    <div className="w-48 shrink-0">
+                      <div className="text-xs text-[var(--theme-text)] uppercase font-bold tracking-wider mb-1">Latest Price</div>
+                      {hasHistory && currentPrice !== null ? (
+                        <div>
+                          <div className="text-2xl font-bold text-[var(--theme-heading)] flex items-baseline gap-2">
+                            {currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {delta !== null && delta !== 0 && (
+                              <span className={`text-sm ${delta < 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                {delta > 0 ? '+' : ''}{delta.toLocaleString()}
+                              </span>
                             )}
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-zinc-500 text-sm">No price history yet</div>
-                    )}
-                  </div>
-                  
-                  {/* All-Time Low */}
-                  <div className="w-48 shrink-0">
-                    <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-1">All-Time Low</div>
-                    {hasHistory && cheapestVal !== null ? (
-                      <div>
-                        <div className="text-2xl font-bold">
-                          {cheapestVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                        <div className="text-xs mt-1">
-                          {isCheapest ? (
-                            <span className="text-green-400">Best Price</span>
-                          ) : priceNeverChanged ? (
-                            <span className="text-zinc-500">Constant</span>
-                          ) : (
-                            <span className="text-red-400">
-                              +{(currentPrice && cheapestVal > 0 ? ((currentPrice - cheapestVal) / cheapestVal * 100) : 0).toFixed(1)}% more exp.
-                            </span>
+                          {history[history.length - 1].original_price && (
+                            <div className="text-xs text-[var(--theme-text)] mt-1 flex items-center gap-2">
+                              <span className="line-through">{history[history.length - 1].original_price?.toLocaleString()}</span>
+                              {history[history.length - 1].discount && (
+                                <span className="text-[var(--theme-bg)] bg-[var(--theme-heading)] font-bold px-1.5 rounded">{history[history.length - 1].discount} OFF</span>
+                              )}
+                            </div>
                           )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-zinc-500 text-sm">-</div>
-                    )}
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => toggleGraph(item.id)}
-                      disabled={history.length < 2}
-                      className={history.length < 2 ? "opacity-50" : ""}
-                    >
-                      <Icon name="show_chart" size={18} />
-                    </Button>
-                    <Button 
-                      variant="danger" 
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Icon name="delete" size={18} />
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Graph */}
-                {showGraph && history.length > 1 && (
-                  <div className="border-t border-white/5 p-6 bg-zinc-900/50">
-                    <h4 className="text-sm font-semibold text-zinc-400 mb-4">Price History</h4>
-                    <div className="h-64 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-                          <XAxis 
-                            dataKey="date" 
-                            stroke="rgba(255,255,255,0.4)" 
-                            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} 
-                          />
-                          <YAxis 
-                            domain={['auto', 'auto']} 
-                            stroke="rgba(255,255,255,0.4)" 
-                            tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }}
-                            tickFormatter={(val) => val.toLocaleString()}
-                          />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', color: '#fff' }}
-                            labelStyle={{ color: '#a1a1aa', marginBottom: '5px' }}
-                            formatter={(value: any) => [Number(value).toLocaleString(), 'Price']}
-                            labelFormatter={(label, payload) => payload?.[0]?.payload?.fullDate || label}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="price" 
-                            stroke="var(--theme-heading)" 
-                            strokeWidth={2}
-                            dot={{ r: 4, fill: '#18181b', stroke: 'var(--theme-heading)', strokeWidth: 2 }}
-                            activeDot={{ r: 6, fill: 'var(--theme-heading)' }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
+                      ) : (
+                        <div className="text-[var(--theme-text)] text-sm">No price history yet</div>
+                      )}
+                    </div>
+                    
+                    {/* All-Time Low */}
+                    <div className="w-48 shrink-0">
+                      <div className="text-xs text-[var(--theme-text)] uppercase font-bold tracking-wider mb-1">All-Time Low</div>
+                      {hasHistory && cheapestVal !== null ? (
+                        <div>
+                          <div className="text-2xl font-bold text-[var(--theme-heading)]">
+                            {cheapestVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-xs mt-1">
+                            {isCheapest ? (
+                              <span className="text-green-500 font-medium">Best Price</span>
+                            ) : priceNeverChanged ? (
+                              <span className="text-[var(--theme-text)]">Constant</span>
+                            ) : (
+                              <span className="text-red-500 font-medium">
+                                +{(currentPrice && cheapestVal > 0 ? ((currentPrice - cheapestVal) / cheapestVal * 100) : 0).toFixed(1)}% more exp.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[var(--theme-text)] text-sm">-</div>
+                      )}
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => toggleGraph(item.id)}
+                        disabled={history.length < 2}
+                        className={`!w-auto px-3 ${history.length < 2 ? "opacity-50" : ""}`}
+                        title={showGraph ? "Hide Graph" : "Show Graph"}
+                      >
+                        <Icon name={showGraph ? "monitoring" : "show_chart"} size={18} />
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={() => handleDelete(item.id)}
+                        className="!w-auto px-3 !text-red-500 hover:!text-red-400"
+                        title="Delete"
+                      >
+                        <Icon name="delete" size={18} />
+                      </Button>
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  
+                  {/* Graph */}
+                  {showGraph && history.length > 1 && (
+                    <div className="border-t border-[var(--theme-ui-border)] p-6 bg-[var(--theme-bg)]">
+                      <h4 className="text-sm font-semibold text-[var(--theme-text)] mb-4">Price History</h4>
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-ui-border)" vertical={false} />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="var(--theme-text)" 
+                              tick={{ fill: 'var(--theme-text)', fontSize: 12 }} 
+                            />
+                            <YAxis 
+                              domain={['auto', 'auto']} 
+                              stroke="var(--theme-text)" 
+                              tick={{ fill: 'var(--theme-text)', fontSize: 12 }}
+                              tickFormatter={(val) => val.toLocaleString()}
+                            />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: 'var(--theme-ui-bg)', borderColor: 'var(--theme-ui-border)', color: 'var(--theme-text)', borderRadius: '8px' }}
+                              labelStyle={{ color: 'var(--theme-heading)', marginBottom: '5px', fontWeight: 'bold' }}
+                              formatter={(value: any) => [Number(value).toLocaleString(), 'Price']}
+                              labelFormatter={(label, payload) => payload?.[0]?.payload?.fullDate || label}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="price" 
+                              stroke="var(--theme-heading)" 
+                              strokeWidth={2}
+                              dot={{ r: 4, fill: 'var(--theme-bg)', stroke: 'var(--theme-heading)', strokeWidth: 2 }}
+                              activeDot={{ r: 6, fill: 'var(--theme-heading)' }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

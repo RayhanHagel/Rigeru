@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
+import { ModernTabs } from "@/components/ui/ModernTabs";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/lib/utils";
 
@@ -137,52 +138,30 @@ export default function MangaLibrary() {
         title="Manga and Manhwa" 
         subtitle="Reading Library" 
         actions={
-          <div className="flex items-center bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm relative z-[100]">
-            <button 
-              onClick={() => { setShowSearch(!showSearch); setShowSort(false); }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showSearch ? 'bg-[var(--theme-heading)]/15 text-[var(--theme-heading)] shadow-sm' : 'text-[var(--theme-text)] hover:bg-[var(--theme-bg)] hover:text-[var(--theme-heading)]'}`}
-            >
-              <Icon name="search" size={16} /> <span className="hidden sm:inline">Search</span>
-            </button>
-            
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-            
-            <button 
-              onClick={() => router.push('/entertainment-reading/manga-search')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-bg)] hover:text-[var(--theme-heading)] transition-all"
-            >
-              <Icon name="add_circle" size={16} /> <span className="hidden sm:inline">Add</span>
-            </button>
+          <ModernTabs className="relative z-[100]" actionButton={
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => { setShowSearch(!showSearch); setShowSort(false); }}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center ${showSearch ? 'bg-[var(--theme-heading)]/15 text-[var(--theme-heading)]' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
+              >
+                Search
+              </button>
+              
+              <button 
+                onClick={() => router.push('/entertainment-reading/manga-search')}
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"
+              >
+                Add
+              </button>
 
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-
-            <button 
-              onClick={handleRefresh}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${refreshing ? 'text-[var(--theme-heading)] opacity-70' : 'text-[var(--theme-text)] hover:bg-[var(--theme-bg)] hover:text-[var(--theme-heading)]'}`}
-            >
-              <Icon name="refresh" size={16} className={refreshing ? 'animate-spin' : ''} /> <span className="hidden sm:inline">Refresh</span>
-            </button>
-            
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-            
-            <button 
-              onClick={() => router.push('/entertainment-reading/manga-sort')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--theme-text)] hover:bg-[var(--theme-bg)] hover:text-[var(--theme-heading)] transition-all"
-            >
-              <Icon name="swap_vert" size={16} /> <span className="hidden sm:inline">Library Order</span>
-            </button>
-
-            <div className="w-px h-4 bg-[var(--theme-ui-border)] mx-1" />
-
-            <div className="relative">
               <button 
                 onClick={() => { setShowSort(!showSort); setShowSearch(false); }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showSort ? 'bg-[var(--theme-heading)]/15 text-[var(--theme-heading)] shadow-sm' : 'text-[var(--theme-text)] hover:bg-[var(--theme-bg)] hover:text-[var(--theme-heading)]'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center ${showSort ? 'bg-[var(--theme-heading)]/15 text-[var(--theme-heading)] shadow-sm' : 'text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5'}`}
               >
-                <Icon name="filter_list" size={16} /> <span className="hidden sm:inline">Sort</span>
+                Sort
               </button>
               {showSort && (
-                <div className="absolute right-0 top-full mt-3 bg-[var(--theme-ui-bg)] backdrop-blur-md border border-[var(--theme-ui-border)] rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden p-1">
+                <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--theme-bg)] rounded-xl shadow-xl border border-[var(--theme-ui-border)] z-50 animate-in fade-in slide-in-from-top-2 flex flex-col p-1">
                   {[
                     { key: "default", label: "Default" },
                     { key: "alpha-asc", label: "Title (A-Z)" },
@@ -203,9 +182,9 @@ export default function MangaLibrary() {
                 </div>
               )}
             </div>
-          </div>
-      }
-    />
+          } />
+        }
+      />
 
       {/* Search Bar */}
       {showSearch && (

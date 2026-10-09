@@ -1,84 +1,62 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { parseMaterialIcon } from "@/lib/utils";
-
 export interface TabItem {
   id: string;
   label: string;
-  /** Can be a material icon string like ':material/bolt:' or a raw string/node */
-  icon?: string | React.ReactNode; 
 }
 
 interface ModernTabsProps {
-  tabs: TabItem[] | string[];
-  activeTab: string;
-  setActiveTab: (id: string) => void;
+  tabs?: TabItem[] | string[];
+  activeTab?: string;
+  setActiveTab?: (id: string) => void;
   className?: string;
+  actionButton?: React.ReactNode;
 }
 
-export function ModernTabs({ tabs, activeTab, setActiveTab, className = "" }: ModernTabsProps) {
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+import { motion, AnimatePresence } from "framer-motion";
 
-  useEffect(() => {
-    // A small timeout ensures DOM is fully rendered before measuring
-    const timer = setTimeout(() => {
-      if (containerRef.current) {
-        const activeElement = containerRef.current.querySelector('[data-state="active"]') as HTMLElement;
-        if (activeElement) {
-          setIndicatorStyle({
-            left: activeElement.offsetLeft,
-            width: activeElement.offsetWidth,
-            opacity: 1
-          });
-        }
-      }
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [activeTab, tabs]);
+export function ModernTabs({ tabs = [], activeTab = "", setActiveTab = () => {}, className = "", actionButton }: ModernTabsProps) {
+  const tabId = React.useId();
 
   return (
     <div className={className}>
       <div 
-        ref={containerRef}
-        className="relative inline-flex max-w-full bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm overflow-x-auto gap-1"
+        className="relative inline-flex max-w-full bg-[var(--theme-ui-bg)] p-1.5 rounded-xl border border-[var(--theme-ui-border)] backdrop-blur-md shadow-sm gap-1 items-center"
       >
-        <div 
-           className="absolute top-1.5 bottom-1.5 rounded-lg bg-[var(--theme-heading)] shadow-[0_0_15px_var(--theme-glow1)] transition-all duration-300 ease-out z-0"
-           style={{ left: `${indicatorStyle.left}px`, width: `${indicatorStyle.width}px`, opacity: indicatorStyle.opacity }}
-        />
+        {actionButton && (
+          <>
+            {actionButton}
+            {tabs.length > 0 && <div className="w-px h-6 bg-[var(--theme-ui-border)] mx-1 shrink-0" />}
+          </>
+        )}
         {tabs.map((tabRaw, idx) => {
           // Normalize string vs object tabs
           const isString = typeof tabRaw === 'string';
           const id = isString ? tabRaw : tabRaw.id;
-          const rawLabel = isString ? tabRaw : tabRaw.label;
-          const explicitIcon = isString ? undefined : tabRaw.icon;
-          
-          // Parse material icon if the label contains it
-          const { icon: parsedIcon, label } = parseMaterialIcon(rawLabel);
-          
-          // If the explicit icon is a material string like ':material/bolt:', parse it
-          let resolvedExplicitIcon = explicitIcon;
-          if (typeof explicitIcon === 'string') {
-            const { icon: parsedExplicit } = parseMaterialIcon(explicitIcon);
-            resolvedExplicitIcon = parsedExplicit || explicitIcon;
-          }
-          
-          const finalIcon = resolvedExplicitIcon || parsedIcon;
+          const label = isString ? tabRaw : tabRaw.label;
+          const isActive = activeTab === id;
 
           return (
             <button
               key={id}
-              data-state={activeTab === id ? 'active' : 'inactive'}
+              data-tab-state={isActive ? 'active' : 'inactive'}
               onClick={() => setActiveTab(id)}
               className={`
                 relative z-10 px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-300 whitespace-nowrap flex items-center
-                ${activeTab === id 
+                ${isActive 
                   ? "text-[var(--theme-bg)]" 
                   : "text-[var(--theme-text)] hover:text-[var(--theme-heading)] hover:bg-white/5"}
               `}
             >
+              {isActive && (
+                <motion.div
+                  layoutId={`modernTabIndicator-${tabId}`}
+                  className="absolute inset-0 rounded-lg bg-[var(--theme-heading)] shadow-[0_0_15px_var(--theme-glow1)]"
+                  style={{ zIndex: -1 }}
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                />
+              )}
               {label}
             </button>
           );
@@ -88,7 +66,7 @@ export function ModernTabs({ tabs, activeTab, setActiveTab, className = "" }: Mo
   );
 }
 
-import { motion, AnimatePresence } from "framer-motion";
+
 
 export function ModernTabContent({ activeTab, children, className = "" }: { activeTab: string, children: React.ReactNode, className?: string }) {
   return (

@@ -3,7 +3,15 @@ from pathlib import Path
 
 
 
-def get_file_type(path: str) -> str:
+def get_file_type(path: str) -> str | None:
+    """Identifies the file type category based on its file extension.
+
+    Args:
+        path (str): Filepath or filename to inspect.
+
+    Returns:
+        str | None: Category string ('cif', 'excel', 'csv', 'image') or None if unsupported.
+    """
     file_extension = Path(path).suffix.lower()
     match file_extension:
         case ".cif":
@@ -18,10 +26,12 @@ def get_file_type(path: str) -> str:
             return None
 
 
+def choose_folder() -> list[str]:
+    """Prompts the user to select a folder and returns discovered data files.
 
-
-
-def choose_folder():
+    Returns:
+        list[str]: List of paths to detected supported data files in the directory.
+    """
     while True:
         location = filedialog.askdirectory(title='Select Folder')
         
@@ -37,9 +47,12 @@ def choose_folder():
     return files
 
 
+def choose_file() -> list[str]:
+    """Prompts the user with a file picker to select a single supported data file.
 
-
-def choose_file():
+    Returns:
+        list[str]: Single-item list containing the chosen file path.
+    """
     while True:
         files = [filedialog.askopenfilename(
             title='Select File to Parse',

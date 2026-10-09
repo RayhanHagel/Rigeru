@@ -122,7 +122,7 @@ export default function SitemapPage() {
   }, []);
 
   return (
-    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans">
+    <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up flex flex-col font-sans custom-scrollbar">
       <Header title="Website Structure Mapper" subtitle="Crawl any website to map its internal page hierarchy." />
 
       <div className="flex flex-col gap-6 animate-slide-up w-full">
@@ -202,14 +202,6 @@ export default function SitemapPage() {
                 ) : "Start Mapping"}
               </Button>
 
-              <Button
-                onClick={downloadJson}
-                disabled={nodesCount === 0}
-                variant="secondary"
-                className="w-full font-medium flex items-center gap-2 border border-[var(--theme-ui-border)]"
-              >
-                <Icon name="download" size={16} /> Save as JSON
-              </Button>
             </div>
           </div>
 
@@ -231,22 +223,24 @@ export default function SitemapPage() {
             </div>
           </div>
           
-          <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 shadow-sm flex items-center gap-3 backdrop-blur-md">
-            {isCrawling ? (
-              <Icon name="progress_activity" size={18} className="text-[var(--theme-heading)] animate-spin shrink-0" />
-            ) : statusMsg.includes("Finished") ? (
-              <Icon name="check_circle" size={18} className="text-green-400 shrink-0" />
-            ) : (
-              <Icon name="language" size={18} className="text-[var(--theme-text)] shrink-0" />
-            )}
-            <span className="text-sm text-[var(--theme-text)] line-clamp-2 leading-tight">
-              {statusMsg || "Ready to crawl. Enter a URL above."}
-            </span>
-          </div>
+          {(isCrawling || statusMsg) && (
+            <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-4 shadow-sm flex items-center gap-3 backdrop-blur-md">
+              {isCrawling ? (
+                <Icon name="progress_activity" size={18} className="text-[var(--theme-heading)] animate-spin shrink-0" />
+              ) : statusMsg.includes("Finished") ? (
+                <Icon name="check_circle" size={18} className="text-green-400 shrink-0" />
+              ) : (
+                <Icon name="language" size={18} className="text-[var(--theme-text)] shrink-0" />
+              )}
+              <span className="text-sm text-[var(--theme-text)] line-clamp-2 leading-tight">
+                {statusMsg}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Tree Map */}
-        <div className="w-full">
+        <div className="w-full flex flex-col gap-4">
           <div className="bg-[var(--theme-ui-bg)] border border-[var(--theme-ui-border)] rounded-xl p-6 shadow-sm h-[700px] flex flex-col backdrop-blur-md">
             <h3 className="text-lg font-semibold text-[var(--theme-heading)] mb-4 border-b border-[var(--theme-ui-border)] pb-4 flex items-center gap-2">Structure Map
             </h3>
@@ -262,6 +256,14 @@ export default function SitemapPage() {
               )}
             </div>
           </div>
+          <Button
+            onClick={downloadJson}
+            disabled={nodesCount === 0}
+            variant="secondary"
+            className="w-full font-medium border border-[var(--theme-ui-border)] shrink-0"
+          >
+            Save as JSON
+          </Button>
         </div>
       </div>
     </div>

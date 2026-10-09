@@ -52,7 +52,7 @@ export default function VoiceClonePage() {
     const fetchVoices = async () => {
         try {
             const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-            const res = await fetch(`http://${host}:8000/api/media-vision/tts/voices`);
+            const res = await fetch(`/api/media-vision/tts/voices`);
             if (res.ok) {
                 const data = await res.json();
                 setSavedVoices(data.voices || []);
@@ -77,15 +77,15 @@ export default function VoiceClonePage() {
             const formData = new FormData();
             formData.append("text", text);
 
-            let endpoint = `http://${host}:8000/api/media-vision/tts/clone`;
+            let endpoint = `/api/media-vision/tts/clone`;
 
             if (mode === "design") {
-                endpoint = `http://${host}:8000/api/media-vision/tts/design`;
+                endpoint = `/api/media-vision/tts/design`;
                 formData.append("speaker_attributes", speakerAttributes);
             } else {
                 if (useSavedVoice) {
                     if (!selectedVoiceId) throw new Error("Please select a saved voice.");
-                    endpoint = `http://${host}:8000/api/media-vision/tts/clone/saved`;
+                    endpoint = `/api/media-vision/tts/clone/saved`;
                     formData.append("voice_id", selectedVoiceId);
                 } else {
                     if (!audioHash) throw new Error("Please record or upload reference audio.");
@@ -127,7 +127,7 @@ export default function VoiceClonePage() {
         e.stopPropagation();
         try {
             const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-            await fetch(`http://${host}:8000/api/media-vision/tts/voices/${id}`, { method: "DELETE" });
+            await fetch(`/api/media-vision/tts/voices/${id}`, { method: "DELETE" });
             if (selectedVoiceId === id) setSelectedVoiceId("");
             fetchVoices();
         } catch (e) {
@@ -143,7 +143,7 @@ export default function VoiceClonePage() {
     })();
 
     return (
-        <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up font-sans">
+        <div className="w-full h-full p-6 lg:p-10 relative z-10 overflow-y-auto animate-slide-up font-sans custom-scrollbar">
             <Header 
                 title="Voice Cloning TTS" 
                 subtitle="Zero-shot voice cloning, voice design, and session reuse powered by OmniVoice." 
@@ -152,8 +152,8 @@ export default function VoiceClonePage() {
                         activeTab={mode}
                         setActiveTab={(m) => setMode(m as Mode)}
                         tabs={[
-                            { id: "clone", label: "Voice Clone", icon: <Icon name="mic" size={16} /> },
-                            { id: "design", label: "Voice Design", icon: <Icon name="palette" size={16} /> }
+                            { id: "clone", label: "Voice Clone" },
+                            { id: "design", label: "Voice Design" }
                         ]}
                     />
                 }
