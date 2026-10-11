@@ -208,8 +208,22 @@ export default function PDFStudioPage() {
               {activeTool === "optimize" && <GenericActionTab endpoint="/api/files-documents/pdf-studio/advanced/optimize" {...toolProps} />}
               {activeTool === "repair" && <GenericActionTab endpoint="/api/files-documents/pdf-studio/advanced/repair" {...toolProps} />}
               
-              {activeTool === "search" && <div className="text-[var(--theme-text)] p-4 text-center">Not available in Editor View.</div>}
-              {activeTool === "compare" && <div className="text-[var(--theme-text)] p-4 text-center">Not available in Editor View.</div>}
+              {activeTool === "search" && (
+                <div className="text-[var(--theme-text)] p-6 text-center space-y-3">
+                  <p className="text-sm">Looking to search inside documents?</p>
+                  <a href="/documents-text/document-search" className="inline-block px-4 py-2 rounded-lg bg-[var(--theme-heading)] text-[var(--theme-bg)] text-xs font-bold">
+                    Open Document Search
+                  </a>
+                </div>
+              )}
+              {activeTool === "compare" && (
+                <div className="text-[var(--theme-text)] p-6 text-center space-y-3">
+                  <p className="text-sm">Looking to compare differences between PDF versions?</p>
+                  <a href="/documents-text/document-diff" className="inline-block px-4 py-2 rounded-lg bg-[var(--theme-heading)] text-[var(--theme-bg)] text-xs font-bold">
+                    Open Document Diff & Compare
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}

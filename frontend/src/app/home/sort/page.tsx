@@ -295,11 +295,16 @@ export default function HomeSortPage() {
             <h2 className="text-lg font-semibold text-[var(--theme-heading)] flex items-center gap-2">{editingCardId !== null ? `Editing Card ${parseInt(editingCardId) + 1}` : "New Card Builder"}
             </h2>
             {editingCardId !== null && (
-              <Button variant="secondary" onClick={() => {
-                setEditingCardId(null);
-                setStagedWidgets([]);
-                setShowAddPanel(false);
-              }} className="text-xs py-1">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => {
+                  setEditingCardId(null);
+                  setStagedWidgets([]);
+                  setShowAddPanel(false);
+                }} 
+                className="!w-auto px-3 py-1 text-xs"
+              >
                 Cancel Edit
               </Button>
             )}
@@ -468,6 +473,7 @@ export default function HomeSortPage() {
                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/vision-censor">Vision Censor</option>
                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/audio-video/voice-clone">Voice Cloning TTS</option>
                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/pinhole-photography">Pinhole Photography</option>
+                      <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/exposure">Exposure</option>
                       <option className="bg-[var(--theme-bg)] text-[var(--theme-text)]" value="/image-vision/fisheye">Fisheye Effect</option>
                     </optgroup>
 

@@ -7,20 +7,29 @@ from utilities.core.util_store import get_data, set_data
 DEFAULT_CONFIG: dict[str, str] = {
     "expense_tracker": "Qwen/Qwen2-VL-2B-Instruct",
     "math_latex": "prithivMLmods/Qwen2-VL-OCR-2B-Instruct",
-    "audio_transcription": "base",
+    "audio_transcription": "Systran/faster-whisper-small",
     "speaker_diarization": "pyannote/speaker-diarization-3.1",
     "object_detection": "yolov8n.pt",
     "face_blur": "buffalo_l",
     "background_removal": "u2net",
+    "depth_estimation": "onnx-community/depth-anything-v2-small",
+    "image_upscaler_scale": "4",
+    "translation": "facebook/nllb-200-distilled-600M",
     "device_preference": "Auto-Detect",
     "hardware_optimization": "PyTorch (Standard)",
+    "global_compute_engine": "cpu",
+    "inference_resolution": "640",
     "obsidian_provider": "Hugging Face API",
     "obsidian_ollama_model": "llama3:8b-instruct-q4_K_M",
+    "obsidian_ollama_generator_model": "llama3:8b-instruct-q4_K_M",
+    "obsidian_ollama_vision_model": "llava",
     "obsidian_scraper_max_urls": "2",
     "obsidian_context_length": "8192",
     "obsidian_embedding_model": "nomic-embed-text",
     "obsidian_summarize_searches": "false",
+    "obsidian_bart_max_words": "150",
     "voice_cloning_tts": "k2-fsa/OmniVoice",
+    "ollama_host": "http://localhost:11434",
     "searxng_url": "http://127.0.0.1:8080/search",
     "searxng_use_local_docker": "true"
 }
@@ -54,6 +63,11 @@ def save_all_config(config: dict[str, str]) -> None:
     ai_settings = get_data("ai_settings") or {}
     ai_settings["models"] = config
     set_data("ai_settings", ai_settings)
+    try:
+        from utilities.core.util_device import clear_device_cache
+        clear_device_cache()
+    except Exception:
+        pass
 
 def get_model_config(key: str) -> str:
     """

@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { Icon } from "@/lib/utils";
+import { ProfileCropModal } from "./ProfileCropModal";
 
 type NavItem = {
   title: string;
@@ -72,6 +73,7 @@ export const navigation: NavGroup[] = [
       { title: "Visual Web Scraper", href: "/web-downloaders/scraper", icon: <Icon name="language" size={18} />, description: "Scrape data from websites visually." },
       { title: "Image Scraper", href: "/web-downloaders/image-scraper", icon: <Icon name="download" size={18} />, description: "Extract and download images from any webpage." },
       { title: "Sitemap Generator", href: "/web-downloaders/sitemap", icon: <Icon name="hub" size={18} />, description: "Generate XML sitemaps for websites." },
+      { title: "GitHub Tracker", href: "/web-downloaders/github-tracker", icon: <Icon name="history" size={18} />, description: "Track GitHub commits and inspect changes across public or private repositories." },
     ]
   },
   {
@@ -89,6 +91,7 @@ export const navigation: NavGroup[] = [
       { title: "Color Picker", href: "/image-vision/color-picker", icon: <Icon name="palette" size={18} />, description: "Extract color palettes from images." },
       { title: "Code to Image", href: "/image-vision/code-to-image", icon: <Icon name="palette" size={18} />, description: "Convert code snippets into beautiful images." },
       { title: "Pinhole Photography", href: "/image-vision/pinhole-photography", icon: <Icon name="camera" size={18} />, description: "Apply a pinhole camera effect to photos." },
+      { title: "Exposure", href: "/image-vision/exposure", icon: <Icon name="exposure" size={18} />, description: "Simulate exposure EV compensation and long exposure photography." },
       { title: "Fisheye Effect", href: "/image-vision/fisheye", icon: <Icon name="camera" size={18} />, description: "Apply a fisheye lens distortion to images." },
       { title: "RGB Shutter Lag", href: "/image-vision/rgb-shutter", icon: <Icon name="movie" size={18} />, description: "Simulate RGB shutter lag effect on videos." },
     ]
@@ -119,6 +122,8 @@ export const navigation: NavGroup[] = [
       { title: "PDF Studio", href: "/documents-text/pdf-studio", icon: <Icon name="description" size={18} />, description: "A comprehensive suite of PDF tools." },
       { title: "Math to LaTeX", href: "/documents-text/math-latex", icon: <Icon name="functions" size={18} />, description: "Convert handwritten math to LaTeX equations." },
       { title: "Excel Cleaner", href: "/documents-text/excel-cleaner", icon: <Icon name="table_chart" size={18} />, description: "Clean and format messy Excel spreadsheets." },
+      { title: "Document Search", href: "/documents-text/document-search", icon: <Icon name="search" size={18} />, description: "Offline full-text search inside documents." },
+      { title: "Document Diff", href: "/documents-text/document-diff", icon: <Icon name="difference" size={18} />, description: "Compare differences across documents and text." },
       { title: "Chart Maker", href: "/documents-text/chart-maker", icon: <Icon name="description" size={18} />, description: "Upload data to instantly generate interactive charts." },
     ]
   },
@@ -184,9 +189,31 @@ export const navigation: NavGroup[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { isSidebarCollapsed, setSidebarCollapsed } = useSettingsStore();
+  const { isSidebarCollapsed, setSidebarCollapsed, profileImage, setProfileImage } = useSettingsStore();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [selectedImageSrc, setSelectedImageSrc] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImageSrc(reader.result as string);
+        setIsCropModalOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    // reset input so the same file can be selected again
+    e.target.value = "";
+  };
 
   const toggleGroup = (title: string) => {
     setOpenGroups(prev => ({ ...prev, [title]: !prev[title] }));
@@ -197,9 +224,33 @@ export function Sidebar() {
       <aside className={`w-72 h-screen fixed left-0 top-0 backdrop-blur-xl border-r z-50 flex flex-col pt-6 pb-6 overflow-y-auto transition-transform duration-300 md:flex ${isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"}`} style={{ backgroundColor: "color-mix(in srgb, var(--theme-bg) 90%, transparent)", borderColor: "var(--theme-ui-border)" }}>
         <div className="px-6 mb-8 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `var(--theme-heading)`, boxShadow: `0 0 15px var(--theme-glow1)` }}>
-              <span className="text-white font-bold text-sm">R</span>
-            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={handleAvatarClick}
+              title="Change profile picture"
+              className="group relative w-8 h-8 rounded-full overflow-hidden flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+              style={{ background: `var(--theme-heading)`, boxShadow: `0 0 15px var(--theme-glow1)` }}
+            >
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold text-sm">R</span>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <Icon name="photo_camera" size={14} className="text-white" />
+              </div>
+            </button>
             <h1 className="text-xl font-bold text-zinc-100 tracking-wide">Rigeru</h1>
           </div>
           <button 
@@ -313,15 +364,29 @@ export function Sidebar() {
 
     </aside>
 
-    {isSidebarCollapsed && (
-      <button
-        onClick={() => setSidebarCollapsed(false)}
-        className="fixed left-4 top-4 z-50 p-2 backdrop-blur-xl border rounded-md text-zinc-400 hover:text-white shadow-lg transition-colors"
-        style={{ backgroundColor: "color-mix(in srgb, var(--theme-bg) 90%, transparent)", borderColor: "var(--theme-ui-border)" }}
-      >
-        <Icon name="menu" size={24} />
-      </button>
-    )}
+      {isSidebarCollapsed && (
+        <button
+          onClick={() => setSidebarCollapsed(false)}
+          className="fixed left-4 top-4 z-50 p-2 backdrop-blur-xl border rounded-md text-zinc-400 hover:text-white shadow-lg transition-colors"
+          style={{ backgroundColor: "color-mix(in srgb, var(--theme-bg) 90%, transparent)", borderColor: "var(--theme-ui-border)" }}
+        >
+          <Icon name="menu" size={24} />
+        </button>
+      )}
+
+      <ProfileCropModal
+        isOpen={isCropModalOpen}
+        imageSrc={selectedImageSrc || ""}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          setSelectedImageSrc(null);
+        }}
+        onConfirm={(croppedDataUrl) => {
+          setProfileImage(croppedDataUrl);
+          setIsCropModalOpen(false);
+          setSelectedImageSrc(null);
+        }}
+      />
     </>
   );
 }

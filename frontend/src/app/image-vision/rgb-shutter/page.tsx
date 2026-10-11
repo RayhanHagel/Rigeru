@@ -273,10 +273,10 @@ export default function RgbShutterPage() {
                   <DirectUploadBox
                     accept="video/*"
                     label="Upload Video"
-                    onUploadComplete={(hash) => {
+                    onUploadComplete={(info) => {
                       stopMedia();
                       setSourceType("video");
-                      const fileUrl = `/api/files/download/${hash}`;
+                      const fileUrl = `/uploads/${info.hash_name}`;
                       if (videoRef.current) {
                         videoRef.current.src = fileUrl;
                         videoRef.current.loop = isLooping;

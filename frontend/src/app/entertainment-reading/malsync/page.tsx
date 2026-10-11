@@ -51,11 +51,23 @@ function MalSyncContent() {
   const [showClientId, setShowClientId] = useState(false);
   const [showClientSecret, setShowClientSecret] = useState(false);
 
+  const getAuthHeaders = (extraHeaders: Record<string, string> = {}) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    return {
+      ...extraHeaders,
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    };
+  };
+
   const fetchAuthStatus = async () => {
     try {
-      const res = await fetch("/api/media-entertainment/malsync/auth/status");
-      const data = await res.json();
-      setIsLoggedIn(data.is_logged_in);
+      const res = await fetch("/api/media-entertainment/malsync/auth/status", {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsLoggedIn(Boolean(data.is_logged_in));
+      }
     } catch (e) {
       console.error(e);
     }
@@ -63,9 +75,13 @@ function MalSyncContent() {
 
   const fetchLibrary = async () => {
     try {
-      const res = await fetch(`/api/media-entertainment/malsync/library/${mediaType}`);
-      const data = await res.json();
-      setLibrary(data);
+      const res = await fetch(`/api/media-entertainment/malsync/library/${mediaType}`, {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLibrary(data);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -73,10 +89,14 @@ function MalSyncContent() {
 
   const fetchCredentials = async () => {
     try {
-      const res = await fetch("/api/media-entertainment/malsync/credentials");
-      const data = await res.json();
-      setClientId(data.client_id || "");
-      setClientSecret(data.client_secret || "");
+      const res = await fetch("/api/media-entertainment/malsync/credentials", {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setClientId(data.client_id || "");
+        setClientSecret(data.client_secret || "");
+      }
     } catch (e) {
       console.error(e);
     }
@@ -88,11 +108,17 @@ function MalSyncContent() {
       setIsAuthLoading(true);
       fetch("/api/media-entertainment/malsync/auth/exchange", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ code: authCode })
       })
-      .then(res => res.json())
-      .then(data => {
+      .then(async (res) => {
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText);
+        }
+        return res.json();
+      })
+      .then(() => {
         router.replace("/entertainment-reading/malsync"); // Clear URL
         setIsLoggedIn(true);
       })
@@ -119,14 +145,21 @@ function MalSyncContent() {
     setSyncMessage("");
     try {
       const res = await fetch("/api/media-entertainment/malsync/sync", {
-        method: "POST"
+        method: "POST",
+        headers: getAuthHeaders()
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = { detail: "Unexpected server response" };
+      }
+
       if (res.ok) {
         setSyncMessage(data.message || "Synced successfully!");
         fetchLibrary(); // Refresh library
       } else {
-        setSyncMessage(`Error: ${data.detail}`);
+        setSyncMessage(`Error: ${data.detail || res.statusText}`);
       }
     } catch (e) {
       setSyncMessage("Network error during sync.");
@@ -137,13 +170,17 @@ function MalSyncContent() {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("/api/media-entertainment/malsync/auth/url");
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Please configure your Client ID in the settings first.");
+      const res = await fetch("/api/media-entertainment/malsync/auth/url", {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
       }
+      alert("Please configure your Client ID in the settings first.");
     } catch (e) {
       alert("Failed to get auth URL. Check settings.");
     }
@@ -156,12 +193,17 @@ function MalSyncContent() {
     }
     setIsSavingCreds(true);
     try {
-      await fetch("/api/media-entertainment/malsync/credentials", {
+      const res = await fetch("/api/media-entertainment/malsync/credentials", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ client_id: clientId.trim(), client_secret: clientSecret.trim() })
       });
-      alert("Credentials saved successfully!");
+      if (res.ok) {
+        alert("Credentials saved successfully!");
+      } else {
+        const err = await res.json().catch(() => ({ detail: "Failed to save" }));
+        alert(`Error: ${err.detail || "Failed to save"}`);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -174,7 +216,7 @@ function MalSyncContent() {
     try {
       await fetch(`/api/media-entertainment/malsync/progress/${mediaType}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ mal_id: malId, progress: newProg })
       });
       fetchLibrary(); // Refresh
@@ -186,7 +228,8 @@ function MalSyncContent() {
   const removeItem = async (malId: string) => {
     try {
       await fetch(`/api/media-entertainment/malsync/library/${mediaType}/${malId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: getAuthHeaders()
       });
       fetchLibrary(); // Refresh
     } catch (e) {

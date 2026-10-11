@@ -26,6 +26,9 @@ interface SettingsState {
     track_limit: number;
   };
   setSpotifyConfig: (config: any) => void;
+
+  profileImage: string | null;
+  setProfileImage: (image: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -55,6 +58,9 @@ export const useSettingsStore = create<SettingsState>()(
         track_limit: 5,
       },
       setSpotifyConfig: (config) => set({ spotifyConfig: config }),
+
+      profileImage: null,
+      setProfileImage: (image) => set({ profileImage: image }),
     }),
     {
       name: 'rigeru-settings', // name of item in the storage (must be unique)

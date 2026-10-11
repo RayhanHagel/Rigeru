@@ -21,6 +21,7 @@ from utilities.audio_video.util_audio import (
     apply_speaker_renames,
     export_srt,
     export_ass_multistyle,
+    render_subtitle_preview,
     STYLE_PRESETS
 )
 from utilities.vision.util_image_fx import encode_cv2_image_to_base64
@@ -45,9 +46,14 @@ class TranscribeRequest(BaseModel):
 class ExportRequest(BaseModel):
     segments: List[Dict[str, Any]] = Field(..., description="Timestamped transcription segments.")
     speaker_mapping: Dict[str, str] = Field(default_factory=dict, description="Custom speaker name remapping.")
-    speaker_styles: Dict[str, str] = Field(default_factory=dict, description="Mapping of speaker IDs to typography style presets.")
+    speaker_styles: Dict[str, Any] = Field(default_factory=dict, description="Mapping of speaker IDs to typography style presets or custom style dicts.")
     format: str = Field("srt", description="Target subtitle format ('srt' or 'ass').")
     style_preset: str = Field("Cinema Black", description="Global ASS visual typography style preset.")
+
+class SubtitlePreviewRequest(BaseModel):
+    file_id: Optional[str] = ""
+    sample_text: str = "Hello world! This is a subtitle preview."
+    style: Dict[str, Any] = Field(default_factory=dict)
 
 @router.post("/upload")
 async def upload_media(file_hash: str = Form(..., min_length=1, description="Uploaded file hash")) -> Dict[str, str]:
@@ -442,9 +448,11 @@ def export_subtitles(req: ExportRequest) -> Dict[str, str]:
             return {"content": content, "filename": "subtitles.srt"}
         elif fmt == "ass":
             actual_styles = {}
-            for spk_id, preset_name in req.speaker_styles.items():
-                if preset_name in STYLE_PRESETS:
-                    actual_styles[spk_id] = STYLE_PRESETS[preset_name]
+            for spk_id, val in req.speaker_styles.items():
+                if isinstance(val, dict):
+                    actual_styles[spk_id] = val
+                elif isinstance(val, str) and val in STYLE_PRESETS:
+                    actual_styles[spk_id] = STYLE_PRESETS[val]
                     
             content = export_ass_multistyle(mapped_segments, actual_styles, True, req.style_preset)
             return {"content": content, "filename": "subtitles.ass"}
@@ -452,6 +460,28 @@ def export_subtitles(req: ExportRequest) -> Dict[str, str]:
             raise HTTPException(status_code=400, detail="Unsupported format: expected 'srt' or 'ass'.")
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/preview-style")
+def preview_subtitle_style(req: SubtitlePreviewRequest) -> Dict[str, str]:
+    """
+    Render 1080p canvas frame with subtitle typography preview.
+    """
+    base_frame = None
+    if req.file_id:
+        temp_path = os.path.join(CACHE_DIR, req.file_id.strip())
+        if os.path.exists(temp_path):
+            try:
+                base_frame = extract_video_frame(temp_path)
+            except Exception:
+                base_frame = None
+
+    try:
+        preview_rgb = render_subtitle_preview(base_frame, req.sample_text, req.style)
+        b64 = encode_cv2_image_to_base64(preview_rgb, format=".jpg")
+        img_b64 = b64.split(",")[-1] if "," in b64 else b64
+        return {"image_base64": img_b64}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

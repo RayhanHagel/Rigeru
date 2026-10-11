@@ -14,3 +14,5 @@ uploads/
 data/
 temp/
 .agents/
+*.db
+backend/users.db

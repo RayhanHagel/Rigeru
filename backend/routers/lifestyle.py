@@ -6,7 +6,15 @@ from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException, Depends
 from backend.database import get_db
 from backend.routers.auth import get_current_user
-from utilities.productivity_lifestyle.util_korean_srs import get_due_cards, get_all_cards, review_card, get_stats, scrape_wikipedia_cloze
+from utilities.productivity_lifestyle.util_korean_srs import (
+    get_due_cards,
+    get_all_cards,
+    review_card,
+    get_stats,
+    scrape_wikipedia_cloze,
+    add_custom_card,
+    delete_card_by_id
+)
 from utilities.productivity_lifestyle.util_qr import generate_qr, scan_qr_from_base64
 
 router = APIRouter(prefix="/api/lifestyle", tags=["Lifestyle"])
@@ -236,6 +244,29 @@ def generate_cloze(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str
     if not res:
         raise HTTPException(status_code=500, detail="Failed to generate cloze card from Wikipedia")
     return res
+
+class CreateCardRequest(BaseModel):
+    front: str = Field(..., min_length=1, description="Card prompt/cloze sentence.")
+    back: str = Field(..., min_length=1, description="Card answer.")
+    card_type: str = Field("cloze", description="Card type ('cloze', 'vocab', 'conversation', 'hangul').")
+
+@router.post("/korean-srs/card")
+def create_korean_card(req: CreateCardRequest, user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    Create a custom Korean flashcard (such as a custom cloze card or vocabulary).
+    """
+    return add_custom_card(req.front, req.back, req.card_type)
+
+@router.delete("/korean-srs/card/{card_id}")
+def delete_korean_card(card_id: str, user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    Delete a Korean flashcard and its review history.
+    """
+    clean_id = card_id.strip()
+    deleted = delete_card_by_id(clean_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Card not found")
+    return {"detail": "Card deleted", "id": clean_id}
 
 # --- QR Code ---
 class QRGenerateRequest(BaseModel):

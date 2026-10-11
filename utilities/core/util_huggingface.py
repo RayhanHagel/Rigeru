@@ -115,7 +115,7 @@ def get_directory_size(path: str) -> int:
     return total
 
 def list_cached_models() -> list[dict]:
-    """Returns a list of downloaded models in ./cache/models/ with their sizes.
+    """Returns a clean, deduplicated list of downloaded models across all architectures with their sizes.
 
     Returns:
         list[dict]: List of metadata dictionaries for cached models.
@@ -125,22 +125,33 @@ def list_cached_models() -> list[dict]:
         return []
         
     models = []
+    seen_repos = set()
     
     for root, dirs, files in os.walk(models_dir):
+        # Ignore locks and hidden directories
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != ".locks"]
         rel_path = os.path.relpath(root, models_dir)
+        
         if rel_path == ".":
-            # Add standalone .pt files (YOLO)
             for f in files:
-                if f.endswith(".pt"):
+                if f.endswith((".pt", ".pth", ".onnx")) and not f.startswith("."):
                     full_path = os.path.join(root, f)
-                    models.append({
-                        "id": f,
-                        "repo_id": f,
-                        "size_bytes": os.path.getsize(full_path),
-                        "path": full_path
-                    })
-            # Skip hidden folders
-            dirs[:] = [d for d in dirs if not d.startswith(".")]
+                    repo_id = f
+                    if f == "u2net.onnx":
+                        repo_id = "u2net"
+                    elif f == "depth_anything_v2_small.onnx":
+                        repo_id = "onnx-community/depth-anything-v2-small"
+                    elif f == "depth_anything_v2_base.onnx":
+                        repo_id = "onnx-community/depth-anything-v2-base"
+
+                    if repo_id not in seen_repos:
+                        seen_repos.add(repo_id)
+                        models.append({
+                            "id": f,
+                            "repo_id": repo_id,
+                            "size_bytes": os.path.getsize(full_path),
+                            "path": full_path
+                        })
             continue
             
         entry = os.path.basename(root)
@@ -148,34 +159,50 @@ def list_cached_models() -> list[dict]:
         # 1. HuggingFace default cache format
         if entry.startswith("models--"):
             repo_id = entry.replace("models--", "").replace("--", "/")
-            if repo_id.startswith("Systran/Systran/faster-whisper-"):
-                repo_id = repo_id.replace("Systran/Systran/faster-whisper-", "")
-            models.append({
-                "id": rel_path.replace("\\", "/"),
-                "repo_id": repo_id,
-                "size_bytes": get_directory_size(root),
-                "path": root
-            })
-            dirs.clear() # Stop recursing inside
+            if repo_id not in seen_repos:
+                size = get_directory_size(root)
+                if size > 1024:
+                    seen_repos.add(repo_id)
+                    models.append({
+                        "id": rel_path.replace("\\", "/"),
+                        "repo_id": repo_id,
+                        "size_bytes": size,
+                        "path": root
+                    })
+            dirs.clear()
             
-        # 2. InsightFace or Explicit local_dir models
-        elif "config.json" in files or ".gitattributes" in files or entry in ["buffalo_l", "buffalo_m", "buffalo_s", "antelopev2"]:
-            repo_id = rel_path.replace("\\", "/")
-            models.append({
-                "id": repo_id,
-                "repo_id": repo_id,
-                "size_bytes": get_directory_size(root),
-                "path": root
-            })
-            dirs.clear() # Stop recursing inside
+        # 2. InsightFace model packs
+        elif entry in ["buffalo_l", "buffalo_m", "buffalo_s", "antelopev2"]:
+            if entry not in seen_repos:
+                seen_repos.add(entry)
+                models.append({
+                    "id": entry,
+                    "repo_id": entry,
+                    "size_bytes": get_directory_size(root),
+                    "path": root
+                })
+            dirs.clear()
+
+        # 3. Faster-Whisper local directory or CTranslate2
+        elif ("model.bin" in files or "config.json" in files) and ("faster-whisper" in rel_path or "Systran" in rel_path or "nllb" in rel_path):
+            clean_rel = rel_path.replace("\\", "/")
+            if clean_rel not in seen_repos:
+                seen_repos.add(clean_rel)
+                models.append({
+                    "id": clean_rel,
+                    "repo_id": clean_rel,
+                    "size_bytes": get_directory_size(root),
+                    "path": root
+                })
+            dirs.clear()
             
     return sorted(models, key=lambda x: x["size_bytes"], reverse=True)
 
 def delete_cached_model(folder_id: str) -> bool:
-    """Deletes a specific model cache folder.
+    """Deletes a specific model cache file or folder by ID or repo ID.
 
     Args:
-        folder_id (str): Folder identifier or file path of the cached model.
+        folder_id (str): Folder identifier, filename, or repository ID.
 
     Returns:
         bool: True if successfully removed, False otherwise.
@@ -187,18 +214,36 @@ def delete_cached_model(folder_id: str) -> bool:
         return False
         
     models_dir = os.path.join(CACHE_DIR, "models")
-    target_path = os.path.join(models_dir, folder_id)
+    clean_id = folder_id.strip()
+
+    # Direct target check
+    candidates = [
+        os.path.join(models_dir, clean_id),
+        os.path.join(models_dir, clean_id.replace("/", "--")),
+        os.path.join(models_dir, f"models--{clean_id.replace('/', '--')}"),
+    ]
     
-    if os.path.exists(target_path):
-        try:
-            if os.path.isdir(target_path):
-                shutil.rmtree(target_path)
-            else:
-                os.remove(target_path)
-            return True
-        except Exception:
-            return False
-    return False
+    # Aliases
+    if clean_id in ["u2net", "u2net.onnx"]:
+        candidates.append(os.path.join(models_dir, "u2net.onnx"))
+    elif "depth-anything-v2-small" in clean_id:
+        candidates.append(os.path.join(models_dir, "depth_anything_v2_small.onnx"))
+    elif "depth-anything-v2-base" in clean_id:
+        candidates.append(os.path.join(models_dir, "depth_anything_v2_base.onnx"))
+
+    deleted = False
+    for target_path in candidates:
+        if os.path.exists(target_path):
+            try:
+                if os.path.isdir(target_path):
+                    shutil.rmtree(target_path)
+                else:
+                    os.remove(target_path)
+                deleted = True
+            except Exception:
+                pass
+
+    return deleted
 
 DOWNLOAD_PROGRESS = {}
 
@@ -206,28 +251,14 @@ class ProgressTqdm:
     """Tqdm wrapper to track Hugging Face download progress."""
 
     def __init__(self, *args: object, **kwargs: object) -> None:
-        """Initializes the progress tracker.
-
-        Args:
-            *args (object): Variable positional arguments passed to tqdm.
-            **kwargs (object): Keyword arguments such as total and desc.
-        """
         self.n = 0
         self.total = kwargs.get('total', 100) or 100
         self.desc = kwargs.get('desc', 'Downloading')
-        # find the active download id from the global state if any
         self.repo_id = getattr(huggingface_hub.utils, 'CURRENT_DOWNLOAD_REPO', "unknown")
         
     def update(self, n: int = 1) -> None:
-        """Updates progress counter.
-
-        Args:
-            n (int): Progress increment count. Defaults to 1.
-        """
         self.n += n
         if self.repo_id in DOWNLOAD_PROGRESS:
-            # We just track bytes downloaded vs total for the current file
-            # Since a repo has multiple files, we'll just send raw stats
             DOWNLOAD_PROGRESS[self.repo_id] = {
                 "status": "downloading", 
                 "progress": self.n,
@@ -236,44 +267,25 @@ class ProgressTqdm:
             }
 
     def close(self) -> None:
-        """Closes progress context."""
         pass
     
     def __enter__(self) -> "ProgressTqdm":
-        """Enters context manager.
-
-        Returns:
-            ProgressTqdm: The progress tracker instance.
-        """
         return self
         
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
-        """Exits context manager.
-
-        Args:
-            exc_type (object): Exception type if raised.
-            exc_val (object): Exception instance if raised.
-            exc_tb (object): Exception traceback if raised.
-        """
         pass
         
     def set_description(self, desc: str) -> None:
-        """Updates description text.
-
-        Args:
-            desc (str): Descriptive text for the download stage.
-        """
         self.desc = desc
 
 import huggingface_hub.utils
-# Patch the tqdm class
 huggingface_hub.utils.tqdm = ProgressTqdm
 
 def download_model(repo_id: str) -> bool:
-    """Downloads a full model repository to the cache directory.
+    """Downloads a full model repository or weight file to the cache directory.
 
     Args:
-        repo_id (str): Hugging Face model repository ID or identifier.
+        repo_id (str): Hugging Face model repository ID or model identifier.
 
     Returns:
         bool: True if model downloaded successfully, False otherwise.
@@ -282,84 +294,121 @@ def download_model(repo_id: str) -> bool:
     models_dir = os.path.join(CACHE_DIR, "models")
     os.makedirs(models_dir, exist_ok=True)
     
-    DOWNLOAD_PROGRESS[repo_id] = {"status": "starting", "progress": 0, "total": 100, "desc": "Starting download..."}
-    setattr(huggingface_hub.utils, 'CURRENT_DOWNLOAD_REPO', repo_id)
+    clean_repo = repo_id.strip()
+    DOWNLOAD_PROGRESS[clean_repo] = {"status": "starting", "progress": 0, "total": 100, "desc": "Starting download..."}
+    setattr(huggingface_hub.utils, 'CURRENT_DOWNLOAD_REPO', clean_repo)
     
-    # Handle custom InsightFace models
+    # 1. Rembg u2net model
+    if clean_repo.lower() in ["u2net", "u2net.onnx"]:
+        try:
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "downloading", "progress": 50, "total": 100, "desc": "Fetching u2net ONNX session..."}
+            import rembg
+            rembg.new_session("u2net")
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished"}
+            return True
+        except Exception as e:
+            print(f"Failed to download u2net: {e}")
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
+            return False
+
+    # 2. Real-ESRGAN Super-Resolution weights
+    if clean_repo in ["RealESRGAN_x2plus.pth", "RealESRGAN_x4plus.pth", "realesrgan_x2", "realesrgan_x4"]:
+        try:
+            import urllib.request
+            scale = 2 if ("x2" in clean_repo.lower()) else 4
+            filename = f"RealESRGAN_x{scale}plus.pth"
+            url = f"https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x2plus.pth" if scale == 2 else "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
+            target = os.path.join(models_dir, filename)
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "downloading", "progress": 30, "total": 100, "desc": f"Downloading {filename}..."}
+            urllib.request.urlretrieve(url, target)
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished"}
+            return True
+        except Exception as e:
+            print(f"Failed to download RealESRGAN weights: {e}")
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
+            return False
+
+    # 3. Depth Anything V2 ONNX
+    if "depth-anything-v2" in clean_repo.lower():
+        try:
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "downloading", "progress": 40, "total": 100, "desc": "Downloading Depth Anything ONNX model..."}
+            from utilities.vision.util_depth_estimation import _ensure_depth_model
+            size_key = "base" if "base" in clean_repo.lower() else "small"
+            path = _ensure_depth_model(size_key)
+            success = bool(path and os.path.exists(path))
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished" if success else "error"}
+            return success
+        except Exception as e:
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
+            return False
+
+    # 4. InsightFace models
     insightface_models = {
         "buffalo_l": "buffalo_l.zip",
         "buffalo_m": "buffalo_m.zip",
         "buffalo_s": "buffalo_s.zip",
         "antelopev2": "antelopev2.zip"
     }
-    
-    if repo_id in insightface_models:
-        zip_target = os.path.join(models_dir, insightface_models[repo_id])
+    if clean_repo in insightface_models:
+        zip_target = os.path.join(models_dir, insightface_models[clean_repo])
         success = download_hf_file(
             "vladmandic/insightface-faceanalysis", 
-            insightface_models[repo_id], 
+            insightface_models[clean_repo], 
             zip_target, 
             token=load_hf_token() or None
         )
-        if success and os.path.exists(zip_target):
-            try:
-                import zipfile
-                with zipfile.ZipFile(zip_target, 'r') as zip_ref:
-                    zip_ref.extractall(os.path.join(models_dir, repo_id))
-                os.remove(zip_target)
-            except:
-                pass
-        DOWNLOAD_PROGRESS[repo_id] = {"status": "finished" if success else "error"}
+        DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished" if success else "error"}
         return success
 
-    # Handle YOLO models (.pt files)
-    if repo_id.endswith(".pt") and ("yolo" in repo_id.lower() or "sam" in repo_id.lower()):
+    # 5. YOLO models (.pt files)
+    if clean_repo.endswith(".pt") or ("yolo" in clean_repo.lower() and "/" not in clean_repo):
+        pt_name = clean_repo if clean_repo.endswith(".pt") else f"{clean_repo}.pt"
         try:
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "downloading", "progress": 50, "total": 100, "desc": f"Fetching YOLO model {pt_name}..."}
             from ultralytics import YOLO
-            # This triggers ultralytics to download it to that exact path
-            YOLO(os.path.join(models_dir, repo_id))
-            DOWNLOAD_PROGRESS[repo_id] = {"status": "finished"}
+            YOLO(os.path.join(models_dir, pt_name))
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished"}
             return True
         except Exception as e:
-            print(f"Failed to download YOLO model {repo_id}: {e}")
-            DOWNLOAD_PROGRESS[repo_id] = {"status": "error"}
+            print(f"Failed to download YOLO model {clean_repo}: {e}")
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
             return False
 
-    # Handle Whisper / Faster-Whisper models
-    whisper_models = {"tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3"}
-    if repo_id.startswith("Systran/faster-whisper-"):
-        actual_repo = repo_id.replace("Systran/faster-whisper-", "")
-    elif repo_id.startswith("whisper-"):
-        actual_repo = repo_id.replace("whisper-", "")
-    else:
-        actual_repo = repo_id
-    
-    # We only let whisperx download itself since it relies on specific formatting.
-    # We let faster-whisper be downloaded via snapshot_download to explicitly manage local_dir.
-    if actual_repo in whisper_models and not repo_id.startswith("Systran/faster-whisper-"):
+    # 6. Whisper / Faster-Whisper models
+    if clean_repo.startswith("Systran/faster-whisper-") or clean_repo.startswith("faster-whisper-"):
+        actual_repo = clean_repo if clean_repo.startswith("Systran/") else f"Systran/{clean_repo}"
         try:
-            import whisperx
-            whisperx.load_model(actual_repo, "cpu", download_root=models_dir)
-            DOWNLOAD_PROGRESS[repo_id] = {"status": "finished"}
+            target_dir = os.path.join(models_dir, actual_repo)
+            snapshot_download(
+                repo_id=actual_repo,
+                local_dir=target_dir,
+                local_dir_use_symlinks=False,
+                token=load_hf_token() or None
+            )
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished"}
             return True
         except Exception as e:
-            print(f"Failed to download Whisper model {repo_id}: {e}")
-            DOWNLOAD_PROGRESS[repo_id] = {"status": "error"}
+            print(f"Failed to download faster-whisper {clean_repo}: {e}")
+            DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
             return False
+
+    # 7. Model aliases mapping
+    target_hf_repo = clean_repo
+    if clean_repo == "briaai-rmbg-1.4":
+        target_hf_repo = "briaai/RMBG-1.4"
+    elif clean_repo == "briaai-rmbg-2.0":
+        target_hf_repo = "briaai/RMBG-2.0"
 
     try:
-        # Download all models (including faster-whisper) directly to their local folder structure
-        # This completely replaces the default HuggingFace cache structure (models-- namespace)
-        target_dir = os.path.join(models_dir, repo_id)
         snapshot_download(
-            repo_id=repo_id,
-            local_dir=target_dir,
+            repo_id=target_hf_repo,
+            cache_dir=models_dir,
             local_dir_use_symlinks=False,
             token=load_hf_token() or None
         )
-        DOWNLOAD_PROGRESS[repo_id] = {"status": "finished"}
+        DOWNLOAD_PROGRESS[clean_repo] = {"status": "finished"}
         return True
     except Exception as e:
-        print(f"Failed to download model {repo_id}: {e}")
-        DOWNLOAD_PROGRESS[repo_id] = {"status": "error"}
-        return False
+        print(f"Failed to download model {clean_repo}: {e}")
+        DOWNLOAD_PROGRESS[clean_repo] = {"status": "error", "desc": str(e)}
+        return False

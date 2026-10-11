@@ -27,7 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .routers import auth, media_entertainment, web_downloads, files_documents, home, price_monitor, currency_view, settings, media_vision, subtitles_metadata, system_network, lifestyle, system_upload, virtual_camera, pinhole_camera, quickmachine
+from .routers import auth, media_entertainment, web_downloads, files_documents, home, price_monitor, currency_view, settings, media_vision, subtitles_metadata, system_network, lifestyle, system_upload, virtual_camera, pinhole_camera, quickmachine, exposure, github_tracker
 from fastapi import Depends
 from .routers.auth import get_current_user
 
@@ -78,7 +78,9 @@ app.include_router(lifestyle.router, dependencies=auth_deps)
 app.include_router(system_upload.router, dependencies=auth_deps)
 app.include_router(virtual_camera.router) # auth is handled per route due to WebSocket
 app.include_router(pinhole_camera.router, dependencies=auth_deps)
+app.include_router(exposure.router, dependencies=auth_deps)
 app.include_router(quickmachine.router, dependencies=auth_deps)
+app.include_router(github_tracker.router, dependencies=auth_deps)
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"))

@@ -17,11 +17,12 @@ def get_model_labels() -> list[str]:
         list[str]: List of model repository identifiers.
     """
     return [
+        "Qwen/Qwen2.5-VL-3B-Instruct",
         "stepfun-ai/GOT-OCR2_0",
+        "prithivMLmods/Qwen2-VL-OCR-2B-Instruct",
         "ATH-MaaS/OvisOCR2",
         "baidu/Unlimited-OCR",
-        "breezedeus/pix2text-mfr",
-        "prithivMLmods/Qwen2-VL-OCR-2B-Instruct"
+        "breezedeus/pix2text-mfr"
     ]
 
 
@@ -41,6 +42,13 @@ def load_hf_model(model_id: str) -> tuple[Any, Any, str, bool]:
     # ─── LAZY IMPORTS ──────────────────────────────────────────────
     import torch
     from transformers import AutoProcessor, TrOCRProcessor, VisionEncoderDecoderModel
+
+    try:
+        import transformers.utils.import_utils
+        if not hasattr(transformers.utils.import_utils, 'is_torch_fx_available'):
+            transformers.utils.import_utils.is_torch_fx_available = lambda: False
+    except (ImportError, AttributeError):
+        pass
     
     try:
         from transformers import Qwen2_5_VLForConditionalGeneration
@@ -296,15 +304,32 @@ def process_math_image(image_bytes: bytes) -> tuple[bool, str]:
                     os.remove(tmp_path)
             return True, res
             
-        elif model_id == "prithivMLmods/Qwen2-VL-OCR-2B-Instruct":
-            prompt = "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>\nExtract the mathematical formulas and convert to LaTeX.<|im_end|>\n<|im_start|>assistant\n"
-            
-            inputs = processor(
-                text=[prompt], 
-                images=[image], 
-                padding=True, 
-                return_tensors="pt"
-            ).to(device)
+        elif "qwen" in model_id.lower():
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": image},
+                        {"type": "text", "text": "Extract all mathematical formulas and convert to LaTeX. Output only the LaTeX."}
+                    ]
+                }
+            ]
+            try:
+                text_prompt = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+                inputs = processor(
+                    text=[text_prompt], 
+                    images=[image], 
+                    padding=True, 
+                    return_tensors="pt"
+                ).to(device)
+            except Exception:
+                fallback_prompt = "<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>\nExtract the mathematical formulas and convert to LaTeX.<|im_end|>\n<|im_start|>assistant\n"
+                inputs = processor(
+                    text=[fallback_prompt], 
+                    images=[image], 
+                    padding=True, 
+                    return_tensors="pt"
+                ).to(device)
             
             generated_ids = model.generate(**inputs, max_new_tokens=512)
             
@@ -326,6 +351,8 @@ def process_math_image(image_bytes: bytes) -> tuple[bool, str]:
             
             generated_ids = model.generate(pixel_values)
             generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        else:
+            raise ValueError(f"Unsupported model selection: {model_id}")
         
         cleaned_text = generated_text.strip()
         

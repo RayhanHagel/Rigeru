@@ -1,5 +1,6 @@
 import json
 import re
+import datetime
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -133,8 +134,136 @@ def delete_channel(channel_id: str) -> None:
     channels = [c for c in channels if c['id'] != channel_id]
     save_tracked_channels(channels)
 
+def _parse_relative_time_to_iso(rel_str: str) -> str:
+    """Helper to convert YouTube relative published strings (e.g. '2d ago', '1mo ago') to ISO format."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    m = re.search(r'(\d+)\s*([a-zA-Z]+)', rel_str or '')
+    if not m:
+        return now.strftime('%Y-%m-%dT%H:%M:%S+00:00')
+    val = int(m.group(1))
+    unit = m.group(2).lower()
+    if 'min' in unit:
+        dt = now - datetime.timedelta(minutes=val)
+    elif 'h' in unit:
+        dt = now - datetime.timedelta(hours=val)
+    elif 'd' in unit:
+        dt = now - datetime.timedelta(days=val)
+    elif 'w' in unit:
+        dt = now - datetime.timedelta(weeks=val)
+    elif 'mo' in unit or unit == 'm':
+        dt = now - datetime.timedelta(days=val * 30)
+    elif 'y' in unit:
+        dt = now - datetime.timedelta(days=val * 365)
+    else:
+        dt = now
+    return dt.strftime('%Y-%m-%dT%H:%M:%S+00:00')
+
+
+def _fetch_from_html_page(channel_id: str, limit: int = 15) -> tuple[bool, list | str]:
+    """Fallback parser extracting recent video cards directly from YouTube's channel /videos HTML."""
+    url = f"https://www.youtube.com/channel/{channel_id}/videos"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+    }
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            html = resp.read().decode('utf-8', errors='ignore')
+
+        idx = html.find('var ytInitialData = ')
+        if idx == -1:
+            idx = html.find('ytInitialData = ')
+        if idx == -1:
+            return False, "Could not locate ytInitialData in channel HTML."
+
+        start = html.find('{', idx)
+        end = html.find(';</script>', start)
+        if start == -1 or end == -1:
+            return False, "Could not delimit JSON payload."
+
+        data = json.loads(html[start:end])
+
+        def find_lockups(obj):
+            if isinstance(obj, dict):
+                if 'lockupViewModel' in obj:
+                    yield obj['lockupViewModel']
+                for v in obj.values():
+                    yield from find_lockups(v)
+            elif isinstance(obj, list):
+                for item in obj:
+                    yield from find_lockups(item)
+
+        videos = []
+        for l in find_lockups(data):
+            vid_id = l.get('contentId')
+            if not vid_id:
+                continue
+            meta = l.get('metadata', {}).get('lockupMetadataViewModel', {})
+            title = meta.get('title', {}).get('content') or f"Video {vid_id}"
+
+            # Extract published time snippet
+            rel_time = ""
+            meta_rows = meta.get('metadata', {}).get('contentMetadataViewModel', {}).get('metadataRows', [])
+            for r in meta_rows:
+                for p in r.get('metadataParts', []):
+                    t = p.get('text', {}).get('content', '')
+                    if 'ago' in t:
+                        rel_time = t
+
+            pub_iso = _parse_relative_time_to_iso(rel_time)
+            thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+
+            videos.append({
+                "title": title,
+                "link": f"https://www.youtube.com/watch?v={vid_id}",
+                "published": pub_iso,
+                "author": "",
+                "thumbnail": thumb
+            })
+            if len(videos) >= limit:
+                break
+
+        if videos:
+            return True, videos
+
+        # Backup: yt-dlp flat playlist extraction
+        try:
+            import yt_dlp
+            ydl_opts = {
+                'extract_flat': 'in_playlist',
+                'playlistend': limit,
+                'quiet': True,
+                'no_warnings': True,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                entries = info.get('entries', [])
+                now_iso = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S+00:00')
+                dlp_videos = []
+                for e in entries:
+                    v_id = e.get('id')
+                    if not v_id:
+                        continue
+                    dlp_videos.append({
+                        "title": e.get('title') or f"Video {v_id}",
+                        "link": e.get('url') or f"https://www.youtube.com/watch?v={v_id}",
+                        "published": now_iso,
+                        "author": info.get('channel') or "",
+                        "thumbnail": f"https://i.ytimg.com/vi/{v_id}/hqdefault.jpg"
+                    })
+                if dlp_videos:
+                    return True, dlp_videos
+        except Exception:
+            pass
+
+        return False, "No videos found in channel HTML."
+    except Exception as e:
+        return False, f"HTML fallback error: {str(e)}"
+
+
 def fetch_latest_videos(channel_id: str, limit: int = 15) -> tuple[bool, list | str]:
-    """Fetches and parses Atom feeds blazingly fast using ElementTree.
+    """Fetches and parses video entries via official XML feed, falling back gracefully to channel HTML parsing.
 
     Args:
         channel_id (str): Target YouTube channel ID.
@@ -146,13 +275,11 @@ def fetch_latest_videos(channel_id: str, limit: int = 15) -> tuple[bool, list | 
     url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
 
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+        with urllib.request.urlopen(req, timeout=4) as response:
             xml_data = response.read()
 
         root = ET.fromstring(xml_data)
-        
-        # Atom namespaces used by YouTube
         ns = {
             'atom': 'http://www.w3.org/2005/Atom',
             'media': 'http://search.yahoo.com/mrss/',
@@ -164,7 +291,6 @@ def fetch_latest_videos(channel_id: str, limit: int = 15) -> tuple[bool, list | 
             title = entry.find('atom:title', ns).text
             link = entry.find('atom:link', ns).attrib['href']
             published = entry.find('atom:published', ns).text
-            
             author_elem = entry.find('atom:author/atom:name', ns)
             author = author_elem.text if author_elem is not None else "Unknown"
 
@@ -183,9 +309,13 @@ def fetch_latest_videos(channel_id: str, limit: int = 15) -> tuple[bool, list | 
                 "thumbnail": thumbnail
             })
 
-        return True, videos
-    except Exception as e:
-        return False, f"Error fetching feed: {str(e)}"
+        if videos:
+            return True, videos
+    except Exception:
+        # YouTube frequently returns 404 or blocks XML feeds intermittently; fallback to HTML scraping
+        pass
+
+    return _fetch_from_html_page(channel_id, limit=limit)
 
 def bulk_add_channels(new_channels: list[dict]) -> tuple[int, int]:
     """Adds multiple channels to the tracking list at once, skipping duplicates.

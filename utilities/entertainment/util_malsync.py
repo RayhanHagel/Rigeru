@@ -332,6 +332,11 @@ def sync_user_list_from_mal() -> tuple[bool, str]:
     def cache_image(url: str, mal_id: str, prefix: str) -> str:
         if not url:
             return ""
+        # Check if already cached
+        for ext_check in [".jpg", ".png", ".webp"]:
+            existing_filename = f"{prefix}_{mal_id}{ext_check}"
+            if os.path.exists(os.path.join(mal_static_dir, existing_filename)):
+                return f"/static/mal/{existing_filename}"
         try:
             resp = better_get(url)
             if resp and resp.status_code == 200:

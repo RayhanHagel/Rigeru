@@ -117,6 +117,47 @@ def extract_speaker_thumbnail(video_path: str, start_seconds: float) -> np.ndarr
     return thumb
 
 
+def render_subtitle_preview(
+    base_frame: np.ndarray | None,
+    sample_text: str,
+    style: dict[str, Any],
+) -> np.ndarray:
+    """
+    Draw sample subtitle text onto a copy of base_frame (or a dark 1080p canvas)
+    using the supplied style dict. Returns a 1920x1080 RGB ndarray.
+    """
+    import cv2
+    canvas = base_frame.copy() if base_frame is not None else np.full((1080, 1920, 3), 30, dtype=np.uint8)
+
+    cv_font = cv2.FONT_HERSHEY_SIMPLEX
+    cv_scale = float(style.get("size", 52)) / 38.0
+    out_w = int(style.get("outline_width", 3))
+
+    text_size, _ = cv2.getTextSize(sample_text, cv_font, cv_scale, out_w + 2)
+    tx = max(0, (1920 - text_size[0]) // 2)
+    ty = 1080 - int(style.get("margin_v", 60))
+
+    def _hex_to_bgr(hex_str: str) -> list[int]:
+        h = hex_str.lstrip("#")
+        return [int(h[4:6], 16), int(h[2:4], 16), int(h[0:2], 16)] if len(h) == 6 else [255, 255, 255]
+
+    p_bgr = _hex_to_bgr(style.get("primary_color", "#FFFFFF"))
+    o_bgr = _hex_to_bgr(style.get("outline_color", "#000000"))
+
+    if out_w > 0:
+        cv2.putText(canvas, sample_text, (tx, ty), cv_font, cv_scale, o_bgr, out_w + 4, cv2.LINE_AA)
+
+    opacity = float(style.get("primary_trans", 1.0))
+    if opacity >= 0.98:
+        cv2.putText(canvas, sample_text, (tx, ty), cv_font, cv_scale, p_bgr, out_w, cv2.LINE_AA)
+    else:
+        overlay = canvas.copy()
+        cv2.putText(overlay, sample_text, (tx, ty), cv_font, cv_scale, p_bgr, out_w, cv2.LINE_AA)
+        cv2.addWeighted(overlay, opacity, canvas, 1.0 - opacity, 0, canvas)
+
+    return cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
+
+
 def extract_speaker_clip(media_path: str, start_seconds: float, end_seconds: float, output_path: str) -> bool:
     """
 
@@ -218,7 +259,9 @@ def run_transcription_pipeline(
     elif is_faster_whisper:
         from faster_whisper import WhisperModel
         _status("Loading Faster-Whisper model weights…", 10)
-        model = WhisperModel(model_name, device=device, compute_type=compute_type, download_root=models_dir)
+        local_dir_direct = os.path.join(models_dir, model_name)
+        model_source = local_dir_direct if os.path.isdir(local_dir_direct) else model_name
+        model = WhisperModel(model_source, device=device, compute_type=compute_type, download_root=models_dir)
     else:
         _status("Loading Whisper model weights…", 10)
         actual_model_name = model_name.replace("whisper-", "") if model_name.startswith("whisper-") else model_name

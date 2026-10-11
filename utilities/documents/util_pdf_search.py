@@ -7,10 +7,10 @@ from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
 from whoosh.highlight import Formatter
 
-class MarkdownFormatter(Formatter):
+class HTMLFormatter(Formatter):
     def format_token(self, text: str, token: Any, replace: bool = False) -> str:
         """
-        Format matched query token into Markdown bold highlight syntax.
+        Format matched query token into HTML mark tag for frontend highlighting.
 
         Args:
             text (str): Surrounding token text.
@@ -18,9 +18,9 @@ class MarkdownFormatter(Formatter):
             replace (bool, optional): Replace flag. Defaults to False.
 
         Returns:
-            str: Highlighted Markdown token string.
+            str: Highlighted token string.
         """
-        return f"**:violet[{text[token.startchar:token.endchar]}]**"
+        return f"<mark class='doc-highlight'>{text[token.startchar:token.endchar]}</mark>"
 
 def extract_text(file_path: str) -> str:
     """
@@ -155,7 +155,7 @@ def search_documents(query_str: str, index_dir: str = "./cache/doc_index") -> tu
             query = QueryParser("content", ix.schema).parse(query_str)
             results = searcher.search(query, limit=20) 
             results.fragmenter.maxchars = 300
-            results.formatter = MarkdownFormatter()
+            results.formatter = HTMLFormatter()
             
             for hit in results:
                 results_list.append({

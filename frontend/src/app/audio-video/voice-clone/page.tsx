@@ -85,7 +85,7 @@ export default function VoiceClonePage() {
             } else {
                 if (useSavedVoice) {
                     if (!selectedVoiceId) throw new Error("Please select a saved voice.");
-                    endpoint = `/api/media-vision/tts/clone/saved`;
+                    endpoint = `/api/media-vision/tts/clone/from-saved`;
                     formData.append("voice_id", selectedVoiceId);
                 } else {
                     if (!audioHash) throw new Error("Please record or upload reference audio.");

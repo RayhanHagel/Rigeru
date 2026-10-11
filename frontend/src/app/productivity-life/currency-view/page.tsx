@@ -39,9 +39,18 @@ export default function CurrencyView() {
         const data = await res.json();
         setCurrencies(data);
         
+        let initialBase = base;
+        let initialTarget = target;
         // Ensure defaults are valid if USD/IDR exist
-        if (!data["USD"]) setBase(Object.keys(data)[0] || "");
-        if (!data["IDR"]) setTarget(Object.keys(data)[1] || "");
+        if (!data["USD"]) initialBase = Object.keys(data)[0] || "";
+        if (!data["IDR"]) initialTarget = Object.keys(data)[1] || "";
+        setBase(initialBase);
+        setTarget(initialTarget);
+
+        // Fetch initial trend immediately
+        if (initialBase && initialTarget && initialBase !== initialTarget) {
+          fetchTrend(initialBase, initialTarget);
+        }
       } else {
         setErrorMsg("Failed to load currencies.");
       }
@@ -60,7 +69,7 @@ export default function CurrencyView() {
   }, [currencies]);
 
   const fetchTrend = async (currentBase = base, currentTarget = target) => {
-    if (currentBase === currentTarget) {
+    if (!currentBase || !currentTarget || currentBase === currentTarget) {
       setTrendData([]);
       return;
     }
@@ -71,8 +80,8 @@ export default function CurrencyView() {
       });
       if (res.ok) {
         const data = await res.json();
-        setTrendData(data.trend_data);
-        setCachedTime(data.cached_time);
+        setTrendData(data.trend_data || []);
+        setCachedTime(data.cached_time || "");
       } else {
         setTrendData([]);
       }
@@ -93,9 +102,6 @@ export default function CurrencyView() {
       if (res.ok) {
         const data = await res.json();
         setConvertResult(data.result);
-        
-        // Fetch trend automatically after successful conversion
-        fetchTrend(currentBase, currentTarget);
       } else {
         setErrorMsg("Conversion failed.");
       }
@@ -110,6 +116,7 @@ export default function CurrencyView() {
     if (Object.keys(currencies).length > 0 && amount > 0 && base && target) {
       const timer = setTimeout(() => {
         handleConvert(amount, base, target);
+        fetchTrend(base, target);
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -239,14 +246,14 @@ export default function CurrencyView() {
         </div>
         
         {loadingTrend ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-[var(--theme-text)]">
+          <div className="flex-1 min-h-[350px] flex flex-col items-center justify-center text-[var(--theme-text)]">
             <Icon name="sync" size={48} className="animate-spin opacity-50 mb-4" />
             <p>Loading market data...</p>
           </div>
         ) : chartData.length > 0 ? (
-          <div className="flex-1 w-full h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <div className="w-full h-[350px] min-h-[350px]">
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-ui-border)" vertical={false} />
                 <XAxis 
                   dataKey="date" 
@@ -300,7 +307,7 @@ export default function CurrencyView() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-[var(--theme-text)] opacity-70">
+          <div className="flex-1 min-h-[350px] flex flex-col items-center justify-center text-[var(--theme-text)] opacity-70">
             <Icon name="query_stats" size={48} className="mb-4" />
             <p>No trend data available for this pair.</p>
           </div>

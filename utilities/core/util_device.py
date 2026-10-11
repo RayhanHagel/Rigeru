@@ -2,6 +2,13 @@ import os
 from functools import lru_cache
 from typing import List, Tuple, Any
 
+try:
+    import transformers.utils.import_utils
+    if not hasattr(transformers.utils.import_utils, 'is_torch_fx_available'):
+        transformers.utils.import_utils.is_torch_fx_available = lambda: False
+except (ImportError, AttributeError):
+    pass
+
 @lru_cache(maxsize=1)
 def get_device(override: str | None = None) -> str:
     """Resolves compute device based on global preferences.
@@ -36,6 +43,11 @@ def get_device(override: str | None = None) -> str:
         return "cuda" if torch.cuda.is_available() else "cpu"
     except ImportError:
         return "cpu"
+
+
+def clear_device_cache() -> None:
+    """Clears the cached compute device resolution."""
+    get_device.cache_clear()
 
 
 def get_torch_dtype(device: str | None = None) -> Any:

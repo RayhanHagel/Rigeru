@@ -1107,7 +1107,52 @@ def pdf_search_delete_document_endpoint(req: DeleteDocumentRequest) -> Dict[str,
         return {"message": f"Document '{req.file_path}' removed from index."}
     raise HTTPException(status_code=404, detail="Document not found in index.")
 
-from utilities.documents.util_pdf_diff import compare_pdfs
+from utilities.documents.util_pdf_diff import compare_pdfs, compare_documents, extract_document_text
+
+class DocumentDiffRequest(BaseModel):
+    mode: str = "text"  # "text" or "files"
+    text1: Optional[str] = ""
+    text2: Optional[str] = ""
+    file1_hash: Optional[str] = None
+    file2_hash: Optional[str] = None
+    file1_name: Optional[str] = "Document A"
+    file2_name: Optional[str] = "Document B"
+
+@router.post("/diff/compare")
+async def compare_documents_endpoint(req: DocumentDiffRequest) -> Dict[str, Any]:
+    """
+    Unified diff comparison for raw text or documents (.pdf, .docx, .txt, .md).
+    """
+    t1 = req.text1 or ""
+    t2 = req.text2 or ""
+
+    if req.mode == "files" or (req.file1_hash and req.file2_hash):
+        p1 = os.path.join(".", "uploads", req.file1_hash)
+        p2 = os.path.join(".", "uploads", req.file2_hash)
+        if not os.path.exists(p1) or not os.path.exists(p2):
+            raise HTTPException(400, "One or both uploaded files not found.")
+        with open(p1, "rb") as f1:
+            b1 = f1.read()
+        with open(p2, "rb") as f2:
+            b2 = f2.read()
+
+        ok1, res1 = extract_document_text(b1, req.file1_name or "doc1.txt")
+        if not ok1:
+            raise HTTPException(400, f"Error reading Document 1: {res1}")
+        ok2, res2 = extract_document_text(b2, req.file2_name or "doc2.txt")
+        if not ok2:
+            raise HTTPException(400, f"Error reading Document 2: {res2}")
+        t1, t2 = res1, res2
+
+    success, result = compare_documents(
+        t1,
+        t2,
+        title1=req.file1_name or "Original",
+        title2=req.file2_name or "Modified"
+    )
+    if not success:
+        raise HTTPException(500, detail=result.get("error", "Failed to compute diff"))
+    return result
 
 @router.post("/pdf-studio/diff")
 async def pdf_diff_endpoint(
@@ -1116,13 +1161,6 @@ async def pdf_diff_endpoint(
 ) -> Dict[str, Any]:
     """
     Compare visual and textual differences between two versions of a PDF document.
-
-    Args:
-        file1_hash (str: Hash of original base PDF.)
-        file2_hash (str: Hash of modified comparison PDF.)
-
-    Returns:
-        Dict[str, Any]: Text diffs, modified pages, and visual comparison overlays.
     """
     t1 = os.path.join(".", "uploads", file1_hash)
     t2 = os.path.join(".", "uploads", file2_hash)
@@ -1132,10 +1170,8 @@ async def pdf_diff_endpoint(
     with open(t2, "rb") as f: contents2 = f.read()
     
     success, result = compare_pdfs(contents1, contents2)
-    
     if not success:
         raise HTTPException(status_code=500, detail=str(result))
-        
     return {"diff": result}
 
 # --- FILE ORGANIZER ---
